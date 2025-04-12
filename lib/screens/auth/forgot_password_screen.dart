@@ -1,14 +1,85 @@
 import 'package:flutter/material.dart';
 import 'package:text_the_answer/config/colors.dart' show AppColors;
+import 'package:text_the_answer/router/routes.dart';
+import 'package:text_the_answer/services/api_service.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
+import 'package:text_the_answer/widgets/custom_button.dart';
+import 'package:text_the_answer/widgets/custom_text_field.dart';
 
-class ForgotPasswordScreen extends StatelessWidget {
+class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+}
+
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  final _emailController = TextEditingController();
+  bool _isLoading = false;
+  final _apiService = ApiService();
+  String? _errorMessage;
+  
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  // Handle the reset password request
+  Future<void> _requestPasswordReset() async {
+    // Basic validation
+    if (_emailController.text.isEmpty) {
+      setState(() {
+        _errorMessage = 'Please enter your email address';
+      });
+      return;
+    }
+
+    // Email format validation
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(_emailController.text)) {
+      setState(() {
+        _errorMessage = 'Please enter a valid email address';
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final response = await _apiService.requestPasswordReset(_emailController.text.trim());
+      
+      // Navigate to OTP verification screen
+      if (!mounted) return;
+      
+      Navigator.pushNamed(
+        context,
+        Routes.otpVerification,
+        arguments: {'email': _emailController.text.trim()},
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(response['message'])),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = e.toString();
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final _emailController = TextEditingController();
-    
     return Scaffold(
       backgroundColor: AppColors.primaryRed,
       appBar: AppBar(
@@ -52,7 +123,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Enter your email address to receive a password reset link',
+                  'Enter your email address to receive a password reset OTP',
                   style: FontUtility.interRegular(
                     fontSize: 15,
                     color: AppColors.white.withOpacity(0.9),
@@ -61,97 +132,27 @@ class ForgotPasswordScreen extends StatelessWidget {
                 const SizedBox(height: 40),
                 
                 // Email Field
-                _buildTextField(
+                CustomTextField(
                   controller: _emailController,
                   hintText: 'Email',
                   prefixIcon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
+                  darkMode: true,
+                  errorText: _errorMessage,
+                  onChanged: (_) => setState(() => _errorMessage = null),
                 ),
                 const SizedBox(height: 30),
                 
                 // Continue Button
-                _buildContinueButton(context),
+                CustomButton(
+                  text: 'CONTINUE',
+                  buttonType: CustomButtonType.primary,
+                  buttonSize: CustomButtonSize.large,
+                  isLoading: _isLoading,
+                  onPressed: _requestPasswordReset,
+                ),
               ],
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hintText,
-    required IconData prefixIcon,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return TextField(
-      controller: controller,
-      style: FontUtility.interRegular(
-        fontSize: 16,
-        color: AppColors.white,
-      ),
-      keyboardType: keyboardType,
-      decoration: InputDecoration(
-        contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-        hintText: hintText,
-        hintStyle: FontUtility.interRegular(
-          fontSize: 16,
-          color: Colors.white.withOpacity(0.7),
-        ),
-        prefixIcon: Icon(
-          prefixIcon,
-          color: Colors.white.withOpacity(0.9),
-        ),
-        filled: true,
-        fillColor: Colors.white.withOpacity(0.1),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white, width: 1.5),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildContinueButton(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: 54,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 8,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ElevatedButton(
-        onPressed: () {
-          // Implement password reset logic
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        child: Text(
-          'CONTINUE',
-          style: FontUtility.montserratBold(
-            fontSize: 17,
-            letterSpacing: 1.2,
-            color: Colors.white,
           ),
         ),
       ),

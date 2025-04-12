@@ -494,4 +494,96 @@ class ApiService {
       rethrow;
     }
   }
+
+  // Request password reset OTP
+  Future<Map<String, dynamic>> requestPasswordReset(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/profile/password-reset/request'),
+        headers: await _getHeaders(requiresAuth: false),
+        body: jsonEncode({'email': email}),
+      );
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': data['success'],
+          'message': data['message'],
+        };
+      } else {
+        final data = jsonDecode(response.body);
+        final message = data['message'] ?? 'Failed to request password reset';
+        print('API Error (requestPasswordReset): $message - ${response.body}');
+        throw Exception(message);
+      }
+    } catch (e) {
+      print('API Error (requestPasswordReset): $e');
+      rethrow;
+    }
+  }
+
+  // Verify password reset OTP
+  Future<Map<String, dynamic>> verifyPasswordResetOTP(String email, String otp) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/profile/password-reset/verify'),
+        headers: await _getHeaders(requiresAuth: false),
+        body: jsonEncode({'email': email, 'otp': otp}),
+      );
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': data['success'],
+          'message': data['message'],
+          'resetToken': data['resetToken'], // Save this token for the next step
+        };
+      } else {
+        final data = jsonDecode(response.body);
+        final message = data['message'] ?? 'Failed to verify OTP';
+        print('API Error (verifyPasswordResetOTP): $message - ${response.body}');
+        throw Exception(message);
+      }
+    } catch (e) {
+      print('API Error (verifyPasswordResetOTP): $e');
+      rethrow;
+    }
+  }
+
+  // Reset password after OTP verification
+  Future<Map<String, dynamic>> resetPassword({
+    required String email, 
+    required String resetToken, 
+    required String newPassword, 
+    required String confirmPassword
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/profile/password-reset/reset'),
+        headers: await _getHeaders(requiresAuth: false),
+        body: jsonEncode({
+          'email': email,
+          'resetToken': resetToken,
+          'newPassword': newPassword,
+          'confirmPassword': confirmPassword
+        }),
+      );
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return {
+          'success': data['success'],
+          'message': data['message'],
+        };
+      } else {
+        final data = jsonDecode(response.body);
+        final message = data['message'] ?? 'Failed to reset password';
+        print('API Error (resetPassword): $message - ${response.body}');
+        throw Exception(message);
+      }
+    } catch (e) {
+      print('API Error (resetPassword): $e');
+      rethrow;
+    }
+  }
 }

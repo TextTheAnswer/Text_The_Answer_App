@@ -141,7 +141,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         child: ElevatedButton(
                           onPressed: () {
                             if (_currentPage == onboardingData.length - 1) {
-                              Navigator.pushReplacementNamed(context, Routes.login);
+                              Navigator.pushReplacementNamed(context, Routes.signup);
                             } else {
                               _pageController.nextPage(
                                 duration: const Duration(milliseconds: 300),

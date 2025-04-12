@@ -4,6 +4,9 @@ import 'package:text_the_answer/config/colors.dart' show AppColors;
 import 'package:text_the_answer/router/routes.dart';
 import 'package:text_the_answer/screens/auth/forgot_password_screen.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
+import 'package:text_the_answer/widgets/custom_button.dart';
+import 'package:text_the_answer/widgets/custom_text_field.dart';
+import 'package:text_the_answer/widgets/social_login_button.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_event.dart';
 import '../../blocs/auth/auth_state.dart';
@@ -106,16 +109,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 35),
                     
                     // Email Field
-                    _buildTextField(
+                    CustomTextField(
                       controller: _emailController,
                       hintText: 'Email',
                       prefixIcon: Icons.email_outlined,
                       keyboardType: TextInputType.emailAddress,
+                      darkMode: true,
                     ),
                     const SizedBox(height: 16),
                     
                     // Password Field
-                    _buildTextField(
+                    CustomTextField(
                       controller: _passwordController,
                       hintText: 'Password',
                       prefixIcon: Icons.lock_outline,
@@ -125,6 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           _obscurePassword = !_obscurePassword;
                         });
                       },
+                      darkMode: true,
                     ),
                     const SizedBox(height: 20),
                     
@@ -186,60 +191,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hintText,
-    required IconData prefixIcon,
-    TextInputType keyboardType = TextInputType.text,
-    bool obscureText = false,
-    VoidCallback? toggleObscureText,
-  }) {
-    return TextField(
-      controller: controller,
-      style: FontUtility.interRegular(
-        fontSize: 16,
-        color: AppColors.white,
-      ),
-      keyboardType: keyboardType,
-      obscureText: obscureText,
-      decoration: InputDecoration(
-        contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-        hintText: hintText,
-        hintStyle: FontUtility.interRegular(
-          fontSize: 16,
-          color: Colors.white.withOpacity(0.7),
-        ),
-        prefixIcon: Icon(
-          prefixIcon,
-          color: Colors.white.withOpacity(0.9),
-        ),
-        suffixIcon: toggleObscureText != null
-            ? IconButton(
-                icon: Icon(
-                  obscureText ? Icons.visibility_off : Icons.visibility,
-                  color: Colors.white.withOpacity(0.9),
-                ),
-                onPressed: toggleObscureText,
-              )
-            : null,
-        filled: true,
-        fillColor: Colors.white.withOpacity(0.1),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.3), width: 1),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white, width: 1.5),
-        ),
-      ),
-    );
-  }
-
   Widget _buildRememberMeAndForgotPassword() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -296,77 +247,41 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildSignInButton(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: 54,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 8,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ElevatedButton(
-        onPressed: () {
-          // Basic validation
-          if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Please enter both email and password')),
-            );
-            return;
-          }
-          
-          // Email format validation
-          final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-          if (!emailRegex.hasMatch(_emailController.text)) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Please enter a valid email address')),
-            );
-            return;
-          }
-          
-          // Trigger sign in event
-          context.read<AuthBloc>().add(
-                SignInEvent(
-                  email: _emailController.text.trim(),
-                  password: _passwordController.text,
-                ),
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        return CustomButton(
+          text: 'SIGN IN',
+          buttonType: CustomButtonType.primary,
+          buttonSize: CustomButtonSize.large,
+          isLoading: state is AuthLoading,
+          onPressed: () {
+            // Basic validation
+            if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Please enter both email and password')),
               );
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        child: BlocBuilder<AuthBloc, AuthState>(
-          builder: (context, state) {
-            if (state is AuthLoading) {
-              return SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              );
+              return;
             }
-            return const Text(
-              'SIGN IN',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-                color: Colors.white,
-              ),
-            );
+            
+            // Email format validation
+            final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+            if (!emailRegex.hasMatch(_emailController.text)) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Please enter a valid email address')),
+              );
+              return;
+            }
+            
+            // Trigger sign in event
+            context.read<AuthBloc>().add(
+                  SignInEvent(
+                    email: _emailController.text.trim(),
+                    password: _passwordController.text,
+                  ),
+                );
           },
-        ),
-      ),
+        );
+      }
     );
   }
 
@@ -402,7 +317,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildSocialLoginButtons() {
     return Column(
       children: [
-        _buildSocialButton(
+        SocialLoginButton(
           text: 'Continue with Google',
           onPressed: () {
             // Implement Google Sign-In
@@ -410,7 +325,7 @@ class _LoginScreenState extends State<LoginScreen> {
           icon: Icons.g_mobiledata,
         ),
         const SizedBox(height: 16),
-        _buildSocialButton(
+        SocialLoginButton(
           text: 'Continue with Apple',
           onPressed: () {
             // Implement Apple Sign-In
@@ -418,38 +333,6 @@ class _LoginScreenState extends State<LoginScreen> {
           icon: Icons.apple,
         ),
       ],
-    );
-  }
-
-  Widget _buildSocialButton({
-    required String text,
-    required VoidCallback onPressed,
-    required IconData icon,
-  }) {
-    return Container(
-      width: double.infinity,
-      height: 54,
-      child: OutlinedButton.icon(
-        onPressed: onPressed,
-        icon: Icon(
-          icon,
-          size: 24,
-          color: Colors.white,
-        ),
-        label: Text(
-          text,
-          style: FontUtility.interMedium(
-            fontSize: 16,
-            color: Colors.white,
-          ),
-        ),
-        style: OutlinedButton.styleFrom(
-          side: BorderSide(color: Colors.white, width: 1),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
     );
   }
 }

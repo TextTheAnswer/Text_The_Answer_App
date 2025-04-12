@@ -5,6 +5,8 @@ import 'package:text_the_answer/router/routes.dart';
 import 'package:text_the_answer/screens/auth/login_screen.dart';
 import 'package:text_the_answer/screens/auth/register_screen.dart';
 import 'package:text_the_answer/screens/auth/forgot_password_screen.dart';
+import 'package:text_the_answer/screens/auth/otp_verification_screen.dart';
+import 'package:text_the_answer/screens/auth/reset_password_screen.dart';
 import 'package:text_the_answer/screens/home_screen.dart';
 import 'package:text_the_answer/screens/auth/onboarding_screen.dart';
 import 'package:text_the_answer/screens/auth/splash_screen.dart';
@@ -52,31 +54,18 @@ class AppRouter {
         final args = settings.arguments as Map<String, dynamic>?;
         final email = args?['email'] as String? ?? '';
         log('OTP Verification route with email: $email');
-        // Create your OTP verification page and uncomment this
-        // return MaterialPageRoute(
-        //   builder: (_) => OTPVerificationScreen(email: email),
-        // );
-        // Temporary fallback
         return MaterialPageRoute(
-          builder: (_) => Scaffold(
-            appBar: AppBar(title: const Text('OTP Verification')),
-            body: Center(child: Text('OTP Verification for $email')),
-          ),
+          builder: (_) => OTPVerificationScreen(email: email),
         );
       
       case Routes.resetPassword:
         final args = settings.arguments as Map<String, dynamic>?;
         final email = args?['email'] as String? ?? '';
-        final otp = args?['otp'] as String? ?? '';
-        // Create your reset password page and uncomment this
-        // return MaterialPageRoute(
-        //   builder: (_) => ResetPasswordScreen(email: email, otp: otp),
-        // );
-        // Temporary fallback
+        final resetToken = args?['resetToken'] as String? ?? '';
         return MaterialPageRoute(
-          builder: (_) => Scaffold(
-            appBar: AppBar(title: const Text('Reset Password')),
-            body: Center(child: Text('Reset Password for $email with OTP: $otp')),
+          builder: (_) => ResetPasswordScreen(
+            email: email, 
+            resetToken: resetToken,
           ),
         );
         
