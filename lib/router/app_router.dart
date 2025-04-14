@@ -7,10 +7,10 @@ import 'package:text_the_answer/screens/auth/register_screen.dart';
 import 'package:text_the_answer/screens/auth/forgot_password_screen.dart';
 import 'package:text_the_answer/screens/auth/otp_verification_screen.dart';
 import 'package:text_the_answer/screens/auth/reset_password_screen.dart';
-import 'package:text_the_answer/screens/home_screen.dart';
+import 'package:text_the_answer/screens/home/home_screen.dart';
 import 'package:text_the_answer/screens/auth/onboarding_screen.dart';
 import 'package:text_the_answer/screens/auth/splash_screen.dart';
-import 'package:text_the_answer/screens/profile/profile_create.dart';
+import 'package:text_the_answer/screens/profile/profile_creation_screen.dart';
 
 class AppRouter {
   // This function manages theme state between screens
@@ -71,7 +71,7 @@ class AppRouter {
         
       case Routes.profileCreate:
         return MaterialPageRoute(
-          builder: (_) => const CreateProfileScreen(),
+          builder: (_) => const ProfileCreationScreen(),
         );
       
       default:

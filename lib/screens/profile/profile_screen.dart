@@ -1,15 +1,88 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_state.dart';
+import '../../config/colors.dart';
+import '../../models/user_profile_model.dart';
+import '../../router/routes.dart';
+import '../../services/profile_service.dart';
+import '../../utils/font_utility.dart';
+import '../../widgets/custom_button.dart';
 import 'edit_profile_screen.dart';
 import 'game_history_screen.dart';
 import 'streak_progress_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   final VoidCallback toggleTheme;
 
   const ProfileScreen({required this.toggleTheme, super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final ProfileService _profileService = ProfileService();
+  UserProfileFull? _userProfile;
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAuthAndFetchProfile();
+  }
+
+  Future<void> _checkAuthAndFetchProfile() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final isAuth = await _profileService.isAuthenticated();
+      
+      if (isAuth) {
+        // User is authenticated, fetch profile
+        await _fetchUserProfile();
+      } else {
+        // User is not authenticated, don't try to fetch profile
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'An error occurred: ${e.toString()}';
+      });
+    }
+  }
+
+  Future<void> _fetchUserProfile() async {
+    try {
+      final response = await _profileService.getFullProfile();
+      setState(() {
+        _isLoading = false;
+        if (response.success && response.profile != null) {
+          _userProfile = response.profile;
+        } else if (response.message?.toLowerCase().contains('no profile') ?? false) {
+          // User is authenticated but doesn't have a profile yet
+          _userProfile = null;
+          _errorMessage = null; // Clear any error message
+        } else {
+          _errorMessage = response.message ?? 'Failed to load profile';
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'An error occurred: ${e.toString()}';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,65 +90,540 @@ class ProfileScreen extends StatelessWidget {
       body: SafeArea(
         child: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
-            if (state is AuthLoading) {
+            if (state is AuthLoading || _isLoading) {
               return const Center(child: CircularProgressIndicator());
             } else if (state is AuthAuthenticated) {
-              final user = state.user;
-              return Padding(
-                padding: const EdgeInsets.all(20),
+              if (_errorMessage != null) {
+                return Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24.w),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 60.sp,
+                          color: Colors.red,
+                        ),
+                        SizedBox(height: 16.h),
+                        Text(
+                          'Error loading profile',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        SizedBox(height: 8.h),
+                        Text(
+                          _errorMessage!,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: 24.h),
+                        CustomButton(
+                          text: 'Retry',
+                          onPressed: _checkAuthAndFetchProfile,
+                          bgColor: AppColors.primaryRed,
+                          icon: Icons.refresh,
+                        ),
+                        SizedBox(height: 12.h),
+                        if (_errorMessage!.toLowerCase().contains('auth') || 
+                            _errorMessage!.toLowerCase().contains('login') ||
+                            _errorMessage!.toLowerCase().contains('token'))
+                          CustomButton(
+                            text: 'Login',
+                            onPressed: () {
+                              Navigator.pushNamed(context, Routes.login);
+                            },
+                            buttonType: CustomButtonType.outline,
+                            borderColor: AppColors.primaryRed,
+                            textColor: AppColors.primaryRed,
+                            icon: Icons.login,
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              if (_userProfile == null) {
+                return _buildNoProfileView();
+              }
+
+              return _buildProfileContent();
+            }
+            return _buildNotLoggedInView();
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileContent() {
+    final profile = _userProfile!;
+    final theme = Theme.of(context);
+
+    return RefreshIndicator(
+      onRefresh: _checkAuthAndFetchProfile,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: 20.h),
+            // Profile Header
+            Text(
+              'Profile 👤',
+              style: theme.textTheme.headlineLarge,
+            ),
+            SizedBox(height: 24.h),
+            
+            // Profile Card
+            _buildProfileCard(profile),
+            SizedBox(height: 24.h),
+            
+            // Stats Card
+            _buildStatsCard(profile.stats),
+            SizedBox(height: 24.h),
+            
+            // Buttons
+            _buildActionButtons(),
+            SizedBox(height: 24.h),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileCard(UserProfileFull profile) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                // Profile Image
+                _buildProfileImage(profile.profile.imageUrl),
+                SizedBox(width: 16.w),
+                
+                // User Info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        profile.name,
+                        style: FontUtility.montserratBold(
+                          fontSize: 20,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        profile.email,
+                        style: FontUtility.interRegular(
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: 8.h),
+                      if (profile.profile.location != null && profile.profile.location!.isNotEmpty)
+                        Row(
+                          children: [
+                            Icon(Icons.location_on_outlined, size: 16.sp, color: Colors.grey),
+                            SizedBox(width: 4.w),
+                            Expanded(
+                              child: Text(
+                                profile.profile.location!,
+                                style: FontUtility.interRegular(
+                                  fontSize: 14,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            
+            // Subscription Badge
+            if (profile.isPremium) 
+              Padding(
+                padding: EdgeInsets.only(top: 16.h),
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.shade100,
+                    borderRadius: BorderRadius.circular(20.r),
+                    border: Border.all(color: Colors.amber.shade700),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.star, color: Colors.amber.shade700, size: 18.sp),
+                      SizedBox(width: 8.w),
+                      Text(
+                        'Premium Member',
+                        style: FontUtility.montserratSemiBold(
+                          fontSize: 14,
+                          color: Colors.amber.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            
+            // Bio
+            if (profile.profile.bio != null && profile.profile.bio!.isNotEmpty)
+              Padding(
+                padding: EdgeInsets.only(top: 16.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Profile 👤',
-                      style: Theme.of(context).textTheme.headlineLarge,
+                      'Bio',
+                      style: FontUtility.montserratSemiBold(fontSize: 16),
                     ),
-                    const SizedBox(height: 20),
-                    Text('Username: ${user.name}'),
-                    const SizedBox(height: 10),
-                    Text('Email: ${user.email}'),
-                    const SizedBox(height: 10),
-                    Text('Subscription: ${user.subscription}'),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => EditProfileScreen(toggleTheme: toggleTheme),
-                          ),
-                        );
-                      },
-                      child: const Text('Edit Profile'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => GameHistoryScreen(toggleTheme: toggleTheme),
-                          ),
-                        );
-                      },
-                      child: const Text('Game History'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => StreakProgressScreen(toggleTheme: toggleTheme),
-                          ),
-                        );
-                      },
-                      child: const Text('Streak Progress'),
+                    SizedBox(height: 4.h),
+                    Text(
+                      profile.profile.bio!,
+                      style: FontUtility.interRegular(fontSize: 14),
                     ),
                   ],
                 ),
-              );
-            }
-            return const Center(child: Text('Error loading profile'));
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileImage(String? imageUrl) {
+    const double imageSize = 80;
+    
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(40.r),
+        child: CachedNetworkImage(
+          imageUrl: imageUrl,
+          width: imageSize.w,
+          height: imageSize.w,
+          fit: BoxFit.cover,
+          placeholder: (context, url) => Container(
+            width: imageSize.w,
+            height: imageSize.w,
+            color: Colors.grey.shade300,
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          errorWidget: (context, url, error) => Container(
+            width: imageSize.w,
+            height: imageSize.w,
+            color: Colors.grey.shade300,
+            child: Icon(Icons.person, size: 40.sp),
+          ),
+        ),
+      );
+    }
+    
+    return Container(
+      width: imageSize.w,
+      height: imageSize.w,
+      decoration: BoxDecoration(
+        color: AppColors.primaryRed.withOpacity(0.1),
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.primaryRed.withOpacity(0.3)),
+      ),
+      child: Center(
+        child: Icon(Icons.person, size: 40.sp, color: AppColors.primaryRed),
+      ),
+    );
+  }
+
+  Widget _buildStatsCard(UserStats stats) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Your Stats',
+              style: FontUtility.montserratBold(fontSize: 18),
+            ),
+            SizedBox(height: 16.h),
+            
+            // Stats Grid
+            Row(
+              children: [
+                _buildStatItem(
+                  icon: Icons.local_fire_department,
+                  iconColor: Colors.orange,
+                  label: 'Streak',
+                  value: '${stats.streak} days',
+                ),
+                _buildStatItem(
+                  icon: Icons.check_circle_outline,
+                  iconColor: Colors.green,
+                  label: 'Correct',
+                  value: '${stats.totalCorrect}',
+                ),
+                _buildStatItem(
+                  icon: Icons.auto_graph,
+                  iconColor: Colors.blue,
+                  label: 'Accuracy',
+                  value: stats.accuracy,
+                ),
+              ],
+            ),
+            
+            // Last Played
+            if (stats.lastPlayed != null)
+              Padding(
+                padding: EdgeInsets.only(top: 16.h),
+                child: Row(
+                  children: [
+                    Icon(Icons.calendar_today, size: 16.sp, color: Colors.grey),
+                    SizedBox(width: 8.w),
+                    Text(
+                      'Last played: ${_formatDate(stats.lastPlayed!)}',
+                      style: FontUtility.interRegular(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatItem({
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    required String value,
+  }) {
+    return Expanded(
+      child: Column(
+        children: [
+          Container(
+            padding: EdgeInsets.all(10.r),
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: iconColor, size: 24.sp),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            value,
+            style: FontUtility.montserratBold(fontSize: 16),
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            label,
+            style: FontUtility.interRegular(
+              fontSize: 12,
+              color: Colors.grey,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        CustomButton(
+          text: 'Edit Profile',
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => EditProfileScreen(toggleTheme: widget.toggleTheme),
+              ),
+            );
           },
+          bgColor: AppColors.primaryRed,
+          icon: Icons.edit,
+        ),
+        SizedBox(height: 12.h),
+        CustomButton(
+          text: 'Game History',
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => GameHistoryScreen(toggleTheme: widget.toggleTheme),
+              ),
+            );
+          },
+          bgColor: Colors.blue,
+          icon: Icons.history,
+        ),
+        SizedBox(height: 12.h),
+        CustomButton(
+          text: 'Streak Progress',
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => StreakProgressScreen(toggleTheme: widget.toggleTheme),
+              ),
+            );
+          },
+          bgColor: Colors.orange,
+          icon: Icons.local_fire_department,
+        ),
+        SizedBox(height: 12.h),
+        CustomButton(
+          text: 'Toggle Theme',
+          onPressed: widget.toggleTheme,
+          buttonType: CustomButtonType.outline,
+          icon: Icons.brightness_4,
+        ),
+      ],
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
+  }
+
+  Widget _buildNotLoggedInView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.account_circle,
+            size: 80.sp,
+            color: AppColors.primaryRed,
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            'You are not logged in',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            'Sign in to access your profile, track your progress, and unlock premium features',
+            style: FontUtility.interRegular(
+              fontSize: 14,
+              color: Colors.grey,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 24.h),
+          CustomButton(
+            text: 'LOG IN',
+            onPressed: () {
+              Navigator.pushNamed(context, Routes.login);
+            },
+            bgColor: AppColors.primaryRed,
+            icon: Icons.login,
+          ),
+          SizedBox(height: 12.h),
+          CustomButton(
+            text: 'SIGN UP',
+            onPressed: () {
+              Navigator.pushNamed(context, Routes.signup);
+            },
+            buttonType: CustomButtonType.outline,
+            borderColor: AppColors.primaryRed,
+            textColor: AppColors.primaryRed,
+            icon: Icons.person_add,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoProfileView() {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 30.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TweenAnimationBuilder(
+              tween: Tween<double>(begin: 0.8, end: 1.0),
+              duration: const Duration(seconds: 2),
+              curve: Curves.elasticOut,
+              builder: (context, value, child) {
+                return Transform.scale(
+                  scale: value,
+                  child: child,
+                );
+              },
+              child: Icon(
+                Icons.person_add_alt_rounded,
+                size: 80.sp,
+                color: AppColors.primaryRed,
+              ),
+            ),
+            SizedBox(height: 24.h),
+            Text(
+              'Complete Your Profile',
+              style: FontUtility.montserratBold(
+                fontSize: 22,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              'Your account is ready, but your profile is not set up yet. Create your profile to personalize your experience!',
+              style: FontUtility.interRegular(
+                fontSize: 16,
+                color: Colors.grey.shade700,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 32.h),
+            CustomButton(
+              text: 'CREATE PROFILE',
+              onPressed: () {
+                Navigator.pushNamed(context, Routes.profileCreate);
+              },
+              bgColor: AppColors.primaryRed,
+              icon: Icons.create_rounded,
+              buttonSize: CustomButtonSize.large,
+            ),
+            SizedBox(height: 16.h),
+            TextButton(
+              onPressed: () {
+                // Navigate back to home tab
+                Navigator.pop(context);
+              },
+              child: Text(
+                'Skip for now',
+                style: FontUtility.interRegular(
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

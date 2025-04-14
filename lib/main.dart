@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:text_the_answer/router/app_router.dart';
 import 'package:text_the_answer/router/routes.dart';
@@ -49,37 +50,45 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (context) => AuthBloc()..add(CheckAuthStatusEvent()),
-        ),
-        BlocProvider(create: (_) => QuizBloc()),
-        BlocProvider(create: (_) => GameBloc()),
-        BlocProvider(create: (_) => LeaderboardBloc()),
-        BlocProvider(create: (_) => SubscriptionBloc()),
-      ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Text the Answer',
-        theme: AppTheme.lightTheme(),
-        darkTheme: AppTheme.darkTheme(),
-        themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
-        initialRoute: Routes.login,
-        onGenerateRoute: AppRouter.generateRoute,
-        builder: (context, child) {
-          return BlocListener<AuthBloc, AuthState>(
-            listener: (context, state) {
-              if (state is AuthAuthenticated) {
-                Navigator.of(context).pushReplacementNamed(Routes.home);
-              } else if (state is AuthInitial) {
-                Navigator.of(context).pushReplacementNamed(Routes.onboard);
-              }
+    return ScreenUtilInit(
+      // Design size based on iPhone 12 Pro dimensions
+      designSize: const Size(390, 844),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (_, child) {
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (context) => AuthBloc()..add(CheckAuthStatusEvent()),
+            ),
+            BlocProvider(create: (_) => QuizBloc()),
+            BlocProvider(create: (_) => GameBloc()),
+            BlocProvider(create: (_) => LeaderboardBloc()),
+            BlocProvider(create: (_) => SubscriptionBloc()),
+          ],
+          child: MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'Text the Answer',
+            theme: AppTheme.lightTheme(),
+            darkTheme: AppTheme.darkTheme(),
+            themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+            initialRoute: Routes.splash,
+            onGenerateRoute: AppRouter.generateRoute,
+            builder: (context, child) {
+              return BlocListener<AuthBloc, AuthState>(
+                listener: (context, state) {
+                  if (state is AuthAuthenticated) {
+                    Navigator.of(context).pushReplacementNamed(Routes.home);
+                  } else if (state is AuthInitial) {
+                    Navigator.of(context).pushReplacementNamed(Routes.onboard);
+                  }
+                },
+                child: child ?? Container(),
+              );
             },
-            child: child ?? Container(),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

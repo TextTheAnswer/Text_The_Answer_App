@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:text_the_answer/config/colors.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
 
@@ -25,6 +26,9 @@ class CustomButton extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final bool darkMode;
   final TextStyle? textStyle;
+  final Color? bgColor;
+  final Color? textColor;
+  final Color? borderColor;
 
   const CustomButton({
     Key? key,
@@ -38,6 +42,9 @@ class CustomButton extends StatelessWidget {
     this.padding,
     this.darkMode = true,  // Default to dark mode
     this.textStyle,
+    this.bgColor,
+    this.textColor,
+    this.borderColor,
   }) : super(key: key);
 
   @override
@@ -46,54 +53,54 @@ class CustomButton extends StatelessWidget {
     double height;
     switch (buttonSize) {
       case CustomButtonSize.small:
-        height = 40;
+        height = 40.h;
         break;
       case CustomButtonSize.medium:
-        height = 48;
+        height = 48.h;
         break;
       case CustomButtonSize.large:
-        height = 54;
+        height = 54.h;
         break;
     }
 
     // Determine button padding
     EdgeInsetsGeometry buttonPadding = padding ?? 
         EdgeInsets.symmetric(
-          horizontal: buttonSize == CustomButtonSize.small ? 16 : 24,
-          vertical: buttonSize == CustomButtonSize.small ? 8 : 12,
+          horizontal: buttonSize == CustomButtonSize.small ? 16.w : 24.w,
+          vertical: buttonSize == CustomButtonSize.small ? 8.h : 12.h,
         );
 
     // Determine button styles based on type
     Color backgroundColor;
-    Color textColor;
-    Color borderColor;
+    Color foregroundTextColor;
+    Color buttonBorderColor;
     BoxBorder? border;
 
     switch (buttonType) {
       case CustomButtonType.primary:
-        backgroundColor = Colors.blue;
-        textColor = Colors.white;
-        borderColor = Colors.transparent;
-        border = null;
+        backgroundColor = bgColor ?? Colors.blue;
+        foregroundTextColor = textColor ?? Colors.white;
+        buttonBorderColor = borderColor ?? Colors.transparent;
+        border = borderColor != null ? Border.all(color: buttonBorderColor, width: 1) : null;
         break;
       case CustomButtonType.secondary:
-        backgroundColor = AppColors.primaryRed;
-        textColor = Colors.white;
-        borderColor = Colors.transparent;
-        border = null;
+        backgroundColor = bgColor ?? AppColors.primaryRed;
+        foregroundTextColor = textColor ?? Colors.white;
+        buttonBorderColor = borderColor ?? Colors.transparent;
+        border = borderColor != null ? Border.all(color: buttonBorderColor, width: 1) : null;
         break;
       case CustomButtonType.outline:
         backgroundColor = Colors.transparent;
-        textColor = darkMode ? Colors.white : AppColors.darkGray;
-        borderColor = darkMode ? Colors.white : AppColors.darkGray;
-        border = Border.all(color: borderColor, width: 1);
+        foregroundTextColor = textColor ?? (darkMode ? Colors.white : AppColors.darkGray);
+        buttonBorderColor = borderColor ?? (darkMode ? Colors.white : AppColors.darkGray);
+        border = Border.all(color: buttonBorderColor, width: 1);
         break;
     }
 
     // Determine text style
     TextStyle buttonTextStyle = textStyle ?? FontUtility.montserratBold(
       fontSize: 16,
-      color: textColor,
+      color: foregroundTextColor,
       letterSpacing: 1.2,
     );
 
@@ -106,12 +113,12 @@ class CustomButton extends StatelessWidget {
         onPressed: isLoading ? null : onPressed,
         style: OutlinedButton.styleFrom(
           padding: buttonPadding,
-          side: BorderSide(color: borderColor, width: 1),
+          side: BorderSide(color: buttonBorderColor, width: 1),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(12.r),
           ),
         ),
-        child: _buildButtonContent(buttonTextStyle),
+        child: _buildButtonContent(buttonTextStyle, foregroundTextColor),
       );
     } else {
       // Create elevated button
@@ -119,14 +126,14 @@ class CustomButton extends StatelessWidget {
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor,
-          foregroundColor: textColor,
+          foregroundColor: foregroundTextColor,
           padding: buttonPadding,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(12.r),
           ),
         ),
-        child: _buildButtonContent(buttonTextStyle),
+        child: _buildButtonContent(buttonTextStyle, foregroundTextColor),
       );
     }
 
@@ -135,14 +142,14 @@ class CustomButton extends StatelessWidget {
       width: fullWidth ? double.infinity : null,
       height: height,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         border: border,
         boxShadow: buttonType != CustomButtonType.outline
             ? [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.2),
-                  blurRadius: 8,
-                  offset: Offset(0, 4),
+                  blurRadius: 8.r,
+                  offset: Offset(0, 4.h),
                 ),
               ]
             : null,
@@ -151,17 +158,17 @@ class CustomButton extends StatelessWidget {
     );
   }
 
-  Widget _buildButtonContent(TextStyle textStyle) {
+  Widget _buildButtonContent(TextStyle textStyle, Color foregroundColor) {
     if (isLoading) {
       return SizedBox(
-        height: 20,
-        width: 20,
+        height: 20.h,
+        width: 20.w,
         child: CircularProgressIndicator(
-          strokeWidth: 2,
+          strokeWidth: 2.w,
           valueColor: AlwaysStoppedAnimation<Color>(
             buttonType == CustomButtonType.outline
-                ? (darkMode ? Colors.white : AppColors.darkGray)
-                : Colors.white,
+                ? (textColor ?? (darkMode ? Colors.white : AppColors.darkGray))
+                : foregroundColor,
           ),
         ),
       );
@@ -170,8 +177,8 @@ class CustomButton extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 20),
-          SizedBox(width: 8),
+          Icon(icon, size: 20.sp),
+          SizedBox(width: 8.w),
           Text(text, style: textStyle),
         ],
       );

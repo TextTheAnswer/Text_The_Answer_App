@@ -9,7 +9,7 @@ import 'package:text_the_answer/widgets/social_login_button.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_event.dart';
 import '../../blocs/auth/auth_state.dart';
-import '../home_screen.dart';
+import '../home/home_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   final VoidCallback toggleTheme;
@@ -47,7 +47,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             if (state is AuthAuthenticated) {
               Navigator.pushReplacementNamed(
                 context,
-                Routes.home,
+                Routes.profileCreate,
               );
             } else if (state is AuthError) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -78,10 +78,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
                     Row(
                       children: [
                         Image.asset('assets/images/splash_page.png',
@@ -94,28 +94,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             'Create an account 🔑',
                             style: TextStyle(
                               fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.white,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.white,
                               letterSpacing: 0.5,
                             ),
                           ),
                         ),
                       ],
-                    ),
+                  ),
                     const SizedBox(height: 12),
-                    // Subheader
-                    Text(
-                      'Please enter your username, email address and password.',
+                  // Subheader
+                  Text(
+                    'Please enter your username, email address and password.',
                       style: TextStyle(
                         color: AppColors.white.withOpacity(0.9),
                         fontSize: 15,
-                      ),
-                    ),
+                        ),
+                  ),
                     const SizedBox(height: 40),
                     
-                    // Username Field
+                  // Username Field
                     CustomTextField(
-                      controller: _usernameController,
+                    controller: _usernameController,
                       hintText: 'Username',
                       prefixIcon: Icons.person_outline,
                       keyboardType: TextInputType.text,
@@ -123,9 +123,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 16),
                     
-                    // Email Field
+                  // Email Field
                     CustomTextField(
-                      controller: _emailController,
+                    controller: _emailController,
                       hintText: 'Email',
                       prefixIcon: Icons.email_outlined,
                       keyboardType: TextInputType.emailAddress,
@@ -135,15 +135,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     
                     // Password Field
                     CustomTextField(
-                      controller: _passwordController,
+                    controller: _passwordController,
                       hintText: 'Password',
                       prefixIcon: Icons.lock_outline,
                       obscureText: _obscurePassword,
                       toggleObscureText: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
                       darkMode: true,
                     ),
                     const SizedBox(height: 16),
@@ -223,17 +223,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Widget _buildRememberMeCheckbox() {
     return Row(
-      children: [
+                    children: [
         SizedBox(
           width: 24,
           height: 24,
           child: Checkbox(
-            value: _rememberMe,
-            onChanged: (value) {
-              setState(() {
-                _rememberMe = value ?? false;
-              });
-            },
+                        value: _rememberMe,
+                        onChanged: (value) {
+                          setState(() {
+                            _rememberMe = value ?? false;
+                          });
+                        },
             side: BorderSide(color: Colors.white),
             checkColor: Colors.white,
             fillColor: MaterialStateProperty.resolveWith<Color>((states) {
@@ -283,15 +283,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
           buttonType: CustomButtonType.primary,
           buttonSize: CustomButtonSize.large,
           isLoading: state is AuthLoading,
-          onPressed: () {
-            context.read<AuthBloc>().add(
-                  SignUpEvent(
-                    email: _emailController.text,
-                    password: _passwordController.text,
+                      onPressed: () {
+                        context.read<AuthBloc>().add(
+                              SignUpEvent(
+                                email: _emailController.text,
+                                password: _passwordController.text,
                     name: _usernameController.text,
-                  ),
-                );
-          },
+                              ),
+                            );
+                      },
         );
       }
     );
@@ -299,7 +299,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Widget _buildDividerWithText(String text) {
     return Row(
-      children: [
+                    children: [
         Expanded(
           child: Divider(
             color: AppColors.white.withOpacity(0.6),
@@ -310,19 +310,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
           padding: EdgeInsets.symmetric(horizontal: 16),
           child: Text(
             text,
-            style: TextStyle(
+                        style: TextStyle(
               color: AppColors.white.withOpacity(0.9),
-              fontSize: 16,
-            ),
-          ),
-        ),
+                          fontSize: 16,
+                      ),
+                    ),
+                  ),
         Expanded(
           child: Divider(
             color: AppColors.white.withOpacity(0.6),
             thickness: 1,
-          ),
-        ),
-      ],
+                    ),
+                  ),
+                ],
     );
   }
 

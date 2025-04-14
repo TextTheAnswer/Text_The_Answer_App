@@ -18,6 +18,7 @@ class CustomTextField extends StatelessWidget {
   final TextCapitalization textCapitalization;
   final EdgeInsetsGeometry? contentPadding;
   final bool readOnly;
+  final int? maxLines;
 
   const CustomTextField({
     Key? key,
@@ -36,6 +37,7 @@ class CustomTextField extends StatelessWidget {
     this.textCapitalization = TextCapitalization.none,
     this.contentPadding,
     this.readOnly = false,
+    this.maxLines = 1,
   }) : super(key: key);
 
   @override
@@ -71,6 +73,7 @@ class CustomTextField extends StatelessWidget {
       onSubmitted: onSubmitted,
       textCapitalization: textCapitalization,
       readOnly: readOnly,
+      maxLines: obscureText ? 1 : maxLines,
       decoration: InputDecoration(
         contentPadding: contentPadding ?? EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         hintText: hintText,
