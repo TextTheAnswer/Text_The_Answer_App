@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:text_the_answer/config/colors.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
@@ -5,7 +7,7 @@ import 'package:text_the_answer/utils/font_utility.dart';
 class CustomTextField extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
-  final IconData prefixIcon;
+  final Icon? prefixIcon;
   final TextInputType keyboardType;
   final bool obscureText;
   final VoidCallback? toggleObscureText;
@@ -21,14 +23,14 @@ class CustomTextField extends StatelessWidget {
   final int? maxLines;
 
   const CustomTextField({
-    Key? key,
+    super.key,
     required this.controller,
     required this.hintText,
-    required this.prefixIcon,
+    this.prefixIcon,
     this.keyboardType = TextInputType.text,
     this.obscureText = false,
     this.toggleObscureText,
-    this.darkMode = true, // Default to light mode
+    this.darkMode = true,
     this.errorText,
     this.autoFocus = false,
     this.focusNode,
@@ -38,33 +40,23 @@ class CustomTextField extends StatelessWidget {
     this.contentPadding,
     this.readOnly = false,
     this.maxLines = 1,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     final Color textColor = darkMode ? AppColors.white : AppColors.darkGray;
-    final Color hintColor = darkMode 
-        ? Colors.white.withOpacity(0.7) 
-        : AppColors.darkGray.withOpacity(0.6);
-    final Color iconColor = darkMode 
-        ? Colors.white.withOpacity(0.9) 
-        : AppColors.darkGray.withOpacity(0.7);
-    final Color fillColor = darkMode 
-        ? Colors.white.withOpacity(0.1)
-        : AppColors.lightGray.withOpacity(0.1);
-    final Color borderColor = darkMode 
-        ? Colors.white.withOpacity(0.3)
-        : AppColors.darkGray.withOpacity(0.2);
-    final Color focusedBorderColor = darkMode 
-        ? Colors.white
-        : AppColors.primaryRed;
+    final Color hintColor =
+        darkMode
+            ? Colors.white.withOpacity(0.7)
+            : AppColors.darkGray.withOpacity(0.6);
+    final Color iconColor =
+        darkMode
+            ? Colors.white.withOpacity(0.9)
+            : AppColors.darkGray.withOpacity(0.7);
 
     return TextField(
       controller: controller,
-      style: FontUtility.interRegular(
-        fontSize: 16,
-        color: textColor,
-      ),
+      style: FontUtility.interRegular(fontSize: 20, color: textColor),
       keyboardType: keyboardType,
       obscureText: obscureText,
       autofocus: autoFocus,
@@ -75,53 +67,42 @@ class CustomTextField extends StatelessWidget {
       readOnly: readOnly,
       maxLines: obscureText ? 1 : maxLines,
       decoration: InputDecoration(
-        contentPadding: contentPadding ?? EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-        hintText: hintText,
-        hintStyle: FontUtility.interRegular(
-          fontSize: 16,
-          color: hintColor,
-        ),
+        contentPadding: contentPadding ?? EdgeInsets.symmetric(vertical: 8),
+        labelText: hintText,
+        labelStyle: FontUtility.interRegular(fontSize: 18, color: textColor),
+        hintStyle: FontUtility.interRegular(fontSize: 18, color: hintColor),
         errorText: errorText,
         errorStyle: FontUtility.interRegular(
           fontSize: 12,
-          color: Colors.red,
+          color: AppColors.error,
         ),
-        prefixIcon: Icon(
-          prefixIcon,
-          color: iconColor,
-        ),
-        suffixIcon: toggleObscureText != null
-            ? IconButton(
-                icon: Icon(
-                  obscureText ? Icons.visibility_off : Icons.visibility,
-                  color: iconColor,
-                ),
-                onPressed: toggleObscureText,
-              )
-            : null,
+        prefixIcon: prefixIcon,
+        suffixIcon:
+            toggleObscureText != null
+                ? IconButton(
+                  icon: Icon(
+                    obscureText ? Icons.visibility_off : Icons.visibility,
+                    color: iconColor,
+                  ),
+                  onPressed: toggleObscureText,
+                )
+                : null,
         filled: true,
-        fillColor: fillColor,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+        fillColor: Colors.transparent,
+        border: UnderlineInputBorder(),
+        enabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.white, width: 1.5),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: borderColor, width: 1),
+        focusedBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: AppColors.secondary, width: 1.5),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: focusedBorderColor, width: 1.5),
+        errorBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: AppColors.error, width: 1.5),
         ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.red, width: 1),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.red, width: 1.5),
+        focusedErrorBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: AppColors.error, width: 1.5),
         ),
       ),
     );
   }
-} 
+}
