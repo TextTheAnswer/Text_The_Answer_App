@@ -10,4 +10,8 @@ class AppColors {
   static const Color secondary = Colors.blue;
 
   static const Color error = Color(0xFFFFC107);
+
+  static const Color buttonPrimary = Colors.blue;
+  static const Color buttonSecondary = Color(0xFF35383F);
+  static const Color buttonTertiary = Color(0xFF1F222A);
 }
