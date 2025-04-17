@@ -2,16 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:text_the_answer/config/colors.dart' show AppColors;
 import 'package:text_the_answer/router/routes.dart';
-import 'package:text_the_answer/screens/auth/forgot_password_screen.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
+import 'package:text_the_answer/widgets/custom_3d_button.dart';
+import 'package:text_the_answer/widgets/custom_bottom_button_with_divider.dart';
 import 'package:text_the_answer/widgets/custom_button.dart';
 import 'package:text_the_answer/widgets/custom_text_field.dart';
-import 'package:text_the_answer/widgets/social_login_button.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_event.dart';
 import '../../blocs/auth/auth_state.dart';
-import '../home/home_screen.dart';
-import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final VoidCallback toggleTheme;
@@ -38,6 +36,9 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.primary,
+      bottomNavigationBar: CustomBottomButtonWithDivider(
+        child: _buildSignInButton(context),
+      ),
       body: SafeArea(
         child: BlocConsumer<AuthBloc, AuthState>(
           listener: (context, state) {
@@ -135,9 +136,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     _buildRememberMeAndForgotPassword(),
                     const SizedBox(height: 30),
 
-                    // Sign In Button
-                    _buildSignInButton(context),
-                    const SizedBox(height: 24),
+                    // // Sign In Button
+                    // _buildSignInButton(context),
+                    // const SizedBox(height: 24),
 
                     // Divider with "or" text
                     _buildDividerWithText('or'),
@@ -298,20 +299,45 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildSocialLoginButtons() {
     return Column(
       children: [
-        SocialLoginButton(
-          text: 'Continue with Google',
-          onPressed: () {
-            // Implement Google Sign-In
-          },
-          icon: Icons.g_mobiledata,
+        // -- Google Sign In Button
+        Custom3DButton(
+          backgroundColor: AppColors.buttonSecondary,
+          onPressed: () {},
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(Icons.g_mobiledata, color: Colors.white),
+              const SizedBox(width: 8),
+
+              Text(
+                'Continue with Google',
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 16),
-        SocialLoginButton(
-          text: 'Continue with Apple',
-          onPressed: () {
-            // Implement Apple Sign-In
-          },
-          icon: Icons.apple,
+
+        // -- Facebook Sign In Button
+        Custom3DButton(
+          backgroundColor: AppColors.buttonSecondary,
+          onPressed: () {},
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(Icons.apple, color: Colors.white),
+              const SizedBox(width: 8),
+
+              Text(
+                'Continue with Apple',
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
         ),
       ],
     );
