@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:text_the_answer/config/colors.dart' show AppColors;
 import 'package:text_the_answer/router/routes.dart';
+import 'package:text_the_answer/widgets/custom_3D_button.dart';
+import 'package:text_the_answer/widgets/custom_bottom_button_with_divider.dart';
 import 'package:text_the_answer/widgets/custom_button.dart';
 import 'package:text_the_answer/widgets/custom_text_field.dart';
-import 'package:text_the_answer/widgets/social_login_button.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_event.dart';
 import '../../blocs/auth/auth_state.dart';
@@ -39,6 +40,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.primary,
+      bottomNavigationBar: CustomBottomButtonWithDivider(
+        child: _buildSignUpButton(context),
+      ),
       body: SafeArea(
         child: BlocConsumer<AuthBloc, AuthState>(
           listener: (context, state) {
@@ -160,10 +164,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     // Remember Me Checkbox
                     _buildRememberMeCheckbox(),
                     const SizedBox(height: 30),
-
-                    // Sign Up Button
-                    _buildSignUpButton(context),
-                    const SizedBox(height: 24),
 
                     // Divider with "or" text
                     _buildDividerWithText('or'),
@@ -308,20 +308,45 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget _buildSocialLoginButtons() {
     return Column(
       children: [
-        SocialLoginButton(
-          text: 'Continue with Google',
-          onPressed: () {
-            // Implement Google Sign-In
-          },
-          icon: Icons.g_mobiledata,
+        // -- Google Sign in Button
+        Custom3DButton(
+          backgroundColor: AppColors.buttonSecondary,
+          onPressed: () {},
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(Icons.apple, color: Colors.white),
+              const SizedBox(width: 8),
+
+              Text(
+                'Continue with Google',
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 16),
-        SocialLoginButton(
-          text: 'Continue with Apple',
-          onPressed: () {
-            // Implement Apple Sign-In
-          },
-          icon: Icons.apple,
+
+        // -- Apple Sign In Button
+        Custom3DButton(
+          backgroundColor: AppColors.buttonSecondary,
+          onPressed: () {},
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(Icons.apple, color: Colors.white),
+              const SizedBox(width: 8),
+
+              Text(
+                'Continue with Apple',
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
         ),
       ],
     );
