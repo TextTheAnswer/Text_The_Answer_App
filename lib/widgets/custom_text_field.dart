@@ -21,6 +21,7 @@ class CustomTextField extends StatelessWidget {
   final EdgeInsetsGeometry? contentPadding;
   final bool readOnly;
   final int? maxLines;
+  final Color? iconColor;
 
   const CustomTextField({
     super.key,
@@ -40,6 +41,7 @@ class CustomTextField extends StatelessWidget {
     this.contentPadding,
     this.readOnly = false,
     this.maxLines = 1,
+    this.iconColor,
   });
 
   @override
@@ -49,10 +51,6 @@ class CustomTextField extends StatelessWidget {
         darkMode
             ? Colors.white.withOpacity(0.7)
             : AppColors.darkGray.withOpacity(0.6);
-    final Color iconColor =
-        darkMode
-            ? Colors.white.withOpacity(0.9)
-            : AppColors.darkGray.withOpacity(0.7);
 
     return TextField(
       controller: controller,
