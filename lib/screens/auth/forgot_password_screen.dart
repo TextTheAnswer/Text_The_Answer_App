@@ -135,7 +135,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 CustomTextField(
                   controller: _emailController,
                   hintText: 'Email',
-                  prefixIcon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                   darkMode: true,
                   errorText: _errorMessage,

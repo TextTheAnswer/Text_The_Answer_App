@@ -112,7 +112,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     CustomTextField(
                       controller: _emailController,
                       hintText: 'Email',
-                      prefixIcon: Icons.email_outlined,
                       keyboardType: TextInputType.emailAddress,
                       darkMode: true,
                     ),
@@ -122,7 +121,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     CustomTextField(
                       controller: _passwordController,
                       hintText: 'Password',
-                      prefixIcon: Icons.lock_outline,
                       obscureText: _obscurePassword,
                       toggleObscureText: () {
                         setState(() {

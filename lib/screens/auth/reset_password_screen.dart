@@ -162,7 +162,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 CustomTextField(
                   controller: _passwordController,
                   hintText: 'New Password',
-                  prefixIcon: Icons.lock_outline,
                   obscureText: _obscurePassword,
                   toggleObscureText: () {
                     setState(() {
@@ -179,7 +178,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 CustomTextField(
                   controller: _confirmPasswordController,
                   hintText: 'Confirm Password',
-                  prefixIcon: Icons.lock_outline,
                   obscureText: _obscureConfirmPassword,
                   toggleObscureText: () {
                     setState(() {
