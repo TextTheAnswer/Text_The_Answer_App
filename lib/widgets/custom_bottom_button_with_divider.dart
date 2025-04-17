@@ -35,3 +35,36 @@ class CustomBottomButtonWithDivider extends StatelessWidget {
     );
   }
 }
+
+class TestCustomBottomButtonWithDivider extends StatelessWidget {
+  const TestCustomBottomButtonWithDivider({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(
+            color: AppColors.white.withValues(alpha: 0.7),
+            width: 0.7,
+          ),
+        ),
+      ),
+      child: AnimatedPadding(
+        duration: const Duration(milliseconds: 30),
+        curve: Curves.easeOut,
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: 40 + bottomInset,
+        ),
+        child: child,
+      ),
+    );
+  }
+}
