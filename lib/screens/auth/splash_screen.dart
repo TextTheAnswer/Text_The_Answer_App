@@ -12,7 +12,11 @@ class SplashScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     if (toggleTheme != null) {
       Future.delayed(const Duration(seconds: 5), () {
-        Navigator.pushReplacementNamed(context, Routes.onboard);
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          Routes.onboard,
+          (route) => false,
+        );
       });
     }
 
