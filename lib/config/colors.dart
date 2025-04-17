@@ -9,5 +9,5 @@ class AppColors {
 
   static const Color secondary = Colors.blue;
 
-  static const Color error = Color.fromARGB(255, 245, 172, 172);
+  static const Color error = Color(0xFFFFC107);
 }
