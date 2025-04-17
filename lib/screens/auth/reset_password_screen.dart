@@ -9,9 +9,9 @@ import 'package:text_the_answer/widgets/custom_text_field.dart';
 class ResetPasswordScreen extends StatefulWidget {
   final String email;
   final String resetToken;
-  
+
   const ResetPasswordScreen({
-    Key? key, 
+    Key? key,
     required this.email,
     required this.resetToken,
   }) : super(key: key);
@@ -39,7 +39,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   // Handle reset password submission
   Future<void> _resetPassword() async {
     // Basic validation
-    if (_passwordController.text.isEmpty || _confirmPasswordController.text.isEmpty) {
+    if (_passwordController.text.isEmpty ||
+        _confirmPasswordController.text.isEmpty) {
       setState(() {
         _errorMessage = 'Please enter and confirm your new password';
       });
@@ -74,10 +75,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         newPassword: _passwordController.text,
         confirmPassword: _confirmPasswordController.text,
       );
-      
+
       // Show success message and navigate to login screen
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(response['message'] ?? 'Password reset successful'),
@@ -154,7 +155,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   ),
                 ),
                 const SizedBox(height: 40),
-                
+
                 // New Password Field
                 CustomTextField(
                   controller: _passwordController,
@@ -170,7 +171,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   onChanged: (_) => setState(() => _errorMessage = null),
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Confirm Password Field
                 CustomTextField(
                   controller: _confirmPasswordController,
@@ -183,9 +184,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   },
                   darkMode: true,
                 ),
-                
+
                 const SizedBox(height: 40),
-                
+
                 // Reset Password Button
                 CustomButton(
                   text: 'RESET PASSWORD',
@@ -201,4 +202,4 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       ),
     );
   }
-} 
+}

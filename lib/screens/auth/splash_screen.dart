@@ -48,20 +48,17 @@ class SplashScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: Image.asset('assets/images/splash_page.png',
-                height: 120,
-                width: 120,
+                child: Image.asset(
+                  'assets/images/splash_page.png',
+                  height: 120,
+                  width: 120,
                 ),
               ),
               const SizedBox(height: 90),
               Padding(
                 padding: EdgeInsets.only(top: 30),
-                child: SpinKitFadingCube(
-                color: Colors.white,
-                size: 50.0,
+                child: SpinKitFadingCube(color: Colors.white, size: 50.0),
               ),
-              )
-              
             ],
           ),
         ),

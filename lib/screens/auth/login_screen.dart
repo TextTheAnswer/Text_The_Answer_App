@@ -42,19 +42,18 @@ class _LoginScreenState extends State<LoginScreen> {
         child: BlocConsumer<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is AuthAuthenticated) {
-              Navigator.pushReplacementNamed(
-                context,
-                Routes.home,
-              );
+              Navigator.pushReplacementNamed(context, Routes.home);
             } else if (state is AuthError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.message)));
             }
           },
           builder: (context, state) {
             if (state is AuthLoading) {
-              return const Center(child: CircularProgressIndicator(color: Colors.white));
+              return const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              );
             }
             return Container(
               decoration: BoxDecoration(
@@ -71,29 +70,33 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 80),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 80,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                           Image.asset('assets/images/splash_page.png',
-                    height: 60,
-                    width: 60,
+                        Image.asset(
+                          'assets/images/splash_page.png',
+                          height: 60,
+                          width: 60,
+                        ),
+                        SizedBox(width: 20),
+                        // Header
+                        Text(
+                          'Hello there 👋',
+                          style: FontUtility.montserratBold(
+                            fontSize: 28,
+                            color: AppColors.white,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(width: 20,),
-                    // Header
-                    Text(
-                      'Hello there 👋',
-                      style: FontUtility.montserratBold(
-                        fontSize: 28,
-                        color: AppColors.white,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                      ]
-                    ),
-                   
+
                     const SizedBox(height: 12),
                     // Subheader
                     Text(
@@ -104,7 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 35),
-                    
+
                     // Email Field
                     CustomTextField(
                       controller: _emailController,
@@ -113,7 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       darkMode: true,
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Password Field
                     CustomTextField(
                       controller: _passwordController,
@@ -127,41 +130,35 @@ class _LoginScreenState extends State<LoginScreen> {
                       darkMode: true,
                     ),
                     const SizedBox(height: 20),
-                    
+
                     // Remember Me & Forgot Password
                     _buildRememberMeAndForgotPassword(),
                     const SizedBox(height: 30),
-                    
+
                     // Sign In Button
                     _buildSignInButton(context),
                     const SizedBox(height: 24),
-                    
+
                     // Divider with "or" text
                     _buildDividerWithText('or'),
                     const SizedBox(height: 24),
-                    
+
                     // Social Login Buttons
                     _buildSocialLoginButtons(),
                     const SizedBox(height: 30),
-                    
+
                     // Sign Up Link
                     Center(
                       child: TextButton(
                         onPressed: () {
-                          Navigator.pushNamed(
-                            context,
-                            Routes.signup,
-                          );
+                          Navigator.pushNamed(context, Routes.signup);
                         },
                         style: TextButton.styleFrom(
                           foregroundColor: Colors.white,
                         ),
                         child: RichText(
                           text: TextSpan(
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 15,
-                            ),
+                            style: TextStyle(color: Colors.white, fontSize: 15),
                             children: [
                               TextSpan(text: "Don't have an account? "),
                               TextSpan(
@@ -224,17 +221,11 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         TextButton(
           onPressed: () {
-            Navigator.pushNamed(
-              context,
-              Routes.forgotPassword,
-            );
+            Navigator.pushNamed(context, Routes.forgotPassword);
           },
           child: Text(
             'Forgot Password?',
-            style: FontUtility.interMedium(
-              fontSize: 15,
-              color: Colors.white,
-            ),
+            style: FontUtility.interMedium(fontSize: 15, color: Colors.white),
           ),
         ),
       ],
@@ -251,13 +242,14 @@ class _LoginScreenState extends State<LoginScreen> {
           isLoading: state is AuthLoading,
           onPressed: () {
             // Basic validation
-            if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+            if (_emailController.text.isEmpty ||
+                _passwordController.text.isEmpty) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('Please enter both email and password')),
               );
               return;
             }
-            
+
             // Email format validation
             final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
             if (!emailRegex.hasMatch(_emailController.text)) {
@@ -266,17 +258,17 @@ class _LoginScreenState extends State<LoginScreen> {
               );
               return;
             }
-            
+
             // Trigger sign in event
             context.read<AuthBloc>().add(
-                  SignInEvent(
-                    email: _emailController.text.trim(),
-                    password: _passwordController.text,
-                  ),
-                );
+              SignInEvent(
+                email: _emailController.text.trim(),
+                password: _passwordController.text,
+              ),
+            );
           },
         );
-      }
+      },
     );
   }
 
@@ -284,10 +276,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Row(
       children: [
         Expanded(
-          child: Divider(
-            color: AppColors.white.withOpacity(0.6),
-            thickness: 1,
-          ),
+          child: Divider(color: AppColors.white.withOpacity(0.6), thickness: 1),
         ),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 16),
@@ -300,10 +289,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         Expanded(
-          child: Divider(
-            color: AppColors.white.withOpacity(0.6),
-            thickness: 1,
-          ),
+          child: Divider(color: AppColors.white.withOpacity(0.6), thickness: 1),
         ),
       ],
     );

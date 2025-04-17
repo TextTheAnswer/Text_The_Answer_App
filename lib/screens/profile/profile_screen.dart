@@ -43,7 +43,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       final isAuth = await _profileService.isAuthenticated();
-      
+
       if (isAuth) {
         // User is authenticated, fetch profile
         await _fetchUserProfile();
@@ -68,7 +68,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _isLoading = false;
         if (response.success && response.profile != null) {
           _userProfile = response.profile;
-        } else if (response.message?.toLowerCase().contains('no profile') ?? false) {
+        } else if (response.message?.toLowerCase().contains('no profile') ??
+            false) {
           // User is authenticated but doesn't have a profile yet
           _userProfile = null;
           _errorMessage = null; // Clear any error message
@@ -124,7 +125,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           icon: Icons.refresh,
                         ),
                         SizedBox(height: 12.h),
-                        if (_errorMessage!.toLowerCase().contains('auth') || 
+                        if (_errorMessage!.toLowerCase().contains('auth') ||
                             _errorMessage!.toLowerCase().contains('login') ||
                             _errorMessage!.toLowerCase().contains('token'))
                           CustomButton(
@@ -170,20 +171,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             SizedBox(height: 20.h),
             // Profile Header
-            Text(
-              'Profile 👤',
-              style: theme.textTheme.headlineLarge,
-            ),
+            Text('Profile 👤', style: theme.textTheme.headlineLarge),
             SizedBox(height: 24.h),
-            
+
             // Profile Card
             _buildProfileCard(profile),
             SizedBox(height: 24.h),
-            
+
             // Stats Card
             _buildStatsCard(profile.stats),
             SizedBox(height: 24.h),
-            
+
             // Buttons
             _buildActionButtons(),
             SizedBox(height: 24.h),
@@ -196,9 +194,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildProfileCard(UserProfileFull profile) {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(
@@ -208,7 +204,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 // Profile Image
                 _buildProfileImage(profile.profile.imageUrl),
                 SizedBox(width: 16.w),
-                
+
                 // User Info
                 Expanded(
                   child: Column(
@@ -216,9 +212,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       Text(
                         profile.name,
-                        style: FontUtility.montserratBold(
-                          fontSize: 20,
-                        ),
+                        style: FontUtility.montserratBold(fontSize: 20),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -233,17 +227,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       SizedBox(height: 8.h),
-                      if (profile.profile.location != null && profile.profile.location!.isNotEmpty)
+                      if (profile.profile.location != null &&
+                          profile.profile.location!.isNotEmpty)
                         Row(
                           children: [
-                            Icon(Icons.location_on_outlined, size: 16.sp, color: Colors.grey),
+                            Icon(
+                              Icons.location_on_outlined,
+                              size: 16.sp,
+                              color: Colors.grey,
+                            ),
                             SizedBox(width: 4.w),
                             Expanded(
                               child: Text(
                                 profile.profile.location!,
-                                style: FontUtility.interRegular(
-                                  fontSize: 14,
-                                ),
+                                style: FontUtility.interRegular(fontSize: 14),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -255,13 +252,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ],
             ),
-            
+
             // Subscription Badge
-            if (profile.isPremium) 
+            if (profile.isPremium)
               Padding(
                 padding: EdgeInsets.only(top: 16.h),
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 8.h,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.amber.shade100,
                     borderRadius: BorderRadius.circular(20.r),
@@ -270,7 +270,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.star, color: Colors.amber.shade700, size: 18.sp),
+                      Icon(
+                        Icons.star,
+                        color: Colors.amber.shade700,
+                        size: 18.sp,
+                      ),
                       SizedBox(width: 8.w),
                       Text(
                         'Premium Member',
@@ -283,7 +287,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
               ),
-            
+
             // Bio
             if (profile.profile.bio != null && profile.profile.bio!.isNotEmpty)
               Padding(
@@ -311,7 +315,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildProfileImage(String? imageUrl) {
     const double imageSize = 80;
-    
+
     if (imageUrl != null && imageUrl.isNotEmpty) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(40.r),
@@ -320,22 +324,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
           width: imageSize.w,
           height: imageSize.w,
           fit: BoxFit.cover,
-          placeholder: (context, url) => Container(
-            width: imageSize.w,
-            height: imageSize.w,
-            color: Colors.grey.shade300,
-            child: Center(child: CircularProgressIndicator()),
-          ),
-          errorWidget: (context, url, error) => Container(
-            width: imageSize.w,
-            height: imageSize.w,
-            color: Colors.grey.shade300,
-            child: Icon(Icons.person, size: 40.sp),
-          ),
+          placeholder:
+              (context, url) => Container(
+                width: imageSize.w,
+                height: imageSize.w,
+                color: Colors.grey.shade300,
+                child: Center(child: CircularProgressIndicator()),
+              ),
+          errorWidget:
+              (context, url, error) => Container(
+                width: imageSize.w,
+                height: imageSize.w,
+                color: Colors.grey.shade300,
+                child: Icon(Icons.person, size: 40.sp),
+              ),
         ),
       );
     }
-    
+
     return Container(
       width: imageSize.w,
       height: imageSize.w,
@@ -353,20 +359,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildStatsCard(UserStats stats) {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Your Stats',
-              style: FontUtility.montserratBold(fontSize: 18),
-            ),
+            Text('Your Stats', style: FontUtility.montserratBold(fontSize: 18)),
             SizedBox(height: 16.h),
-            
+
             // Stats Grid
             Row(
               children: [
@@ -390,7 +391,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ],
             ),
-            
+
             // Last Played
             if (stats.lastPlayed != null)
               Padding(
@@ -433,17 +434,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Icon(icon, color: iconColor, size: 24.sp),
           ),
           SizedBox(height: 8.h),
-          Text(
-            value,
-            style: FontUtility.montserratBold(fontSize: 16),
-          ),
+          Text(value, style: FontUtility.montserratBold(fontSize: 16)),
           SizedBox(height: 4.h),
           Text(
             label,
-            style: FontUtility.interRegular(
-              fontSize: 12,
-              color: Colors.grey,
-            ),
+            style: FontUtility.interRegular(fontSize: 12, color: Colors.grey),
           ),
         ],
       ),
@@ -460,7 +455,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => EditProfileScreen(toggleTheme: widget.toggleTheme),
+                builder:
+                    (_) => EditProfileScreen(toggleTheme: widget.toggleTheme),
               ),
             );
           },
@@ -474,7 +470,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => GameHistoryScreen(toggleTheme: widget.toggleTheme),
+                builder:
+                    (_) => GameHistoryScreen(toggleTheme: widget.toggleTheme),
               ),
             );
           },
@@ -488,7 +485,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => StreakProgressScreen(toggleTheme: widget.toggleTheme),
+                builder:
+                    (_) =>
+                        StreakProgressScreen(toggleTheme: widget.toggleTheme),
               ),
             );
           },
@@ -524,10 +523,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SizedBox(height: 8.h),
           Text(
             'Sign in to access your profile, track your progress, and unlock premium features',
-            style: FontUtility.interRegular(
-              fontSize: 14,
-              color: Colors.grey,
-            ),
+            style: FontUtility.interRegular(fontSize: 14, color: Colors.grey),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 24.h),
@@ -567,10 +563,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               duration: const Duration(seconds: 2),
               curve: Curves.elasticOut,
               builder: (context, value, child) {
-                return Transform.scale(
-                  scale: value,
-                  child: child,
-                );
+                return Transform.scale(scale: value, child: child);
               },
               child: Icon(
                 Icons.person_add_alt_rounded,
@@ -581,9 +574,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SizedBox(height: 24.h),
             Text(
               'Complete Your Profile',
-              style: FontUtility.montserratBold(
-                fontSize: 22,
-              ),
+              style: FontUtility.montserratBold(fontSize: 22),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 16.h),

@@ -28,10 +28,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       'title': 'Play and take quiz challenges together with your friends',
       'image': 'assets/images/onboard3.png',
     },
-    {
-      'title': 'Text The Answer',
-      'image': 'assets/images/onboard3.png',
-    },
+    {'title': 'Text The Answer', 'image': 'assets/images/onboard3.png'},
     {
       'title': 'Spell it correctly in the fastest time',
       'image': 'assets/images/onboard3.png',
@@ -39,7 +36,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     {
       'title': 'Spelling and speed is everything',
       'image': 'assets/images/onboard3.png',
-    }
+    },
   ];
 
   @override
@@ -109,9 +106,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     height: 8,
                     width: _currentPage == index ? 24 : 8,
                     decoration: BoxDecoration(
-                      color: _currentPage == index
-                          ? Colors.white
-                          : Colors.white.withOpacity(0.5),
+                      color:
+                          _currentPage == index
+                              ? Colors.white
+                              : Colors.white.withOpacity(0.5),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -138,7 +136,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         child: ElevatedButton(
                           onPressed: () {
                             if (_currentPage == onboardingData.length - 1) {
-                              Navigator.pushReplacementNamed(context, Routes.signup);
+                              Navigator.pushReplacementNamed(
+                                context,
+                                Routes.signup,
+                              );
                             } else {
                               _pageController.nextPage(
                                 duration: const Duration(milliseconds: 300),

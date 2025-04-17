@@ -10,7 +10,7 @@ class AppTheme {
 
   static TextTheme _getTextTheme(bool isDark) {
     final Color textColor = isDark ? AppColors.white : AppColors.darkGray;
-    
+
     return TextTheme(
       displayLarge: GoogleFonts.montserrat(
         fontSize: FontConfig.displayLarge.sp,
@@ -95,7 +95,7 @@ class AppTheme {
 
   static ThemeData lightTheme() {
     final textTheme = _getTextTheme(false);
-    
+
     return ThemeData(
       brightness: Brightness.light,
       primaryColor: AppColors.primary,
@@ -110,7 +110,9 @@ class AppTheme {
             fontSize: 16.sp,
             letterSpacing: 1.2,
           ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
           padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 24.w),
         ),
       ),
@@ -121,7 +123,9 @@ class AppTheme {
             fontWeight: FontWeight.w500,
             fontSize: 16.sp,
           ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
           padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 24.w),
         ),
       ),
@@ -151,7 +155,10 @@ class AppTheme {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          borderSide: BorderSide(color: AppColors.darkGray.withOpacity(0.2), width: 1),
+          borderSide: BorderSide(
+            color: AppColors.darkGray.withOpacity(0.2),
+            width: 1,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
@@ -163,7 +170,7 @@ class AppTheme {
 
   static ThemeData darkTheme() {
     final textTheme = _getTextTheme(true);
-    
+
     return ThemeData(
       brightness: Brightness.dark,
       primaryColor: AppColors.primary,
@@ -178,7 +185,9 @@ class AppTheme {
             fontSize: 16.sp,
             letterSpacing: 1.2,
           ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
           padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 24.w),
         ),
       ),
@@ -189,7 +198,9 @@ class AppTheme {
             fontWeight: FontWeight.w500,
             fontSize: 16.sp,
           ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
           padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 24.w),
         ),
       ),
@@ -208,10 +219,7 @@ class AppTheme {
           color: AppColors.white.withOpacity(0.6),
           fontSize: 16.sp,
         ),
-        labelStyle: GoogleFonts.inter(
-          color: AppColors.white,
-          fontSize: 16.sp,
-        ),
+        labelStyle: GoogleFonts.inter(color: AppColors.white, fontSize: 16.sp),
         contentPadding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 16.w),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
@@ -219,7 +227,10 @@ class AppTheme {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          borderSide: BorderSide(color: AppColors.white.withOpacity(0.3), width: 1),
+          borderSide: BorderSide(
+            color: AppColors.white.withOpacity(0.3),
+            width: 1,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),

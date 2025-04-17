@@ -4,15 +4,15 @@ import 'package:text_the_answer/config/colors.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
 
 enum CustomButtonType {
-  primary,  // Blue in auth screens
+  primary, // Blue in auth screens
   secondary, // Red background
-  outline,   // Outlined buttons like social login
+  outline, // Outlined buttons like social login
 }
 
 enum CustomButtonSize {
-  small,   // For smaller actions
-  medium,  // Default
-  large,   // Prominent actions
+  small, // For smaller actions
+  medium, // Default
+  large, // Prominent actions
 }
 
 class CustomButton extends StatelessWidget {
@@ -31,7 +31,7 @@ class CustomButton extends StatelessWidget {
   final Color? borderColor;
 
   const CustomButton({
-    Key? key,
+    super.key,
     required this.text,
     required this.onPressed,
     this.buttonType = CustomButtonType.primary,
@@ -40,12 +40,12 @@ class CustomButton extends StatelessWidget {
     this.icon,
     this.fullWidth = true,
     this.padding,
-    this.darkMode = true,  // Default to dark mode
+    this.darkMode = true, // Default to dark mode
     this.textStyle,
     this.bgColor,
     this.textColor,
     this.borderColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +64,8 @@ class CustomButton extends StatelessWidget {
     }
 
     // Determine button padding
-    EdgeInsetsGeometry buttonPadding = padding ?? 
+    EdgeInsetsGeometry buttonPadding =
+        padding ??
         EdgeInsets.symmetric(
           horizontal: buttonSize == CustomButtonSize.small ? 16.w : 24.w,
           vertical: buttonSize == CustomButtonSize.small ? 8.h : 12.h,
@@ -81,32 +82,42 @@ class CustomButton extends StatelessWidget {
         backgroundColor = bgColor ?? Colors.blue;
         foregroundTextColor = textColor ?? Colors.white;
         buttonBorderColor = borderColor ?? Colors.transparent;
-        border = borderColor != null ? Border.all(color: buttonBorderColor, width: 1) : null;
+        border =
+            borderColor != null
+                ? Border.all(color: buttonBorderColor, width: 1)
+                : null;
         break;
       case CustomButtonType.secondary:
         backgroundColor = bgColor ?? AppColors.primary;
         foregroundTextColor = textColor ?? Colors.white;
         buttonBorderColor = borderColor ?? Colors.transparent;
-        border = borderColor != null ? Border.all(color: buttonBorderColor, width: 1) : null;
+        border =
+            borderColor != null
+                ? Border.all(color: buttonBorderColor, width: 1)
+                : null;
         break;
       case CustomButtonType.outline:
         backgroundColor = Colors.transparent;
-        foregroundTextColor = textColor ?? (darkMode ? Colors.white : AppColors.darkGray);
-        buttonBorderColor = borderColor ?? (darkMode ? Colors.white : AppColors.darkGray);
+        foregroundTextColor =
+            textColor ?? (darkMode ? Colors.white : AppColors.darkGray);
+        buttonBorderColor =
+            borderColor ?? (darkMode ? Colors.white : AppColors.darkGray);
         border = Border.all(color: buttonBorderColor, width: 1);
         break;
     }
 
     // Determine text style
-    TextStyle buttonTextStyle = textStyle ?? FontUtility.montserratBold(
-      fontSize: 16,
-      color: foregroundTextColor,
-      letterSpacing: 1.2,
-    );
+    TextStyle buttonTextStyle =
+        textStyle ??
+        FontUtility.montserratBold(
+          fontSize: 16,
+          color: foregroundTextColor,
+          letterSpacing: 1.2,
+        );
 
     // Create the button widget
     Widget buttonWidget;
-    
+
     if (buttonType == CustomButtonType.outline) {
       // Create outlined button
       buttonWidget = OutlinedButton(
@@ -144,15 +155,16 @@ class CustomButton extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12.r),
         border: border,
-        boxShadow: buttonType != CustomButtonType.outline
-            ? [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 8.r,
-                  offset: Offset(0, 4.h),
-                ),
-              ]
-            : null,
+        boxShadow:
+            buttonType != CustomButtonType.outline
+                ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 8.r,
+                    offset: Offset(0, 4.h),
+                  ),
+                ]
+                : null,
       ),
       child: buttonWidget,
     );
@@ -186,4 +198,4 @@ class CustomButton extends StatelessWidget {
       return Text(text, style: textStyle);
     }
   }
-} 
+}
