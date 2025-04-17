@@ -98,12 +98,12 @@ class AppTheme {
     
     return ThemeData(
       brightness: Brightness.light,
-      primaryColor: AppColors.primaryRed,
+      primaryColor: AppColors.primary,
       scaffoldBackgroundColor: AppColors.white,
       textTheme: textTheme,
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryRed,
+          backgroundColor: AppColors.primary,
           foregroundColor: AppColors.white,
           textStyle: GoogleFonts.montserrat(
             fontWeight: FontWeight.bold,
@@ -127,7 +127,7 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.primaryRed,
+          foregroundColor: AppColors.primary,
           textStyle: GoogleFonts.inter(
             fontWeight: FontWeight.w500,
             fontSize: 15.sp,
@@ -155,7 +155,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          borderSide: BorderSide(color: AppColors.primaryRed, width: 1.5),
+          borderSide: BorderSide(color: AppColors.primary, width: 1.5),
         ),
       ),
     );
@@ -166,12 +166,12 @@ class AppTheme {
     
     return ThemeData(
       brightness: Brightness.dark,
-      primaryColor: AppColors.primaryRed,
+      primaryColor: AppColors.primary,
       scaffoldBackgroundColor: AppColors.darkGray,
       textTheme: textTheme,
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryRed,
+          backgroundColor: AppColors.primary,
           foregroundColor: AppColors.white,
           textStyle: GoogleFonts.montserrat(
             fontWeight: FontWeight.bold,

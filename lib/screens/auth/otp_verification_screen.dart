@@ -7,11 +7,8 @@ import 'package:text_the_answer/widgets/custom_button.dart';
 
 class OTPVerificationScreen extends StatefulWidget {
   final String email;
-  
-  const OTPVerificationScreen({
-    Key? key, 
-    required this.email,
-  }) : super(key: key);
+
+  const OTPVerificationScreen({super.key, required this.email});
 
   @override
   State<OTPVerificationScreen> createState() => _OTPVerificationScreenState();
@@ -19,14 +16,11 @@ class OTPVerificationScreen extends StatefulWidget {
 
 class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
   final List<TextEditingController> _otpControllers = List.generate(
-    6, 
-    (index) => TextEditingController()
+    6,
+    (index) => TextEditingController(),
   );
-  final List<FocusNode> _focusNodes = List.generate(
-    6, 
-    (index) => FocusNode()
-  );
-  
+  final List<FocusNode> _focusNodes = List.generate(6, (index) => FocusNode());
+
   bool _isLoading = false;
   String? _errorMessage;
   final _apiService = ApiService();
@@ -63,11 +57,14 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     });
 
     try {
-      final response = await _apiService.verifyPasswordResetOTP(widget.email, _otpCode);
-      
+      final response = await _apiService.verifyPasswordResetOTP(
+        widget.email,
+        _otpCode,
+      );
+
       // Navigate to reset password screen
       if (!mounted) return;
-      
+
       Navigator.pushNamed(
         context,
         Routes.resetPassword,
@@ -108,7 +105,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primaryRed,
+      backgroundColor: AppColors.primary,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -124,10 +121,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               stops: [0.0, 1.0],
-              colors: [
-                AppColors.primaryRed,
-                AppColors.primaryRed,
-              ],
+              colors: [AppColors.primary, AppColors.primary],
             ),
             image: DecorationImage(
               image: AssetImage('assets/images/auth_bg_pattern.png'),
@@ -157,17 +151,14 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                   ),
                 ),
                 const SizedBox(height: 40),
-                
+
                 // OTP Input Fields
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(
-                    6,
-                    (index) => _buildOTPField(index),
-                  ),
+                  children: List.generate(6, (index) => _buildOTPField(index)),
                 ),
-                
-                if (_errorMessage != null) 
+
+                if (_errorMessage != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 16),
                     child: Text(
@@ -178,9 +169,9 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                       ),
                     ),
                   ),
-                
+
                 const SizedBox(height: 40),
-                
+
                 // Verify Button
                 CustomButton(
                   text: 'VERIFY',
@@ -189,9 +180,9 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                   isLoading: _isLoading,
                   onPressed: _verifyOTP,
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Resend Code
                 Center(
                   child: TextButton(
@@ -226,19 +217,13 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.3),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
       ),
       child: TextField(
         controller: _otpControllers[index],
         focusNode: _focusNodes[index],
         onChanged: (value) => _onChanged(value, index),
-        style: FontUtility.interBold(
-          fontSize: 20,
-          color: Colors.white,
-        ),
+        style: FontUtility.interBold(fontSize: 20, color: Colors.white),
         keyboardType: TextInputType.number,
         textAlign: TextAlign.center,
         maxLength: 1,
@@ -250,4 +235,4 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       ),
     );
   }
-} 
+}

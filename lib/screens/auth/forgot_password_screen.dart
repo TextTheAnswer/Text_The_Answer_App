@@ -3,6 +3,7 @@ import 'package:text_the_answer/config/colors.dart' show AppColors;
 import 'package:text_the_answer/router/routes.dart';
 import 'package:text_the_answer/services/api_service.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
+import 'package:text_the_answer/widgets/custom_bottom_button_with_divider.dart';
 import 'package:text_the_answer/widgets/custom_button.dart';
 import 'package:text_the_answer/widgets/custom_text_field.dart';
 
@@ -18,7 +19,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   bool _isLoading = false;
   final _apiService = ApiService();
   String? _errorMessage;
-  
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -50,20 +51,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     });
 
     try {
-      final response = await _apiService.requestPasswordReset(_emailController.text.trim());
-      
+      final response = await _apiService.requestPasswordReset(
+        _emailController.text.trim(),
+      );
+
       // Navigate to OTP verification screen
       if (!mounted) return;
-      
+
       Navigator.pushNamed(
         context,
         Routes.otpVerification,
         arguments: {'email': _emailController.text.trim()},
       );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(response['message'])),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(response['message'])));
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -81,13 +84,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primaryRed,
+      backgroundColor: AppColors.primary,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
+      bottomNavigationBar: CustomBottomButtonWithDivider(
+        child: CustomButton(
+          text: 'Continue',
+          buttonType: CustomButtonType.primary,
+          buttonSize: CustomButtonSize.large,
+          isLoading: _isLoading,
+          onPressed: _requestPasswordReset,
         ),
       ),
       body: SafeArea(
@@ -97,10 +109,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               stops: [0.0, 1.0],
-              colors: [
-                AppColors.primaryRed,
-                AppColors.primaryRed,
-              ],
+              colors: [AppColors.primary, AppColors.primary],
             ),
             image: DecorationImage(
               image: AssetImage('assets/images/auth_bg_pattern.png'),
@@ -130,26 +139,27 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                 ),
                 const SizedBox(height: 40),
-                
+
                 // Email Field
                 CustomTextField(
                   controller: _emailController,
                   hintText: 'Email',
                   keyboardType: TextInputType.emailAddress,
                   darkMode: true,
+
                   errorText: _errorMessage,
                   onChanged: (_) => setState(() => _errorMessage = null),
                 ),
                 const SizedBox(height: 30),
-                
-                // Continue Button
-                CustomButton(
-                  text: 'CONTINUE',
-                  buttonType: CustomButtonType.primary,
-                  buttonSize: CustomButtonSize.large,
-                  isLoading: _isLoading,
-                  onPressed: _requestPasswordReset,
-                ),
+
+                // // Continue Button
+                // CustomButton(
+                //   text: 'CONTINUE',
+                //   buttonType: CustomButtonType.primary,
+                //   buttonSize: CustomButtonSize.large,
+                //   isLoading: _isLoading,
+                //   onPressed: _requestPasswordReset,
+                // ),
               ],
             ),
           ),

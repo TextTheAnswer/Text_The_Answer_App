@@ -120,7 +120,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         CustomButton(
                           text: 'Retry',
                           onPressed: _checkAuthAndFetchProfile,
-                          bgColor: AppColors.primaryRed,
+                          bgColor: AppColors.primary,
                           icon: Icons.refresh,
                         ),
                         SizedBox(height: 12.h),
@@ -133,8 +133,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Navigator.pushNamed(context, Routes.login);
                             },
                             buttonType: CustomButtonType.outline,
-                            borderColor: AppColors.primaryRed,
-                            textColor: AppColors.primaryRed,
+                            borderColor: AppColors.primary,
+                            textColor: AppColors.primary,
                             icon: Icons.login,
                           ),
                       ],
@@ -340,12 +340,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       width: imageSize.w,
       height: imageSize.w,
       decoration: BoxDecoration(
-        color: AppColors.primaryRed.withOpacity(0.1),
+        color: AppColors.primary.withOpacity(0.1),
         shape: BoxShape.circle,
-        border: Border.all(color: AppColors.primaryRed.withOpacity(0.3)),
+        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
       ),
       child: Center(
-        child: Icon(Icons.person, size: 40.sp, color: AppColors.primaryRed),
+        child: Icon(Icons.person, size: 40.sp, color: AppColors.primary),
       ),
     );
   }
@@ -464,7 +464,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             );
           },
-          bgColor: AppColors.primaryRed,
+          bgColor: AppColors.primary,
           icon: Icons.edit,
         ),
         SizedBox(height: 12.h),
@@ -515,11 +515,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.account_circle,
-            size: 80.sp,
-            color: AppColors.primaryRed,
-          ),
+          Icon(Icons.account_circle, size: 80.sp, color: AppColors.primary),
           SizedBox(height: 16.h),
           Text(
             'You are not logged in',
@@ -540,7 +536,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () {
               Navigator.pushNamed(context, Routes.login);
             },
-            bgColor: AppColors.primaryRed,
+            bgColor: AppColors.primary,
             icon: Icons.login,
           ),
           SizedBox(height: 12.h),
@@ -550,8 +546,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Navigator.pushNamed(context, Routes.signup);
             },
             buttonType: CustomButtonType.outline,
-            borderColor: AppColors.primaryRed,
-            textColor: AppColors.primaryRed,
+            borderColor: AppColors.primary,
+            textColor: AppColors.primary,
             icon: Icons.person_add,
           ),
         ],
@@ -579,7 +575,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Icon(
                 Icons.person_add_alt_rounded,
                 size: 80.sp,
-                color: AppColors.primaryRed,
+                color: AppColors.primary,
               ),
             ),
             SizedBox(height: 24.h),
@@ -605,7 +601,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               onPressed: () {
                 Navigator.pushNamed(context, Routes.profileCreate);
               },
-              bgColor: AppColors.primaryRed,
+              bgColor: AppColors.primary,
               icon: Icons.create_rounded,
               buttonSize: CustomButtonSize.large,
             ),

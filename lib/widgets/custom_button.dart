@@ -84,7 +84,7 @@ class CustomButton extends StatelessWidget {
         border = borderColor != null ? Border.all(color: buttonBorderColor, width: 1) : null;
         break;
       case CustomButtonType.secondary:
-        backgroundColor = bgColor ?? AppColors.primaryRed;
+        backgroundColor = bgColor ?? AppColors.primary;
         foregroundTextColor = textColor ?? Colors.white;
         buttonBorderColor = borderColor ?? Colors.transparent;
         border = borderColor != null ? Border.all(color: buttonBorderColor, width: 1) : null;

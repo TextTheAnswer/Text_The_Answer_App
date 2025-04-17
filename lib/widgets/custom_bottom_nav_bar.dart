@@ -8,19 +8,20 @@ class CustomBottomNavBar extends StatelessWidget {
   final Function(int) onTap;
 
   const CustomBottomNavBar({
-    Key? key,
+    super.key,
     required this.currentIndex,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 80.h,
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark 
-            ? AppColors.darkGray 
-            : Colors.white,
+        color:
+            Theme.of(context).brightness == Brightness.dark
+                ? AppColors.darkGray
+                : Colors.white,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -46,12 +47,18 @@ class CustomBottomNavBar extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon, String label, BuildContext context) {
+  Widget _buildNavItem(
+    int index,
+    IconData icon,
+    String label,
+    BuildContext context,
+  ) {
     final bool isSelected = currentIndex == index;
-    final Color selectedColor = AppColors.primaryRed;
-    final Color unselectedColor = Theme.of(context).brightness == Brightness.dark 
-        ? Colors.white.withOpacity(0.7) 
-        : Colors.black.withOpacity(0.5);
+    final Color selectedColor = AppColors.primary;
+    final Color unselectedColor =
+        Theme.of(context).brightness == Brightness.dark
+            ? Colors.white.withOpacity(0.7)
+            : Colors.black.withOpacity(0.5);
 
     return InkWell(
       onTap: () => onTap(index),
@@ -82,24 +89,23 @@ class CustomBottomNavBar extends StatelessWidget {
 
   Widget _buildJoinButton(int index, BuildContext context) {
     final bool isSelected = currentIndex == index;
-    
+
     return GestureDetector(
       onTap: () => onTap(index),
       child: Container(
         width: 60.w,
         height: 60.h,
         decoration: BoxDecoration(
-          color: isSelected 
-              ? AppColors.primaryRed.withOpacity(0.2) 
-              : AppColors.primaryRed,
+          color:
+              isSelected
+                  ? AppColors.primary.withOpacity(0.2)
+                  : AppColors.primary,
           shape: BoxShape.circle,
         ),
         child: Center(
           child: Icon(
             Icons.gamepad,
-            color: isSelected 
-                ? AppColors.primaryRed 
-                : Colors.white,
+            color: isSelected ? AppColors.primary : Colors.white,
             size: 30.sp,
           ),
         ),

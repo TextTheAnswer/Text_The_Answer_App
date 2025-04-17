@@ -194,14 +194,10 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
             width: 60.w,
             height: 60.w,
             decoration: BoxDecoration(
-              color: AppColors.primaryRed.withOpacity(0.1),
+              color: AppColors.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12.r),
             ),
-            child: Icon(
-              icon,
-              color: AppColors.primaryRed,
-              size: 30.sp,
-            ),
+            child: Icon(icon, color: AppColors.primary, size: 30.sp),
           ),
           SizedBox(height: 8.h),
           Text(
@@ -306,7 +302,7 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
           // Handle unauthenticated or error states (initial/error)
           // The BlocListener will handle redirection, show a temporary message here
           return Scaffold(
-            backgroundColor: AppColors.primaryRed,
+            backgroundColor: AppColors.primary,
             body: Center(
               child: Padding(
                 padding: EdgeInsets.all(30.w),
@@ -330,7 +326,7 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
 
   Widget _buildMainScreen() {
     return Scaffold(
-      backgroundColor: AppColors.primaryRed,
+      backgroundColor: AppColors.primary,
       appBar: AppBar(
         title: Text('Complete Your Profile', 
           style: FontUtility.montserratBold(
@@ -348,10 +344,7 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             stops: [0.0, 1.0],
-            colors: [
-              AppColors.primaryRed,
-              AppColors.primaryRed,
-            ],
+            colors: [AppColors.primary, AppColors.primary],
           ),
           image: DecorationImage(
             image: AssetImage('assets/images/auth_bg_pattern.png'),
@@ -454,7 +447,7 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
                 buttonSize: CustomButtonSize.large,
                 fullWidth: true,
                 onPressed: _saveProfile,
-                textColor: AppColors.primaryRed,
+                textColor: AppColors.primary,
                 bgColor: Colors.white,
                 isLoading: _isLoading,
               ),
@@ -522,7 +515,7 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
                 width: 32.w,
                 height: 32.w,
                 decoration: BoxDecoration(
-                  color: AppColors.primaryRed,
+                  color: AppColors.primary,
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: Colors.white,

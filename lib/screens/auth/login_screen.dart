@@ -37,7 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primaryRed,
+      backgroundColor: AppColors.primary,
       body: SafeArea(
         child: BlocConsumer<AuthBloc, AuthState>(
           listener: (context, state) {
@@ -62,10 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   stops: [0.0, 1.0],
-                  colors: [
-                    AppColors.primaryRed,
-                    AppColors.primaryRed,
-                  ],
+                  colors: [AppColors.primary, AppColors.primary],
                 ),
                 image: DecorationImage(
                   image: AssetImage('assets/images/auth_bg_pattern.png'),
