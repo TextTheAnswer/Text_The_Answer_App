@@ -135,7 +135,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Verification Code 🔢',
+                  'You\'ve got a mail 📩',
                   style: FontUtility.montserratBold(
                     fontSize: 28,
                     color: AppColors.white,
@@ -144,7 +144,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'We have sent a verification code to ${widget.email}',
+                  'We have sent a verification code to ${widget.email}. Check your mail and enter the code below',
                   style: FontUtility.interRegular(
                     fontSize: 15,
                     color: AppColors.white.withOpacity(0.9),
@@ -163,6 +163,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                     padding: const EdgeInsets.only(top: 16),
                     child: Text(
                       _errorMessage!,
+                      maxLines: 2,
                       style: FontUtility.interRegular(
                         fontSize: 14,
                         color: Colors.red,
