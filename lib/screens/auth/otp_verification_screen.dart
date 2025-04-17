@@ -176,17 +176,6 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
 
                 const SizedBox(height: 40),
 
-                // Verify Button
-                CustomButton(
-                  text: 'VERIFY',
-                  buttonType: CustomButtonType.primary,
-                  buttonSize: CustomButtonSize.large,
-                  isLoading: _isLoading,
-                  onPressed: _verifyOTP,
-                ),
-
-                const SizedBox(height: 24),
-
                 // Resend Code
                 Center(
                   child: TextButton(
@@ -206,6 +195,18 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 40),
+
+                // Verify Button
+                CustomButton(
+                  text: 'VERIFY',
+                  buttonType: CustomButtonType.primary,
+                  buttonSize: CustomButtonSize.large,
+                  isLoading: _isLoading,
+                  onPressed: _verifyOTP,
+                ),
+
+                const SizedBox(height: 24),
               ],
             ),
           ),
@@ -215,26 +216,78 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
   }
 
   Widget _buildOTPField(int index) {
+    return _OTPField(
+      controller: _otpControllers[index],
+      focusNode: _focusNodes[index],
+      onChanged: (value) => _onChanged(value, index),
+    );
+  }
+}
+
+/// Custom widget for individual 5OTP input field
+class _OTPField extends StatefulWidget {
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final ValueChanged<String> onChanged;
+
+  const _OTPField({
+    required this.controller,
+    required this.focusNode,
+    required this.onChanged,
+  });
+
+  @override
+  State<_OTPField> createState() => _OTPFieldState();
+}
+
+class _OTPFieldState extends State<_OTPField> {
+  @override
+  void initState() {
+    super.initState();
+    widget.focusNode.addListener(_handleFocusChange);
+  }
+
+  void _handleFocusChange() {
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    widget.focusNode.removeListener(_handleFocusChange);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isFocused = widget.focusNode.hasFocus;
+
     return Container(
       width: 45,
       height: 55,
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+        border: Border.all(
+          color: isFocused ? Colors.blue : Colors.white.withOpacity(0.3),
+          width: 1,
+        ),
       ),
-      child: TextField(
-        controller: _otpControllers[index],
-        focusNode: _focusNodes[index],
-        onChanged: (value) => _onChanged(value, index),
-        style: FontUtility.interBold(fontSize: 20, color: Colors.white),
-        keyboardType: TextInputType.number,
-        textAlign: TextAlign.center,
-        maxLength: 1,
-        decoration: InputDecoration(
-          counterText: '',
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.zero,
+      child: Center(
+        child: TextField(
+          controller: widget.controller,
+          focusNode: widget.focusNode,
+          onChanged: widget.onChanged,
+          style: FontUtility.interBold(fontSize: 20, color: Colors.white),
+          keyboardType: TextInputType.number,
+          textAlign: TextAlign.center,
+          maxLength: 1,
+          decoration: const InputDecoration(
+            counterText: '',
+            border: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            contentPadding: EdgeInsets.zero,
+          ),
         ),
       ),
     );
