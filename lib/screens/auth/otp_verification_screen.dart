@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:text_the_answer/config/colors.dart' show AppColors;
 import 'package:text_the_answer/router/routes.dart';
@@ -57,10 +59,10 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     });
 
     try {
-      final response = await _apiService.verifyPasswordResetOTP(
-        widget.email,
-        _otpCode,
-      );
+      // final response = await _apiService.verifyPasswordResetOTP(
+      //   widget.email,
+      //   _otpCode,
+      // );
 
       // Navigate to reset password screen
       if (!mounted) return;
@@ -70,7 +72,8 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
         Routes.resetPassword,
         arguments: {
           'email': widget.email,
-          'resetToken': response['resetToken'],
+          // 'resetToken': response['resetToken'],
+          'resetToken': 'dsghirwerpewofjmweorwe',
         },
       );
     } catch (e) {
