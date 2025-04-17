@@ -130,7 +130,7 @@ class CustomButton extends StatelessWidget {
           padding: buttonPadding,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
+            borderRadius: BorderRadius.circular(100.r),
           ),
         ),
         child: _buildButtonContent(buttonTextStyle, foregroundTextColor),
