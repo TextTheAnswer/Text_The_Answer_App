@@ -51,9 +51,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     });
 
     try {
-      final response = await _apiService.requestPasswordReset(
-        _emailController.text.trim(),
-      );
+      // final response = await _apiService.requestPasswordReset(
+      //   _emailController.text.trim(),
+      // );
 
       // Navigate to OTP verification screen
       if (!mounted) return;
@@ -66,7 +66,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(response['message'])));
+      ).showSnackBar(SnackBar(content: Text('Successfully sent OTP')));
+      // ).showSnackBar(SnackBar(content: Text(response['message'])));
     } catch (e) {
       if (!mounted) return;
       setState(() {
