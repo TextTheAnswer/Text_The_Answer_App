@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 
 /// A custom 3D button widget
 /// Replacement for [SocialButton]
-///
-/// TODO: Improve the API to work as a generate button through the app @danielkiing3
 class Custom3DButton extends StatefulWidget {
   const Custom3DButton({
     super.key,
@@ -14,6 +12,7 @@ class Custom3DButton extends StatefulWidget {
     this.padding = const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
     this.borderRadius = const BorderRadius.all(Radius.circular(12)),
     this.semanticsLabel,
+    this.buttonHeight = 54.0,
   });
 
   /// Widget to display inside the button
@@ -26,7 +25,7 @@ class Custom3DButton extends StatefulWidget {
   final Duration duration;
 
   /// Callback function to be called when the button is pressed
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   /// Padding around the button content
   final EdgeInsets padding;
@@ -36,6 +35,8 @@ class Custom3DButton extends StatefulWidget {
 
   /// Semantics label for the button
   final String? semanticsLabel;
+
+  final double? buttonHeight;
 
   @override
   State<Custom3DButton> createState() => _Custom3DButtonState();
@@ -72,7 +73,9 @@ class _Custom3DButtonState extends State<Custom3DButton>
   void _onTapDown(_) => _controller.forward();
 
   void _onTapUp(_) async {
-    widget.onPressed();
+    if (widget.onPressed != null) {
+      widget.onPressed!();
+    }
 
     if (!_controller.isCompleted) {
       await _controller.forward();
@@ -100,45 +103,50 @@ class _Custom3DButtonState extends State<Custom3DButton>
     return Semantics(
       label: widget.semanticsLabel ?? 'Press to perform action',
       button: true,
+      enabled: widget.onPressed != null,
       onTap: widget.onPressed,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTapDown: _onTapDown,
         onTapUp: _onTapUp,
         onTapCancel: _onTapCancel,
-        child: AnimatedBuilder(
-          animation: _pressedAnimation,
-          builder: (context, child) {
-            return Stack(
-              children: [
-                // -- Shadow layer
-                Positioned.fill(
-                  top: _buttonDepth,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: _hslRelativeColor(s: -0.2, l: -0.25),
-                      borderRadius: widget.borderRadius,
+        child: SizedBox(
+          height: widget.buttonHeight,
+          child: AnimatedBuilder(
+            animation: _pressedAnimation,
+            builder: (context, child) {
+              return Stack(
+                children: [
+                  // -- Shadow layer
+                  Positioned.fill(
+                    top: _buttonDepth,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: _hslRelativeColor(s: -0.2, l: -0.25),
+                        borderRadius: widget.borderRadius,
+                      ),
                     ),
                   ),
-                ),
 
-                // -- Top button
-                Transform.translate(
-                  offset: Offset(0, _pressedAnimation.value),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: widget.backgroundColor,
-                      borderRadius: widget.borderRadius,
-                    ),
-                    child: Padding(
-                      padding: widget.padding,
-                      child: Center(child: widget.child),
+                  // -- Top button
+                  Transform.translate(
+                    offset: Offset(0, _pressedAnimation.value),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: widget.backgroundColor,
+                        borderRadius: widget.borderRadius,
+                      ),
+
+                      child: Padding(
+                        padding: widget.padding,
+                        child: Center(child: widget.child),
+                      ),
                     ),
                   ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
