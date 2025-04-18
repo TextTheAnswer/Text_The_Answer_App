@@ -317,7 +317,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Icon(Icons.apple, color: Colors.white),
+              Icon(Icons.g_mobiledata, color: Colors.white),
               const SizedBox(width: 8),
 
               Text(
