@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:text_the_answer/router/app_router.dart';
 import 'package:text_the_answer/router/routes.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
@@ -18,10 +17,10 @@ import 'utils/theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
-  
+
   // Configure Google Fonts to use local fonts as fallbacks
   FontUtility.configureGoogleFonts();
-  
+
   runApp(const MyApp());
 }
 
@@ -78,9 +77,13 @@ class _MyAppState extends State<MyApp> {
               return BlocListener<AuthBloc, AuthState>(
                 listener: (context, state) {
                   if (state is AuthAuthenticated) {
-                    Navigator.of(context).pushReplacementNamed(Routes.home);
+                    Navigator.of(
+                      context,
+                    ).pushNamedAndRemoveUntil(Routes.home, (route) => false);
                   } else if (state is AuthInitial) {
-                    Navigator.of(context).pushReplacementNamed(Routes.onboard);
+                    Navigator.of(
+                      context,
+                    ).pushNamedAndRemoveUntil(Routes.onboard, (route) => false);
                   }
                 },
                 child: child ?? Container(),

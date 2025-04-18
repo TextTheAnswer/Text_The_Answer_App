@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:text_the_answer/widgets/custom_3D_button.dart';
 import '../../config/colors.dart';
 import '../../router/routes.dart';
 
@@ -28,10 +29,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       'title': 'Play and take quiz challenges together with your friends',
       'image': 'assets/images/onboard3.png',
     },
-    {
-      'title': 'Text The Answer',
-      'image': 'assets/images/onboard3.png',
-    },
+    {'title': 'Text The Answer', 'image': 'assets/images/onboard3.png'},
     {
       'title': 'Spell it correctly in the fastest time',
       'image': 'assets/images/onboard3.png',
@@ -39,7 +37,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     {
       'title': 'Spelling and speed is everything',
       'image': 'assets/images/onboard3.png',
-    }
+    },
   ];
 
   @override
@@ -51,10 +49,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             stops: [0.0, 1.0],
-            colors: [
-              AppColors.primaryRed,
-              AppColors.primaryRed,
-            ],
+            colors: [AppColors.primary, AppColors.primary],
           ),
           image: DecorationImage(
             image: AssetImage('assets/images/auth_bg_pattern.png'),
@@ -65,6 +60,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         child: SafeArea(
           child: Column(
             children: [
+              // -- Pageview
               Expanded(
                 child: PageView.builder(
                   controller: _pageController,
@@ -112,15 +108,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     height: 8,
                     width: _currentPage == index ? 24 : 8,
                     decoration: BoxDecoration(
-                      color: _currentPage == index
-                          ? Colors.white
-                          : Colors.white.withOpacity(0.5),
+                      color:
+                          _currentPage == index
+                              ? Colors.white
+                              : Colors.white.withOpacity(0.5),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 40),
+
+              // -- Next and Skip button
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Row(
@@ -138,10 +137,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             ),
                           ],
                         ),
-                        child: ElevatedButton(
+                        child: Custom3DButton(
+                          semanticsLabel:
+                              _currentPage == onboardingData.length - 1
+                                  ? 'Get Started'
+                                  : 'Next',
+                          backgroundColor: AppColors.buttonPrimary,
                           onPressed: () {
                             if (_currentPage == onboardingData.length - 1) {
-                              Navigator.pushReplacementNamed(context, Routes.signup);
+                              Navigator.pushNamedAndRemoveUntil(
+                                context,
+                                Routes.signup,
+                                (route) => false,
+                              );
                             } else {
                               _pageController.nextPage(
                                 duration: const Duration(milliseconds: 300),
@@ -149,13 +157,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               );
                             }
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
                           child: Text(
                             _currentPage == onboardingData.length - 1
                                 ? 'Get Started'
@@ -170,7 +171,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    if (_currentPage < onboardingData.length - 1)
+                      const SizedBox(width: 16),
                     if (_currentPage < onboardingData.length - 1)
                       Container(
                         height: 54,
@@ -184,7 +186,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             ),
                           ],
                         ),
-                        child: ElevatedButton(
+                        child: Custom3DButton(
+                          backgroundColor: AppColors.buttonSecondary,
+                          semanticsLabel: 'Skip',
                           onPressed: () {
                             _pageController.animateToPage(
                               onboardingData.length - 1,
@@ -192,15 +196,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               curve: Curves.easeInOut,
                             );
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            elevation: 0,
-                            padding: EdgeInsets.symmetric(horizontal: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(color: Colors.white, width: 1),
-                            ),
-                          ),
                           child: Text(
                             'Skip',
                             style: TextStyle(
@@ -215,7 +210,32 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 20),
+
+              // -- I already have an account
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Custom3DButton(
+                  semanticsLabel: 'I already have an account',
+                  backgroundColor: AppColors.buttonTertiary,
+                  onPressed: () {
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      Routes.login,
+                      (route) => false,
+                    );
+                  },
+                  child: Text(
+                    'I ALREADY HAVE AN ACCOUNT',
+                    style: TextStyle(
+                      color: AppColors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
             ],
           ),
         ),

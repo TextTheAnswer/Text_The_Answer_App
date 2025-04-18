@@ -12,7 +12,11 @@ class SplashScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     if (toggleTheme != null) {
       Future.delayed(const Duration(seconds: 5), () {
-        Navigator.pushReplacementNamed(context, Routes.onboard);
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          Routes.onboard,
+          (route) => false,
+        );
       });
     }
 
@@ -23,10 +27,7 @@ class SplashScreen extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             stops: [0.0, 1.0],
-            colors: [
-              AppColors.primaryRed,
-              AppColors.primaryRed,
-            ],
+            colors: [AppColors.primary, AppColors.primary],
           ),
           // image: DecorationImage(
           //   image: AssetImage('assets/images/auth_bg_pattern.png'),
@@ -51,20 +52,17 @@ class SplashScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: Image.asset('assets/images/splash_page.png',
-                height: 120,
-                width: 120,
+                child: Image.asset(
+                  'assets/images/splash_page.png',
+                  height: 120,
+                  width: 120,
                 ),
               ),
               const SizedBox(height: 90),
               Padding(
                 padding: EdgeInsets.only(top: 30),
-                child: SpinKitFadingCube(
-                color: Colors.white,
-                size: 50.0,
+                child: SpinKitFadingCube(color: Colors.white, size: 50.0),
               ),
-              )
-              
             ],
           ),
         ),

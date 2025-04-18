@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:text_the_answer/config/colors.dart' show AppColors;
 import 'package:text_the_answer/router/routes.dart';
-import 'package:text_the_answer/screens/auth/forgot_password_screen.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
-import 'package:text_the_answer/widgets/custom_button.dart';
+import 'package:text_the_answer/widgets/custom_3d_button.dart';
+import 'package:text_the_answer/widgets/custom_bottom_button_with_divider.dart';
 import 'package:text_the_answer/widgets/custom_text_field.dart';
-import 'package:text_the_answer/widgets/social_login_button.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_event.dart';
 import '../../blocs/auth/auth_state.dart';
-import '../home/home_screen.dart';
-import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final VoidCallback toggleTheme;
@@ -37,24 +35,26 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primaryRed,
+      backgroundColor: AppColors.primary,
+      bottomNavigationBar: CustomBottomButtonWithDivider(
+        child: _buildSignInButton(context),
+      ),
       body: SafeArea(
         child: BlocConsumer<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is AuthAuthenticated) {
-              Navigator.pushReplacementNamed(
-                context,
-                Routes.home,
-              );
+              Navigator.pushReplacementNamed(context, Routes.home);
             } else if (state is AuthError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.message)));
             }
           },
           builder: (context, state) {
             if (state is AuthLoading) {
-              return const Center(child: CircularProgressIndicator(color: Colors.white));
+              return const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              );
             }
             return Container(
               decoration: BoxDecoration(
@@ -62,10 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   stops: [0.0, 1.0],
-                  colors: [
-                    AppColors.primaryRed,
-                    AppColors.primaryRed,
-                  ],
+                  colors: [AppColors.primary, AppColors.primary],
                 ),
                 image: DecorationImage(
                   image: AssetImage('assets/images/auth_bg_pattern.png'),
@@ -74,29 +71,33 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 80),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 80,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                           Image.asset('assets/images/splash_page.png',
-                    height: 60,
-                    width: 60,
+                        Image.asset(
+                          'assets/images/splash_page.png',
+                          height: 60,
+                          width: 60,
+                        ),
+                        SizedBox(width: 20),
+                        // Header
+                        Text(
+                          'Hello there 👋',
+                          style: FontUtility.montserratBold(
+                            fontSize: 28,
+                            color: AppColors.white,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(width: 20,),
-                    // Header
-                    Text(
-                      'Hello there 👋',
-                      style: FontUtility.montserratBold(
-                        fontSize: 28,
-                        color: AppColors.white,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                      ]
-                    ),
-                   
+
                     const SizedBox(height: 12),
                     // Subheader
                     Text(
@@ -107,22 +108,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 35),
-                    
+
                     // Email Field
                     CustomTextField(
                       controller: _emailController,
                       hintText: 'Email',
-                      prefixIcon: Icons.email_outlined,
                       keyboardType: TextInputType.emailAddress,
                       darkMode: true,
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Password Field
                     CustomTextField(
                       controller: _passwordController,
                       hintText: 'Password',
-                      prefixIcon: Icons.lock_outline,
                       obscureText: _obscurePassword,
                       toggleObscureText: () {
                         setState(() {
@@ -132,41 +131,35 @@ class _LoginScreenState extends State<LoginScreen> {
                       darkMode: true,
                     ),
                     const SizedBox(height: 20),
-                    
+
                     // Remember Me & Forgot Password
                     _buildRememberMeAndForgotPassword(),
                     const SizedBox(height: 30),
-                    
-                    // Sign In Button
-                    _buildSignInButton(context),
-                    const SizedBox(height: 24),
-                    
+
+                    // // Sign In Button
+                    // _buildSignInButton(context),
+                    // const SizedBox(height: 24),
+
                     // Divider with "or" text
                     _buildDividerWithText('or'),
                     const SizedBox(height: 24),
-                    
+
                     // Social Login Buttons
                     _buildSocialLoginButtons(),
                     const SizedBox(height: 30),
-                    
+
                     // Sign Up Link
                     Center(
                       child: TextButton(
                         onPressed: () {
-                          Navigator.pushNamed(
-                            context,
-                            Routes.signup,
-                          );
+                          Navigator.pushNamed(context, Routes.signup);
                         },
                         style: TextButton.styleFrom(
                           foregroundColor: Colors.white,
                         ),
                         child: RichText(
                           text: TextSpan(
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 15,
-                            ),
+                            style: TextStyle(color: Colors.white, fontSize: 15),
                             children: [
                               TextSpan(text: "Don't have an account? "),
                               TextSpan(
@@ -229,17 +222,11 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         TextButton(
           onPressed: () {
-            Navigator.pushNamed(
-              context,
-              Routes.forgotPassword,
-            );
+            Navigator.pushNamed(context, Routes.forgotPassword);
           },
           child: Text(
             'Forgot Password?',
-            style: FontUtility.interMedium(
-              fontSize: 15,
-              color: Colors.white,
-            ),
+            style: FontUtility.interMedium(fontSize: 15, color: Colors.white),
           ),
         ),
       ],
@@ -249,39 +236,70 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildSignInButton(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
-        return CustomButton(
-          text: 'SIGN IN',
-          buttonType: CustomButtonType.primary,
-          buttonSize: CustomButtonSize.large,
-          isLoading: state is AuthLoading,
-          onPressed: () {
-            // Basic validation
-            if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Please enter both email and password')),
-              );
-              return;
-            }
-            
-            // Email format validation
-            final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-            if (!emailRegex.hasMatch(_emailController.text)) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Please enter a valid email address')),
-              );
-              return;
-            }
-            
-            // Trigger sign in event
-            context.read<AuthBloc>().add(
-                  SignInEvent(
-                    email: _emailController.text.trim(),
-                    password: _passwordController.text,
+        final bool isLoading = state is AuthLoading;
+
+        //TODO: Refactor to make it more readable and clean @danielkiing3
+        return Custom3DButton(
+          backgroundColor: AppColors.buttonPrimary,
+          borderRadius: BorderRadius.circular(100.r),
+          onPressed:
+              isLoading
+                  ? null
+                  : () {
+                    // Basic validation
+                    if (_emailController.text.isEmpty ||
+                        _passwordController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Please enter both email and password'),
+                        ),
+                      );
+                      return;
+                    }
+
+                    // Email format validation
+                    final emailRegex = RegExp(
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                    );
+                    if (!emailRegex.hasMatch(_emailController.text)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Please enter a valid email address'),
+                        ),
+                      );
+                      return;
+                    }
+
+                    // Trigger sign in event
+                    context.read<AuthBloc>().add(
+                      SignInEvent(
+                        email: _emailController.text.trim(),
+                        password: _passwordController.text,
+                      ),
+                    );
+                  },
+          child:
+              isLoading
+                  ? SizedBox(
+                    height: 20.h,
+                    width: 20.w,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.w,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppColors.white,
+                      ),
+                    ),
+                  )
+                  : Text(
+                    'SIGN IN',
+                    style: FontUtility.montserratBold(
+                      fontSize: 16,
+                      color: Colors.white,
+                      letterSpacing: 1.2,
+                    ),
                   ),
-                );
-          },
         );
-      }
+      },
     );
   }
 
@@ -289,10 +307,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Row(
       children: [
         Expanded(
-          child: Divider(
-            color: AppColors.white.withOpacity(0.6),
-            thickness: 1,
-          ),
+          child: Divider(color: AppColors.white.withOpacity(0.6), thickness: 1),
         ),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 16),
@@ -305,10 +320,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         Expanded(
-          child: Divider(
-            color: AppColors.white.withOpacity(0.6),
-            thickness: 1,
-          ),
+          child: Divider(color: AppColors.white.withOpacity(0.6), thickness: 1),
         ),
       ],
     );
@@ -317,20 +329,45 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildSocialLoginButtons() {
     return Column(
       children: [
-        SocialLoginButton(
-          text: 'Continue with Google',
-          onPressed: () {
-            // Implement Google Sign-In
-          },
-          icon: Icons.g_mobiledata,
+        // -- Google Sign In Button
+        Custom3DButton(
+          backgroundColor: AppColors.buttonSecondary,
+          onPressed: () {},
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(Icons.g_mobiledata, color: Colors.white),
+              const SizedBox(width: 8),
+
+              Text(
+                'Continue with Google',
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 16),
-        SocialLoginButton(
-          text: 'Continue with Apple',
-          onPressed: () {
-            // Implement Apple Sign-In
-          },
-          icon: Icons.apple,
+
+        // -- Facebook Sign In Button
+        Custom3DButton(
+          backgroundColor: AppColors.buttonSecondary,
+          onPressed: () {},
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(Icons.apple, color: Colors.white),
+              const SizedBox(width: 8),
+
+              Text(
+                'Continue with Apple',
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
         ),
       ],
     );
