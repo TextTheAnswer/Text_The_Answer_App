@@ -1,11 +1,12 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:text_the_answer/config/colors.dart' show AppColors;
 import 'package:text_the_answer/router/routes.dart';
 import 'package:text_the_answer/services/api_service.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
-import 'package:text_the_answer/widgets/custom_button.dart';
+import 'package:text_the_answer/widgets/custom_3d_button.dart';
 
 class OTPVerificationScreen extends StatefulWidget {
   final String email;
@@ -174,7 +175,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                     ),
                   ),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 20),
 
                 // Resend Code
                 Center(
@@ -195,15 +196,21 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 20),
 
                 // Verify Button
-                CustomButton(
-                  text: 'VERIFY',
-                  buttonType: CustomButtonType.primary,
-                  buttonSize: CustomButtonSize.large,
-                  isLoading: _isLoading,
-                  onPressed: _verifyOTP,
+                Custom3DButton(
+                  backgroundColor: AppColors.buttonPrimary,
+                  borderRadius: BorderRadius.circular(100.r),
+                  onPressed: _isLoading ? null : _verifyOTP,
+                  child: Text(
+                    'VERIFY',
+                    style: FontUtility.montserratBold(
+                      fontSize: 16,
+                      color: Colors.white,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
                 ),
 
                 const SizedBox(height: 24),

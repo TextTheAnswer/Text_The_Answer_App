@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:text_the_answer/config/colors.dart' show AppColors;
 import 'package:text_the_answer/router/routes.dart';
+import 'package:text_the_answer/utils/font_utility.dart';
 import 'package:text_the_answer/widgets/custom_3D_button.dart';
 import 'package:text_the_answer/widgets/custom_bottom_button_with_divider.dart';
-import 'package:text_the_answer/widgets/custom_button.dart';
 import 'package:text_the_answer/widgets/custom_text_field.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_event.dart';
@@ -263,20 +264,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget _buildSignUpButton(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
-        return CustomButton(
-          text: 'SIGN UP',
-          buttonType: CustomButtonType.primary,
-          buttonSize: CustomButtonSize.large,
-          isLoading: state is AuthLoading,
-          onPressed: () {
-            context.read<AuthBloc>().add(
-              SignUpEvent(
-                email: _emailController.text,
-                password: _passwordController.text,
-                name: _usernameController.text,
-              ),
-            );
-          },
+        final bool isLoading = state is AuthLoading;
+
+        //TODO: Refactor to make it more readable and clean @danielkiing3
+        return Custom3DButton(
+          backgroundColor: AppColors.buttonPrimary,
+          borderRadius: BorderRadius.circular(100.r),
+          onPressed:
+              isLoading
+                  ? null
+                  : () {
+                    context.read<AuthBloc>().add(
+                      SignUpEvent(
+                        email: _emailController.text,
+                        password: _passwordController.text,
+                        name: _usernameController.text,
+                      ),
+                    );
+                  },
+          child:
+              isLoading
+                  ? SizedBox(
+                    height: 20.h,
+                    width: 20.w,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.w,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppColors.white,
+                      ),
+                    ),
+                  )
+                  : Text(
+                    'SIGN UP',
+                    style: FontUtility.montserratBold(
+                      fontSize: 16,
+                      color: Colors.white,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
         );
       },
     );

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:text_the_answer/config/colors.dart' show AppColors;
 import 'package:text_the_answer/router/routes.dart';
 import 'package:text_the_answer/services/api_service.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
+import 'package:text_the_answer/widgets/custom_3d_button.dart';
 import 'package:text_the_answer/widgets/custom_bottom_button_with_divider.dart';
-import 'package:text_the_answer/widgets/custom_button.dart';
 import 'package:text_the_answer/widgets/custom_text_field.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -95,12 +96,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
       ),
       bottomNavigationBar: CustomBottomButtonWithDivider(
-        child: CustomButton(
-          text: 'Continue',
-          buttonType: CustomButtonType.primary,
-          buttonSize: CustomButtonSize.large,
-          isLoading: _isLoading,
-          onPressed: _requestPasswordReset,
+        child: Custom3DButton(
+          backgroundColor: AppColors.buttonPrimary,
+          borderRadius: BorderRadius.circular(100.r),
+          onPressed: _isLoading ? null : _requestPasswordReset,
+          child: Text(
+            'Continue',
+            style: FontUtility.montserratBold(
+              fontSize: 16,
+              color: Colors.white,
+              letterSpacing: 1.2,
+            ),
+          ),
         ),
       ),
       body: SafeArea(
@@ -152,15 +159,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   onChanged: (_) => setState(() => _errorMessage = null),
                 ),
                 const SizedBox(height: 30),
-
-                // // Continue Button
-                // CustomButton(
-                //   text: 'CONTINUE',
-                //   buttonType: CustomButtonType.primary,
-                //   buttonSize: CustomButtonSize.large,
-                //   isLoading: _isLoading,
-                //   onPressed: _requestPasswordReset,
-                // ),
               ],
             ),
           ),

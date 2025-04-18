@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:text_the_answer/config/colors.dart' show AppColors;
 import 'package:text_the_answer/router/routes.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
 import 'package:text_the_answer/widgets/custom_3d_button.dart';
 import 'package:text_the_answer/widgets/custom_bottom_button_with_divider.dart';
-import 'package:text_the_answer/widgets/custom_button.dart';
 import 'package:text_the_answer/widgets/custom_text_field.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_event.dart';
@@ -236,38 +236,68 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildSignInButton(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, state) {
-        return CustomButton(
-          text: 'SIGN IN',
-          buttonType: CustomButtonType.primary,
-          buttonSize: CustomButtonSize.large,
-          isLoading: state is AuthLoading,
-          onPressed: () {
-            // Basic validation
-            if (_emailController.text.isEmpty ||
-                _passwordController.text.isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Please enter both email and password')),
-              );
-              return;
-            }
+        final bool isLoading = state is AuthLoading;
 
-            // Email format validation
-            final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-            if (!emailRegex.hasMatch(_emailController.text)) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Please enter a valid email address')),
-              );
-              return;
-            }
+        //TODO: Refactor to make it more readable and clean @danielkiing3
+        return Custom3DButton(
+          backgroundColor: AppColors.buttonPrimary,
+          borderRadius: BorderRadius.circular(100.r),
+          onPressed:
+              isLoading
+                  ? null
+                  : () {
+                    // Basic validation
+                    if (_emailController.text.isEmpty ||
+                        _passwordController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Please enter both email and password'),
+                        ),
+                      );
+                      return;
+                    }
 
-            // Trigger sign in event
-            context.read<AuthBloc>().add(
-              SignInEvent(
-                email: _emailController.text.trim(),
-                password: _passwordController.text,
-              ),
-            );
-          },
+                    // Email format validation
+                    final emailRegex = RegExp(
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                    );
+                    if (!emailRegex.hasMatch(_emailController.text)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Please enter a valid email address'),
+                        ),
+                      );
+                      return;
+                    }
+
+                    // Trigger sign in event
+                    context.read<AuthBloc>().add(
+                      SignInEvent(
+                        email: _emailController.text.trim(),
+                        password: _passwordController.text,
+                      ),
+                    );
+                  },
+          child:
+              isLoading
+                  ? SizedBox(
+                    height: 20.h,
+                    width: 20.w,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.w,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppColors.white,
+                      ),
+                    ),
+                  )
+                  : Text(
+                    'SIGN IN',
+                    style: FontUtility.montserratBold(
+                      fontSize: 16,
+                      color: Colors.white,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
         );
       },
     );
