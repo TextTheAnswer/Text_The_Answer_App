@@ -13,7 +13,10 @@ class Custom3DButton extends StatefulWidget {
     this.borderRadius = const BorderRadius.all(Radius.circular(12)),
     this.semanticsLabel,
     this.buttonHeight = 54.0,
-  });
+  }) : assert(
+         buttonHeight != null && buttonHeight > 30,
+         'Button height can not be null and button height can not be less than 30',
+       );
 
   /// Widget to display inside the button
   final Widget child;
@@ -124,6 +127,9 @@ class _Custom3DButtonState extends State<Custom3DButton>
                       decoration: BoxDecoration(
                         color: _hslRelativeColor(s: -0.2, l: -0.25),
                         borderRadius: widget.borderRadius,
+                      ),
+                      child: SizedBox(
+                        height: (widget.buttonHeight! - _buttonDepth),
                       ),
                     ),
                   ),
