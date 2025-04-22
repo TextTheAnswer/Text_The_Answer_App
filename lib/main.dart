@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 import 'package:text_the_answer/router/app_router.dart';
 import 'package:text_the_answer/router/routes.dart';
+import 'package:text_the_answer/services/api_service.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
 import 'blocs/auth/auth_bloc.dart';
 import 'blocs/auth/auth_event.dart';
@@ -33,6 +35,8 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   bool isDarkMode = false;
+  // Create shared API service instance
+  final ApiService _apiService = ApiService();
 
   void toggleTheme() {
     setState(() {
@@ -45,6 +49,10 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     // Set the toggleTheme function in AppRouter
     AppRouter.toggleTheme = toggleTheme;
+    
+    // Enable the mock data fallback for development
+    _apiService.useMockDataOnFailure = true;
+    print('Mock data fallback enabled for development');
   }
 
   @override
@@ -55,40 +63,45 @@ class _MyAppState extends State<MyApp> {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (_, child) {
-        return MultiBlocProvider(
+        return MultiProvider(
           providers: [
-            BlocProvider(
-              create: (context) => AuthBloc()..add(CheckAuthStatusEvent()),
-            ),
-            BlocProvider(create: (_) => QuizBloc()),
-            BlocProvider(create: (_) => GameBloc()),
-            BlocProvider(create: (_) => LeaderboardBloc()),
-            BlocProvider(create: (_) => SubscriptionBloc()),
+            Provider<ApiService>.value(value: _apiService),
           ],
-          child: MaterialApp(
-            debugShowCheckedModeBanner: false,
-            title: 'Text the Answer',
-            theme: AppTheme.lightTheme(),
-            darkTheme: AppTheme.darkTheme(),
-            themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
-            initialRoute: Routes.login,
-            onGenerateRoute: AppRouter.generateRoute,
-            builder: (context, child) {
-              return BlocListener<AuthBloc, AuthState>(
-                listener: (context, state) {
-                  if (state is AuthAuthenticated) {
-                    Navigator.of(
-                      context,
-                    ).pushNamedAndRemoveUntil(Routes.home, (route) => false);
-                  } else if (state is AuthInitial) {
-                    Navigator.of(
-                      context,
-                    ).pushNamedAndRemoveUntil(Routes.onboard, (route) => false);
-                  }
-                },
-                child: child ?? Container(),
-              );
-            },
+          child: MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (context) => AuthBloc()..add(CheckAuthStatusEvent()),
+              ),
+              BlocProvider(create: (context) => QuizBloc(apiService: _apiService)),
+              BlocProvider(create: (_) => GameBloc()),
+              BlocProvider(create: (_) => LeaderboardBloc()),
+              BlocProvider(create: (_) => SubscriptionBloc()),
+            ],
+            child: MaterialApp(
+              debugShowCheckedModeBanner: false,
+              title: 'Text the Answer',
+              theme: AppTheme.lightTheme(),
+              darkTheme: AppTheme.darkTheme(),
+              themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+              initialRoute: Routes.login,
+              onGenerateRoute: AppRouter.generateRoute,
+              builder: (context, child) {
+                return BlocListener<AuthBloc, AuthState>(
+                  listener: (context, state) {
+                    if (state is AuthAuthenticated) {
+                      Navigator.of(
+                        context,
+                      ).pushNamedAndRemoveUntil(Routes.splash, (route) => false);
+                    } else if (state is AuthInitial) {
+                      Navigator.of(
+                        context,
+                      ).pushNamedAndRemoveUntil(Routes.onboard, (route) => false);
+                    }
+                  },
+                  child: child ?? Container(),
+                );
+              },
+            ),
           ),
         );
       },

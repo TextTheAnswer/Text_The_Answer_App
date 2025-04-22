@@ -306,20 +306,29 @@ class ProfileService {
   // Get full user profile
   Future<ProfileFullResponse> getFullProfile() async {
     try {
-      print('ProfileService: Getting full user profile');
+      print('ProfileService: Getting full user profile from profile/full endpoint');
       
       // Get and ensure a valid authentication token
       final token = await _getAuthToken();
       if (token == null) {
+        print('ProfileService: No valid token available for full profile fetch');
         return ProfileFullResponse(
           success: false,
           message: 'Authentication required. Please login again.',
         );
       }
 
+      // Print token info for debugging (first few chars only for security)
+      final shortToken = token.length > 10 ? '${token.substring(0, 10)}...' : token;
+      print('ProfileService: Using token starting with: $shortToken');
+
+      // Construct the correct URL
+      final url = '${baseUrl}profile/full';
+      print('ProfileService: Calling API endpoint: $url');
+
       // Make API request
       final response = await http.get(
-        Uri.parse('$baseUrl/profile/full'),
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -327,37 +336,76 @@ class ProfileService {
       );
       
       print('ProfileService: Get full profile response status: ${response.statusCode}');
+      print('ProfileService: Get full profile response body: ${response.body}');
 
       // Process response
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return ProfileFullResponse.fromJson(data);
+        try {
+          final data = jsonDecode(response.body);
+          print('ProfileService: Successfully parsed full profile response');
+          
+          if (data.containsKey('profile') && data['profile'] != null) {
+            print('ProfileService: Full profile data found in response');
+            return ProfileFullResponse.fromJson(data);
+          } else {
+            print('ProfileService: No profile data in the full profile response');
+            return ProfileFullResponse(
+              success: false,
+              message: 'No profile data in the response',
+            );
+          }
+        } catch (e) {
+          print('ProfileService: Error parsing full profile response: $e');
+          return ProfileFullResponse(
+            success: false,
+            message: 'Invalid response format',
+          );
+        }
       } else if (response.statusCode == 404) {
         // User found but no profile data exists yet
-        print('ProfileService: No profile data exists yet');
+        print('ProfileService: No profile data exists yet (404)');
         return ProfileFullResponse(
           success: false,
           message: 'No profile data exists yet. Please create your profile.',
         );
-      } else {
-        Map<String, dynamic> errorData = {};
-        try {
-          errorData = jsonDecode(response.body);
-        } catch (_) {
-          // Ignore parsing errors
-        }
-        
-        print('ProfileService: Get full profile error: ${errorData['message']}');
+      } else if (response.statusCode == 400) {
+        print('ProfileService: Bad request (400)');
         return ProfileFullResponse(
           success: false,
-          message: errorData['message'] ?? 'Failed to get profile. Status: ${response.statusCode}',
+          message: 'Bad request. User ID is required.',
+        );
+      } else if (response.statusCode == 401 || response.statusCode == 403) {
+        print('ProfileService: Authentication error (${response.statusCode})');
+        return ProfileFullResponse(
+          success: false,
+          message: 'Authentication failed. Please login again.',
+        );
+      } else {
+        print('ProfileService: Other error in full profile (${response.statusCode})');
+        
+        String errorMessage = 'Failed to get full profile. Status: ${response.statusCode}';
+        
+        try {
+          final errorData = jsonDecode(response.body);
+          if (errorData.containsKey('message') && errorData['message'] != null) {
+            errorMessage = errorData['message'];
+          }
+          print('ProfileService: Error message from server: $errorMessage');
+        } catch (e) {
+          // Ignore parsing errors
+          print('ProfileService: Could not parse error response: $e');
+        }
+        
+        return ProfileFullResponse(
+          success: false,
+          message: errorMessage,
         );
       }
     } catch (e) {
       print('ProfileService: Exception in getFullProfile: $e');
       return ProfileFullResponse(
         success: false,
-        message: 'Error getting profile: ${e.toString()}',
+        message: 'Error getting full profile: ${e.toString()}',
       );
     }
   }
@@ -433,7 +481,7 @@ class ProfileService {
         'location': 'Test location',
         'preferences': {
           'favoriteCategories': ['Science', 'History'],
-          'notificationSettings': { 'email': true, 'push': false },
+          'notificationSettings': { 'dailyQuizReminder': true, 'multiplayerInvites': false },
           'displayTheme': 'light'
         }
       };

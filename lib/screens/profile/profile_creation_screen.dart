@@ -945,8 +945,8 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
 
       // Create notification settings
       final notificationSettings = NotificationSettings(
-        email: true,
-        push: true,
+        dailyQuizReminder: true,
+        multiplayerInvites: true,
       );
 
       // Create profile preferences
