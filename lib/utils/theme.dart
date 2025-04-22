@@ -9,7 +9,7 @@ class AppTheme {
   static final _interTextTheme = GoogleFonts.interTextTheme();
 
   static TextTheme _getTextTheme(bool isDark) {
-    final Color textColor = isDark ? AppColors.white : AppColors.darkGray;
+    final Color textColor = isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText;
 
     return TextTheme(
       displayLarge: GoogleFonts.montserrat(
@@ -99,7 +99,7 @@ class AppTheme {
     return ThemeData(
       brightness: Brightness.light,
       primaryColor: AppColors.primary,
-      scaffoldBackgroundColor: AppColors.white,
+      scaffoldBackgroundColor: AppColors.lightBackground,
       textTheme: textTheme,
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -118,7 +118,7 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.darkGray,
+          foregroundColor: AppColors.lightPrimaryText,
           textStyle: GoogleFonts.montserrat(
             fontWeight: FontWeight.w500,
             fontSize: 16.sp,
@@ -131,7 +131,7 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.primary,
+          foregroundColor: AppColors.lightOutlineBg,
           textStyle: GoogleFonts.inter(
             fontWeight: FontWeight.w500,
             fontSize: 15.sp,
@@ -141,14 +141,16 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         hintStyle: GoogleFonts.inter(
-          color: AppColors.darkGray.withOpacity(0.6),
+          color: AppColors.lightLabelText.withOpacity(0.6),
           fontSize: 16.sp,
         ),
         labelStyle: GoogleFonts.inter(
-          color: AppColors.darkGray,
+          color: AppColors.lightLabelText,
           fontSize: 16.sp,
         ),
         contentPadding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 16.w),
+        fillColor: AppColors.lightPrimaryBg,
+        filled: true,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
           borderSide: BorderSide.none,
@@ -156,13 +158,13 @@ class AppTheme {
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
           borderSide: BorderSide(
-            color: AppColors.darkGray.withOpacity(0.2),
+            color: AppColors.lightOutlineBg.withOpacity(0.2),
             width: 1,
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+          borderSide: BorderSide(color: AppColors.lightOutlineBg, width: 1.5),
         ),
       ),
     );
@@ -174,12 +176,12 @@ class AppTheme {
     return ThemeData(
       brightness: Brightness.dark,
       primaryColor: AppColors.primary,
-      scaffoldBackgroundColor: AppColors.darkGray,
+      scaffoldBackgroundColor: AppColors.darkBackground,
       textTheme: textTheme,
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.white,
+          foregroundColor: AppColors.darkPrimaryText,
           textStyle: GoogleFonts.montserrat(
             fontWeight: FontWeight.bold,
             fontSize: 16.sp,
@@ -193,7 +195,7 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.white,
+          foregroundColor: AppColors.darkPrimaryText,
           textStyle: GoogleFonts.montserrat(
             fontWeight: FontWeight.w500,
             fontSize: 16.sp,
@@ -206,7 +208,7 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.lightGray,
+          foregroundColor: AppColors.darkOutlineBg,
           textStyle: GoogleFonts.inter(
             fontWeight: FontWeight.w500,
             fontSize: 15.sp,
@@ -216,11 +218,16 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         hintStyle: GoogleFonts.inter(
-          color: AppColors.white.withOpacity(0.6),
+          color: AppColors.darkLabelText.withOpacity(0.6),
           fontSize: 16.sp,
         ),
-        labelStyle: GoogleFonts.inter(color: AppColors.white, fontSize: 16.sp),
+        labelStyle: GoogleFonts.inter(
+          color: AppColors.darkLabelText,
+          fontSize: 16.sp,
+        ),
         contentPadding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 16.w),
+        fillColor: AppColors.darkPrimaryBg,
+        filled: true,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
           borderSide: BorderSide.none,
@@ -228,13 +235,13 @@ class AppTheme {
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
           borderSide: BorderSide(
-            color: AppColors.white.withOpacity(0.3),
+            color: AppColors.darkOutlineBg.withOpacity(0.3),
             width: 1,
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          borderSide: BorderSide(color: AppColors.white, width: 1.5),
+          borderSide: BorderSide(color: AppColors.darkOutlineBg, width: 1.5),
         ),
       ),
     );

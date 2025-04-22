@@ -29,7 +29,7 @@ class Profile {
     final Map<String, dynamic> data = {};
     if (bio != null) data['bio'] = bio;
     if (location != null) data['location'] = location;
-    if (imageUrl != null) data['profilePicture'] = imageUrl;
+    if (imageUrl != null) data['imageUrl'] = imageUrl;
     if (preferences != null) data['preferences'] = preferences!.toJson();
     return data;
   }
@@ -68,25 +68,25 @@ class ProfilePreferences {
 }
 
 class NotificationSettings {
-  final bool? dailyQuizReminder;
-  final bool? multiplayerInvites;
+  final bool? email;
+  final bool? push;
 
   NotificationSettings({
-    this.dailyQuizReminder,
-    this.multiplayerInvites,
+    this.email,
+    this.push,
   });
 
   factory NotificationSettings.fromJson(Map<String, dynamic> json) {
     return NotificationSettings(
-      dailyQuizReminder: json['dailyQuizReminder'],
-      multiplayerInvites: json['multiplayerInvites'],
+      email: json['email'],
+      push: json['push'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      if (dailyQuizReminder != null) 'dailyQuizReminder': dailyQuizReminder,
-      if (multiplayerInvites != null) 'multiplayerInvites': multiplayerInvites,
+      if (email != null) 'email': email,
+      if (push != null) 'push': push,
     };
   }
 }

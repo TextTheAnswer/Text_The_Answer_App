@@ -65,7 +65,7 @@ class CustomTextField extends StatelessWidget {
       readOnly: readOnly,
       maxLines: obscureText ? 1 : maxLines,
       decoration: InputDecoration(
-        contentPadding: contentPadding ?? EdgeInsets.symmetric(vertical: 8),
+        contentPadding: contentPadding ?? EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         labelText: hintText,
         labelStyle: FontUtility.interRegular(fontSize: 18, color: textColor),
         hintStyle: FontUtility.interRegular(fontSize: 18, color: hintColor),
@@ -87,17 +87,24 @@ class CustomTextField extends StatelessWidget {
                 : null,
         filled: true,
         fillColor: Colors.transparent,
-        border: UnderlineInputBorder(),
-        enabledBorder: UnderlineInputBorder(
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: Colors.white, width: 1.5),
         ),
-        focusedBorder: UnderlineInputBorder(
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.white, width: 1.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: AppColors.secondary, width: 1.5),
         ),
-        errorBorder: UnderlineInputBorder(
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: AppColors.error, width: 1.5),
         ),
-        focusedErrorBorder: UnderlineInputBorder(
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: AppColors.error, width: 1.5),
         ),
       ),

@@ -6,13 +6,24 @@ import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_state.dart';
 import '../../config/colors.dart';
 import '../../models/user_profile_model.dart';
+import '../../models/profile_model.dart';
 import '../../router/routes.dart';
 import '../../services/profile_service.dart';
+import '../../utils/common_ui.dart';
 import '../../utils/font_utility.dart';
+import '../../widgets/app_drawer.dart';
 import '../../widgets/custom_button.dart';
 import 'edit_profile_screen.dart';
 import 'game_history_screen.dart';
 import 'streak_progress_screen.dart';
+
+// Extension method to capitalize strings
+extension StringExtension on String {
+  String capitalize() {
+    if (this.isEmpty) return this;
+    return "${this[0].toUpperCase()}${this.substring(1)}";
+  }
+}
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback toggleTheme;
@@ -26,6 +37,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final ProfileService _profileService = ProfileService();
   UserProfileFull? _userProfile;
+  Profile? _basicProfile;
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -45,8 +57,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final isAuth = await _profileService.isAuthenticated();
 
       if (isAuth) {
-        // User is authenticated, fetch profile
-        await _fetchUserProfile();
+        // User is authenticated, fetch profile using the updated endpoint
+        await _fetchBasicProfile();
       } else {
         // User is not authenticated, don't try to fetch profile
         setState(() {
@@ -61,6 +73,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  // New method to fetch basic profile from /api/auth/profile
+  Future<void> _fetchBasicProfile() async {
+    try {
+      final response = await _profileService.getProfile();
+      
+      print('ProfileScreen: Basic profile fetch response - ${response.success}');
+      
+      if (response.success && response.profile != null) {
+        // Store the basic profile
+        _basicProfile = response.profile;
+        
+        // Once we have the basic profile, fetch the full profile
+        await _fetchUserProfile();
+      } else {
+        setState(() {
+          _isLoading = false;
+          _basicProfile = null;
+          
+          if (response.message?.toLowerCase().contains('not found') ?? false) {
+            _errorMessage = 'Profile not found. Please create your profile.';
+          } else if (response.message?.toLowerCase().contains('auth') ?? false) {
+            _errorMessage = 'Authentication required. Please login again.';
+          } else {
+            _errorMessage = response.message ?? 'Failed to load profile';
+          }
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _basicProfile = null;
+        _errorMessage = 'An error occurred while fetching profile: ${e.toString()}';
+      });
+    }
+  }
+
   Future<void> _fetchUserProfile() async {
     try {
       final response = await _profileService.getFullProfile();
@@ -68,33 +116,72 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _isLoading = false;
         if (response.success && response.profile != null) {
           _userProfile = response.profile;
-        } else if (response.message?.toLowerCase().contains('no profile') ??
-            false) {
-          // User is authenticated but doesn't have a profile yet
+          _errorMessage = null; // Clear any previous error
+        } else if (response.message?.toLowerCase().contains('no profile') ?? false) {
+          // User is authenticated but doesn't have a full profile yet
+          // We might still have the basic profile from _fetchBasicProfile
           _userProfile = null;
-          _errorMessage = null; // Clear any error message
+          // Only set error message if we don't have basic profile
+          if (_basicProfile == null) {
+            _errorMessage = 'Profile not found. Please create your profile.';
+          } else {
+            _errorMessage = null; // We'll show the basic profile instead
+          }
         } else {
-          _errorMessage = response.message ?? 'Failed to load profile';
+          // There's an error but we might still have basic profile
+          _errorMessage = response.message ?? 'Failed to load complete profile';
         }
       });
     } catch (e) {
       setState(() {
         _isLoading = false;
-        _errorMessage = 'An error occurred: ${e.toString()}';
+        // Only set error message if we don't have basic profile
+        if (_basicProfile == null) {
+          _errorMessage = 'An error occurred: ${e.toString()}';
+        } else {
+          // We have basic profile, so we'll show that instead
+          _errorMessage = 'Failed to load complete profile. Showing basic information.';
+        }
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
+      appBar: CommonUI.buildAppBar(
+        context: context,
+        title: 'Profile',
+        isDarkMode: isDarkMode,
+        toggleTheme: widget.toggleTheme,
+      ),
+      drawer: CommonUI.buildDrawer(
+        context: context,
+        toggleTheme: widget.toggleTheme,
+        isDarkMode: isDarkMode,
+      ),
       body: SafeArea(
         child: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
+            // Loading state
             if (state is AuthLoading || _isLoading) {
               return const Center(child: CircularProgressIndicator());
-            } else if (state is AuthAuthenticated) {
-              if (_errorMessage != null) {
+            } 
+            // Authenticated
+            else if (state is AuthAuthenticated) {
+              // Check if we have any profile data
+              if (_userProfile != null) {
+                // Show full profile
+                return _buildProfileContent();
+              } 
+              else if (_basicProfile != null) {
+                // Show basic profile if available
+                return _buildBasicProfileContent();
+              }
+              else if (_errorMessage != null) {
+                // Show error message when no profile data is available
                 return Center(
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -125,6 +212,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           icon: Icons.refresh,
                         ),
                         SizedBox(height: 12.h),
+                        if (_errorMessage!.toLowerCase().contains('not found') ||
+                           _errorMessage!.toLowerCase().contains('create'))
+                          CustomButton(
+                            text: 'Create Profile',
+                            onPressed: () {
+                              Navigator.pushNamed(context, Routes.profileCreate);
+                            },
+                            bgColor: Colors.green,
+                            icon: Icons.person_add,
+                          ),
                         if (_errorMessage!.toLowerCase().contains('auth') ||
                             _errorMessage!.toLowerCase().contains('login') ||
                             _errorMessage!.toLowerCase().contains('token'))
@@ -143,14 +240,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 );
               }
-
-              if (_userProfile == null) {
+              else {
+                // No profile data and no errors - show create profile view
                 return _buildNoProfileView();
               }
-
-              return _buildProfileContent();
             }
-            return _buildNotLoggedInView();
+            // Not authenticated
+            else {
+              return _buildNotLoggedInView();
+            }
           },
         ),
       ),
@@ -610,6 +708,152 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // New method to display basic profile if full profile fails
+  Widget _buildBasicProfileContent() {
+    final profile = _basicProfile!;
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final cardColor = isDarkMode 
+      ? AppColors.darkPrimaryBg 
+      : AppColors.lightPrimaryBg;
+    final textColor = isDarkMode 
+      ? AppColors.darkPrimaryText 
+      : AppColors.lightPrimaryText;
+    final accentColor = isDarkMode 
+      ? AppColors.darkOutlineBg 
+      : AppColors.lightOutlineBg;
+    
+    return RefreshIndicator(
+      onRefresh: _checkAuthAndFetchProfile,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: 20.h),
+            // Profile Header
+            Text('Profile 👤', style: theme.textTheme.headlineLarge),
+            SizedBox(height: 24.h),
+
+            // Basic Profile Card
+            Card(
+              elevation: 4,
+              color: cardColor,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+              child: Padding(
+                padding: EdgeInsets.all(16.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Profile Image
+                    Center(
+                      child: Column(
+                        children: [
+                          _buildProfileImage(profile.imageUrl),
+                          SizedBox(height: 16.h),
+                          if (profile.bio != null && profile.bio!.isNotEmpty)
+                            Text(
+                              profile.bio!,
+                              style: theme.textTheme.bodyMedium,
+                              textAlign: TextAlign.center,
+                            ),
+                        ],
+                      ),
+                    ),
+                    
+                    SizedBox(height: 16.h),
+                    
+                    // Location if available
+                    if (profile.location != null && profile.location!.isNotEmpty)
+                      Padding(
+                        padding: EdgeInsets.only(top: 8.h),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.location_on_outlined,
+                              size: 18.sp,
+                              color: textColor.withOpacity(0.7),
+                            ),
+                            SizedBox(width: 8.w),
+                            Expanded(
+                              child: Text(
+                                profile.location!,
+                                style: theme.textTheme.bodyMedium,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    
+                    // Preferences if available
+                    if (profile.preferences != null)
+                      Padding(
+                        padding: EdgeInsets.only(top: 16.h),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Preferences',
+                              style: theme.textTheme.titleMedium,
+                            ),
+                            SizedBox(height: 8.h),
+                            
+                            // Favorite categories
+                            if (profile.preferences!.favoriteCategories != null &&
+                                profile.preferences!.favoriteCategories!.isNotEmpty)
+                              Wrap(
+                                spacing: 8.w,
+                                runSpacing: 8.h,
+                                children: profile.preferences!.favoriteCategories!
+                                    .map((category) => Chip(
+                                          label: Text(category),
+                                          backgroundColor: accentColor.withOpacity(0.1),
+                                          labelStyle: TextStyle(color: accentColor),
+                                        ))
+                                    .toList(),
+                              ),
+                            
+                            // Display theme preference
+                            if (profile.preferences!.displayTheme != null)
+                              Padding(
+                                padding: EdgeInsets.only(top: 8.h),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      profile.preferences!.displayTheme == 'dark'
+                                          ? Icons.dark_mode
+                                          : Icons.light_mode,
+                                      size: 18.sp,
+                                      color: textColor.withOpacity(0.7),
+                                    ),
+                                    SizedBox(width: 8.w),
+                                    Text(
+                                      'Theme: ${profile.preferences!.displayTheme!.capitalize()}',
+                                      style: theme.textTheme.bodyMedium,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            
+            SizedBox(height: 24.h),
+
+            // Action Buttons
+            _buildActionButtons(),
+            SizedBox(height: 24.h),
           ],
         ),
       ),

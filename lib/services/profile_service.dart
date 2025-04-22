@@ -58,7 +58,7 @@ class ProfileService {
         );
       }
 
-      // If there's a profile image file, upload it first using the new endpoint
+      // If there's a profile image file, upload it first using the image upload endpoint
       String? imageUrl;
       if (profileImageFile != null) {
         print('ProfileService: Uploading profile image first');
@@ -66,50 +66,78 @@ class ProfileService {
         
         if (imageUrl == null) {
           print('ProfileService: Image upload failed, but continuing with profile creation');
-          // We'll continue with profile creation even if image upload fails
         } else {
           print('ProfileService: Image upload successful: $imageUrl');
         }
       }
 
       // Create profile data
-      final profile = Profile(
-        bio: bio,
-        location: location,
-        imageUrl: imageUrl,
-        preferences: preferences,
-      );
+      final Map<String, dynamic> profileData = {
+        'bio': bio,
+        'location': location,
+      };
+
+      if (preferences != null) {
+        profileData['preferences'] = preferences.toJson();
+      }
+
+      if (imageUrl != null) {
+        profileData['imageUrl'] = imageUrl;
+      }
 
       print('ProfileService: Calling profile/create endpoint with token');
+      print('ProfileService: Profile data: $profileData');
       
-      // Make API request to create the profile
+      // Make API request to create the profile using the proper endpoint
       final response = await http.post(
-        Uri.parse('$baseUrl/profile/create'),
+        Uri.parse('${baseUrl}profile/create'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode(profile.toJson()),
+        body: jsonEncode(profileData),
       );
 
       print('ProfileService: API response status: ${response.statusCode}');
       print('ProfileService: API response body: ${response.body}');
 
       // Process response
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return ProfileResponse.fromJson(data);
-      } else {
-        Map<String, dynamic> errorData = {};
-        try {
-          errorData = jsonDecode(response.body);
-        } catch (_) {
-          // Ignore parsing errors
-        }
-
+      Map<String, dynamic> responseData = {};
+      try {
+        responseData = jsonDecode(response.body);
+      } catch (e) {
+        print('ProfileService: Error parsing response body: $e');
         return ProfileResponse(
           success: false,
-          message: errorData['message'] ?? 'Failed to create profile. Status: ${response.statusCode}',
+          message: 'Invalid response from server',
+        );
+      }
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return ProfileResponse(
+          success: true,
+          message: responseData['message'] ?? 'Profile created successfully',
+          profile: responseData['profile'] != null 
+              ? Profile.fromJson(responseData['profile']) 
+              : null,
+        );
+      } else if (response.statusCode == 401 || response.statusCode == 403) {
+        print('ProfileService: Authentication error');
+        return ProfileResponse(
+          success: false,
+          message: responseData['message'] ?? 'Authentication required. Please login again.',
+        );
+      } else if (response.statusCode == 400) {
+        print('ProfileService: Bad request error');
+        return ProfileResponse(
+          success: false,
+          message: responseData['message'] ?? 'Invalid profile data',
+        );
+      } else {
+        print('ProfileService: Other error: ${response.statusCode}');
+        return ProfileResponse(
+          success: false,
+          message: responseData['message'] ?? 'Failed to create profile. Status: ${response.statusCode}',
         );
       }
     } catch (e) {
@@ -126,10 +154,10 @@ class ProfileService {
     try {
       print('ProfileService: Creating multipart request for image upload');
       
-      // Create a multipart request for the new endpoint
+      // Create a multipart request for the endpoint
       final request = http.MultipartRequest(
         'POST',
-        Uri.parse('$baseUrl/api/profile/image'),
+        Uri.parse('${baseUrl}profile/image'),
       );
 
       // Add authorization header
@@ -152,7 +180,7 @@ class ProfileService {
       request.files.add(multipartFile);
 
       // Send the request
-      print('ProfileService: Sending image upload request to /api/profile/image');
+      print('ProfileService: Sending image upload request');
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
       
@@ -162,8 +190,8 @@ class ProfileService {
       // Process response
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        // Extract imageUrl from the profile object according to the API docs
-        return data['profile']['imageUrl']; 
+        // Extract imageUrl from the response
+        return data['imageUrl']; 
       } else {
         print('Error uploading image: ${response.body}');
         return null;
@@ -177,20 +205,29 @@ class ProfileService {
   // Get user profile
   Future<ProfileResponse> getProfile() async {
     try {
-      print('ProfileService: Getting user profile');
+      print('ProfileService: Getting user profile from auth/profile endpoint');
       
       // Get and ensure a valid authentication token
       final token = await _getAuthToken();
       if (token == null) {
+        print('ProfileService: No valid token available for profile fetch');
         return ProfileResponse(
           success: false,
           message: 'Authentication required. Please login again.',
         );
       }
 
+      // Print token info for debugging (first few chars only for security)
+      final shortToken = token.length > 10 ? '${token.substring(0, 10)}...' : token;
+      print('ProfileService: Using token starting with: $shortToken');
+
+      // Construct the correct URL
+      final url = '${baseUrl}auth/profile';
+      print('ProfileService: Calling API endpoint: $url');
+
       // Make API request
       final response = await http.get(
-        Uri.parse('$baseUrl/profile'),
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -198,23 +235,63 @@ class ProfileService {
       );
       
       print('ProfileService: Get profile response status: ${response.statusCode}');
+      print('ProfileService: Get profile response body: ${response.body}');
 
       // Process response
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return ProfileResponse.fromJson(data);
-      } else {
-        Map<String, dynamic> errorData = {};
         try {
-          errorData = jsonDecode(response.body);
-        } catch (_) {
-          // Ignore parsing errors
+          final data = jsonDecode(response.body);
+          print('ProfileService: Successfully parsed profile response');
+          
+          // Check if the data contains a profile object
+          if (data.containsKey('profile') && data['profile'] != null) {
+            print('ProfileService: Profile data found in response');
+            return ProfileResponse.fromJson(data);
+          } else {
+            print('ProfileService: No profile data in the response');
+            return ProfileResponse(
+              success: false,
+              message: 'No profile data in the response',
+            );
+          }
+        } catch (e) {
+          print('ProfileService: Error parsing profile response: $e');
+          return ProfileResponse(
+            success: false,
+            message: 'Invalid response format',
+          );
         }
-
-        print('ProfileService: Get profile error: ${errorData['message']}');
+      } else if (response.statusCode == 404) {
+        print('ProfileService: Profile not found (404)');
         return ProfileResponse(
           success: false,
-          message: errorData['message'] ?? 'Failed to get profile. Status: ${response.statusCode}',
+          message: 'Profile not found. Please create your profile.',
+        );
+      } else if (response.statusCode == 401 || response.statusCode == 403) {
+        print('ProfileService: Authentication error (${response.statusCode})');
+        return ProfileResponse(
+          success: false,
+          message: 'Authentication failed. Please login again.',
+        );
+      } else {
+        print('ProfileService: Other error (${response.statusCode})');
+        
+        String errorMessage = 'Failed to get profile. Status: ${response.statusCode}';
+        
+        try {
+          final errorData = jsonDecode(response.body);
+          if (errorData.containsKey('message') && errorData['message'] != null) {
+            errorMessage = errorData['message'];
+          }
+          print('ProfileService: Error message from server: $errorMessage');
+        } catch (e) {
+          // Ignore parsing errors
+          print('ProfileService: Could not parse error response: $e');
+        }
+
+        return ProfileResponse(
+          success: false,
+          message: errorMessage,
         );
       }
     } catch (e) {
@@ -335,4 +412,92 @@ class ProfileService {
       );
     }
   }
-} 
+
+  // Test profile creation API
+  Future<ProfileResponse> testProfileCreation() async {
+    try {
+      print('ProfileService: Testing profile creation API');
+      
+      // Get and ensure a valid authentication token
+      final token = await _getAuthToken();
+      if (token == null) {
+        return ProfileResponse(
+          success: false,
+          message: 'Authentication required. Please login again.',
+        );
+      }
+
+      // Create test profile data with all required fields
+      final Map<String, dynamic> testProfileData = {
+        'bio': 'Test bio from mobile app',
+        'location': 'Test location',
+        'preferences': {
+          'favoriteCategories': ['Science', 'History'],
+          'notificationSettings': { 'email': true, 'push': false },
+          'displayTheme': 'light'
+        }
+      };
+
+      print('ProfileService: Sending test profile data to profile/create endpoint');
+      
+      // Make API request to create the profile
+      final response = await http.post(
+        Uri.parse('${baseUrl}profile/create'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(testProfileData),
+      );
+
+      print('ProfileService: Test API response status: ${response.statusCode}');
+      print('ProfileService: Test API response body: ${response.body}');
+
+      // Process response
+      Map<String, dynamic> responseData = {};
+      try {
+        responseData = jsonDecode(response.body);
+      } catch (e) {
+        print('ProfileService: Error parsing test response body: $e');
+        return ProfileResponse(
+          success: false,
+          message: 'Invalid response from server',
+        );
+      }
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return ProfileResponse(
+          success: true,
+          message: 'Profile creation test successful',
+          profile: responseData['profile'] != null 
+              ? Profile.fromJson(responseData['profile']) 
+              : null,
+        );
+      } else if (response.statusCode == 401 || response.statusCode == 403) {
+        print('ProfileService: Authentication error in test');
+        return ProfileResponse(
+          success: false,
+          message: responseData['message'] ?? 'Authentication required. Please login again.',
+        );
+      } else if (response.statusCode == 400) {
+        print('ProfileService: Bad request error in test');
+        return ProfileResponse(
+          success: false,
+          message: responseData['message'] ?? 'Invalid profile data',
+        );
+      } else {
+        print('ProfileService: Other error in test: ${response.statusCode}');
+        return ProfileResponse(
+          success: false,
+          message: responseData['message'] ?? 'Test failed. Status: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      print('ProfileService: Exception in testProfileCreation: $e');
+      return ProfileResponse(
+        success: false,
+        message: 'Error testing profile creation: ${e.toString()}',
+      );
+    }
+  }
+}   

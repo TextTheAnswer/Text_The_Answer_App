@@ -474,6 +474,44 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
                 borderColor: Colors.white,
                 textColor: Colors.white,
               ),
+              
+              // Add developer mode test button for API testing
+              SizedBox(height: 40.h),
+              Align(
+                alignment: Alignment.center,
+                child: GestureDetector(
+                  onTap: _isLoading ? null : _testProfileCreation,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(16.r),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.2),
+                        width: 1.w,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.code,
+                          color: Colors.white.withOpacity(0.7),
+                          size: 18.sp,
+                        ),
+                        SizedBox(width: 8.w),
+                        Text(
+                          'Test API Integration',
+                          style: FontUtility.montserratMedium(
+                            fontSize: 12,
+                            color: Colors.white.withOpacity(0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -907,13 +945,13 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
 
       // Create notification settings
       final notificationSettings = NotificationSettings(
-        dailyQuizReminder: true,
-        multiplayerInvites: true,
+        email: true,
+        push: true,
       );
 
       // Create profile preferences
       final preferences = ProfilePreferences(
-        favoriteCategories: ['General Knowledge'],
+        favoriteCategories: ['General Knowledge', 'Science', 'History'],
         notificationSettings: notificationSettings,
         displayTheme: 'light',
       );
@@ -1023,5 +1061,51 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
     Navigator.of(
       context,
     ).pushNamedAndRemoveUntil(Routes.home, (route) => false);
+  }
+
+  // Add a test function to test the profile creation API
+  Future<void> _testProfileCreation() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final response = await _profileService.testProfileCreation();
+      
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (!mounted) return;
+
+      if (response.success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('API Test successful! Profile created.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('API Test failed: ${response.message}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error in API test: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }
