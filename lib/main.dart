@@ -71,7 +71,7 @@ class _MyAppState extends State<MyApp> {
             theme: AppTheme.lightTheme(),
             darkTheme: AppTheme.darkTheme(),
             themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
-            initialRoute: Routes.login,
+            initialRoute: Routes.home,
             onGenerateRoute: AppRouter.generateRoute,
             builder: (context, child) {
               return BlocListener<AuthBloc, AuthState>(
