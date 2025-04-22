@@ -1,7 +1,15 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:iconsax_plus/iconsax_plus.dart';
+import 'package:text_the_answer/screens/profile/widgets/profile_card.dart';
+import 'package:text_the_answer/screens/profile/widgets/profile_image.dart';
+import 'package:text_the_answer/utils/constants/app_images.dart';
+import 'package:text_the_answer/widgets/app_bar/custom_app_bar.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_state.dart';
 import '../../config/colors.dart';
@@ -11,7 +19,6 @@ import '../../router/routes.dart';
 import '../../services/profile_service.dart';
 import '../../utils/common_ui.dart';
 import '../../utils/font_utility.dart';
-import '../../widgets/app_drawer.dart';
 import '../../widgets/custom_button.dart';
 import 'edit_profile_screen.dart';
 import 'game_history_screen.dart';
@@ -20,8 +27,8 @@ import 'streak_progress_screen.dart';
 // Extension method to capitalize strings
 extension StringExtension on String {
   String capitalize() {
-    if (this.isEmpty) return this;
-    return "${this[0].toUpperCase()}${this.substring(1)}";
+    if (isEmpty) return this;
+    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }
 
@@ -53,48 +60,71 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _errorMessage = null;
     });
 
-    try {
-      final isAuth = await _profileService.isAuthenticated();
+    final testingProfile = Profile(
+      id: 'Testing',
+      bio: 'A love gaming',
+      location: 'London',
+      imageUrl: '',
+    );
 
-      if (isAuth) {
-        // User is authenticated, fetch profile using the updated endpoint
-        await _fetchBasicProfile();
-      } else {
-        // User is not authenticated, don't try to fetch profile
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'An error occurred: ${e.toString()}';
-      });
-    }
+    final testingFullProfile = UserProfileFull(
+      id: 'Testing',
+      email: 'oluwaferanmiidaniel@gmail.com',
+      name: 'Daniel Olayinka',
+      profile: testingProfile,
+      subscription: Subscription(),
+      stats: UserStats(),
+      isPremium: true,
+      isEducation: false,
+    );
+    setState(() {
+      _userProfile = testingFullProfile;
+      // _basicProfile = testingProfile;
+      _isLoading = false;
+    });
+
+    // try {
+    //   final isAuth = await _profileService.isAuthenticated();
+
+    //   if (isAuth) {
+    //     // User is authenticated, fetch profile using the updated endpoint
+    //     await _fetchBasicProfile();
+    //   } else {
+    //     // User is not authenticated, don't try to fetch profile
+    //     setState(() {
+    //       _isLoading = false;
+    //     });
+    //   }
+    // } catch (e) {
+    //   setState(() {
+    //     _isLoading = false;
+    //     _errorMessage = 'An error occurred: ${e.toString()}';
+    //   });
+    // }
   }
 
   // New method to fetch basic profile from /api/auth/profile
   Future<void> _fetchBasicProfile() async {
     try {
       final response = await _profileService.getProfile();
-      
+
       if (kDebugMode) {
         print(
           'ProfileScreen: Basic profile fetch response - ${response.success}',
         );
       }
-      
+
       if (response.success && response.profile != null) {
         // Store the basic profile
         _basicProfile = response.profile;
-        
+
         // Once we have the basic profile, fetch the full profile
         await _fetchUserProfile();
       } else {
         setState(() {
           _isLoading = false;
           _basicProfile = null;
-          
+
           if (response.message.toLowerCase().contains('not found')) {
             _errorMessage = 'Profile not found. Please create your profile.';
           } else if (response.message.toLowerCase().contains('auth')) {
@@ -156,7 +186,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
       appBar: CustomAppBar(
         showBackArrow: false,
@@ -193,85 +223,85 @@ class _ProfileScreenState extends State<ProfileScreen> {
         isDarkMode: isDarkMode,
       ),
       body: BlocBuilder<AuthBloc, AuthState>(
-          builder: (context, state) {
-            // Loading state
-            if (state is AuthLoading || _isLoading) {
-              return const Center(child: CircularProgressIndicator());
-            } 
-            // Authenticated
-            else if (state is AuthAuthenticated) {
-              // Check if we have any profile data
-              if (_userProfile != null) {
-                // Show full profile
-                return _buildProfileContent();
+        builder: (context, state) {
+          // Loading state
+          if (state is AuthLoading || _isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          // Authenticated
+          else if (state is AuthAuthenticated) {
+            // Check if we have any profile data
+            if (_userProfile != null) {
+              // Show full profile
+              return _buildProfileContent();
             } else if (_basicProfile != null) {
-                // Show basic profile if available
-                return _buildBasicProfileContent();
+              // Show basic profile if available
+              return _buildBasicProfileContent();
             } else if (_errorMessage != null) {
-                // Show error message when no profile data is available
-                return Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24.w),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
+              // Show error message when no profile data is available
+              return Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24.w),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
                       Icon(Icons.error_outline, size: 60.sp, color: Colors.red),
-                        SizedBox(height: 16.h),
-                        Text(
-                          'Error loading profile',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          _errorMessage!,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                          textAlign: TextAlign.center,
-                        ),
-                        SizedBox(height: 24.h),
+                      SizedBox(height: 16.h),
+                      Text(
+                        'Error loading profile',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      SizedBox(height: 8.h),
+                      Text(
+                        _errorMessage!,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 24.h),
+                      CustomButton(
+                        text: 'Retry',
+                        onPressed: _checkAuthAndFetchProfile,
+                        bgColor: AppColors.primary,
+                        icon: Icons.refresh,
+                      ),
+                      SizedBox(height: 12.h),
+                      if (_errorMessage!.toLowerCase().contains('not found') ||
+                          _errorMessage!.toLowerCase().contains('create'))
                         CustomButton(
-                          text: 'Retry',
-                          onPressed: _checkAuthAndFetchProfile,
-                          bgColor: AppColors.primary,
-                          icon: Icons.refresh,
+                          text: 'Create Profile',
+                          onPressed: () {
+                            Navigator.pushNamed(context, Routes.profileCreate);
+                          },
+                          bgColor: Colors.green,
+                          icon: Icons.person_add,
                         ),
-                        SizedBox(height: 12.h),
-                        if (_errorMessage!.toLowerCase().contains('not found') ||
-                           _errorMessage!.toLowerCase().contains('create'))
-                          CustomButton(
-                            text: 'Create Profile',
-                            onPressed: () {
-                              Navigator.pushNamed(context, Routes.profileCreate);
-                            },
-                            bgColor: Colors.green,
-                            icon: Icons.person_add,
-                          ),
-                        if (_errorMessage!.toLowerCase().contains('auth') ||
-                            _errorMessage!.toLowerCase().contains('login') ||
-                            _errorMessage!.toLowerCase().contains('token'))
-                          CustomButton(
-                            text: 'Login',
-                            onPressed: () {
-                              Navigator.pushNamed(context, Routes.login);
-                            },
-                            buttonType: CustomButtonType.outline,
-                            borderColor: AppColors.primary,
-                            textColor: AppColors.primary,
-                            icon: Icons.login,
-                          ),
-                      ],
-                    ),
+                      if (_errorMessage!.toLowerCase().contains('auth') ||
+                          _errorMessage!.toLowerCase().contains('login') ||
+                          _errorMessage!.toLowerCase().contains('token'))
+                        CustomButton(
+                          text: 'Login',
+                          onPressed: () {
+                            Navigator.pushNamed(context, Routes.login);
+                          },
+                          buttonType: CustomButtonType.outline,
+                          borderColor: AppColors.primary,
+                          textColor: AppColors.primary,
+                          icon: Icons.login,
+                        ),
+                    ],
                   ),
-                );
+                ),
+              );
             } else {
-                // No profile data and no errors - show create profile view
-                return _buildNoProfileView();
-              }
+              // No profile data and no errors - show create profile view
+              return _buildNoProfileView();
             }
-            // Not authenticated
-            else {
-              return _buildNotLoggedInView();
-            }
-          },
+          }
+          // Not authenticated
+          else {
+            return _buildNotLoggedInView();
+          }
+        },
       ),
     );
   }
@@ -580,7 +610,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         isDarkMode ? AppColors.darkPrimaryText : AppColors.lightPrimaryText;
     final accentColor =
         isDarkMode ? AppColors.darkOutlineBg : AppColors.lightOutlineBg;
-    
+
     return RefreshIndicator(
       onRefresh: _checkAuthAndFetchProfile,
       child: SingleChildScrollView(
@@ -621,9 +651,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ],
                       ),
                     ),
-                    
+
                     SizedBox(height: 16.h),
-                    
+
                     // Location if available
                     if (profile.location != null &&
                         profile.location!.isNotEmpty)
@@ -646,7 +676,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ],
                         ),
                       ),
-                    
+
                     // Preferences if available
                     if (profile.preferences != null)
                       Padding(
@@ -659,7 +689,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               style: theme.textTheme.titleMedium,
                             ),
                             SizedBox(height: 8.h),
-                            
+
                             // Favorite categories
                             if (profile.preferences!.favoriteCategories !=
                                     null &&
@@ -674,7 +704,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     profile.preferences!.favoriteCategories!
                                         .map(
                                           (category) => Chip(
-                                          label: Text(category),
+                                            label: Text(category),
                                             backgroundColor: accentColor
                                                 .withOpacity(0.1),
                                             labelStyle: TextStyle(
@@ -682,9 +712,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             ),
                                           ),
                                         )
-                                    .toList(),
+                                        .toList(),
                               ),
-                            
+
                             // Display theme preference
                             if (profile.preferences!.displayTheme != null)
                               Padding(
@@ -714,7 +744,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             ),
-            
+
             SizedBox(height: 24.h),
 
             // Action Buttons
