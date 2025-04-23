@@ -22,7 +22,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     emit(SubscriptionLoading());
     
     try {
-      final response = await _apiService.createCheckoutSession(event.priceId);
+      final response = await _apiService.createCheckoutSession();
       
       if (response.containsKey('url')) {
         emit(CheckoutSessionCreated(response['url']));

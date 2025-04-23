@@ -79,7 +79,9 @@ class SubscriptionScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
-                      context.read<SubscriptionBloc>().add(const CreateCheckoutSession());
+                      context.read<SubscriptionBloc>().add(
+                        const CreateCheckoutSession(priceId: 'price_premium_monthly')
+                      );
                     },
                     child: const Text('Choose Plan'),
                   ),

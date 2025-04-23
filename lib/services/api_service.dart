@@ -7,7 +7,11 @@ import 'package:text_the_answer/models/question.dart';
 import 'package:text_the_answer/models/study_material.dart';
 import 'package:text_the_answer/models/theme.dart';
 import 'package:text_the_answer/models/user.dart';
+<<<<<<< HEAD
 import 'package:text_the_answer/models/lobby.dart';
+=======
+import 'package:text_the_answer/models/leaderboard.dart';
+>>>>>>> c5717fde34d46e5ed135a7fad1588df3cb6af1d5
 
 class ApiService {
   final String baseUrl = ApiConfig.baseUrl;
@@ -225,7 +229,7 @@ class ApiService {
   }
 
   // Quiz Endpoints
-  Future<Map<String, dynamic>> getDailyQuestions() async {
+  Future<Map<String, dynamic>> getDailyQuiz() async {
     final token = await _getToken();
     final response = await http.get(
       Uri.parse('$baseUrl/quiz/daily'),
@@ -242,6 +246,8 @@ class ApiService {
       
       return {
         'questions': questions,
+        'questionsAnswered': data['questionsAnswered'] ?? 0,
+        'correctAnswers': data['correctAnswers'] ?? 0,
         'theme': data['theme']['name'] ?? 'Daily Quiz',
         'themeDescription': data['theme']['description'] ?? '',
       };
@@ -250,7 +256,7 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> submitAnswer(String questionId, String answer) async {
+  Future<Map<String, dynamic>> submitDailyQuizAnswer(String questionId, String answer) async {
     final token = await _getToken();
     final response = await http.post(
       Uri.parse('$baseUrl/quiz/submit'),
@@ -272,10 +278,10 @@ class ApiService {
   }
 
   // Leaderboard Endpoints
-  Future<List<Map<String, dynamic>>> getLeaderboard() async {
+  Future<Map<String, dynamic>> getDailyLeaderboard() async {
     final token = await _getToken();
     final response = await http.get(
-      Uri.parse('$baseUrl/leaderboard'),
+      Uri.parse('$baseUrl/leaderboard/daily'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -284,9 +290,43 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return List<Map<String, dynamic>>.from(data['leaderboard']);
+      final List<dynamic> leaderboardData = data['leaderboard'];
+      final List<LeaderboardEntry> leaderboardEntries = leaderboardData
+          .map((entry) => LeaderboardEntry.fromJson(entry))
+          .toList();
+      
+      return {
+        'leaderboard': leaderboardEntries,
+        'userRank': data['userRank'] ?? 0,
+      };
     } else {
-      throw Exception('Failed to get leaderboard: ${response.body}');
+      throw Exception('Failed to get daily leaderboard: ${response.body}');
+    }
+  }
+
+  Future<Map<String, dynamic>> getGameLeaderboard(String gameId) async {
+    final token = await _getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/leaderboard/game/$gameId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List<dynamic> leaderboardData = data['leaderboard'];
+      final List<LeaderboardEntry> leaderboardEntries = leaderboardData
+          .map((entry) => LeaderboardEntry.fromJson(entry))
+          .toList();
+      
+      return {
+        'leaderboard': leaderboardEntries,
+        'userRank': data['userRank'] ?? 0,
+      };
+    } else {
+      throw Exception('Failed to get game leaderboard: ${response.body}');
     }
   }
 
@@ -500,7 +540,7 @@ class ApiService {
   }
 
   // Subscription Endpoints
-  Future<Map<String, dynamic>> getSubscriptionStatus() async {
+  Future<Map<String, dynamic>> getSubscriptionDetails() async {
     final token = await _getToken();
     final response = await http.get(
       Uri.parse('$baseUrl/subscriptions/status'),
@@ -517,7 +557,11 @@ class ApiService {
     }
   }
 
+<<<<<<< HEAD
   Future<Map<String, dynamic>> createCheckoutSession([String? priceId]) async {
+=======
+  Future<Map<String, dynamic>> createCheckoutSession({required String priceId}) async {
+>>>>>>> c5717fde34d46e5ed135a7fad1588df3cb6af1d5
     final token = await _getToken();
     final Map<String, dynamic> requestBody = {};
     
