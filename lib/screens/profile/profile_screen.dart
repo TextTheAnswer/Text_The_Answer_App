@@ -1,7 +1,15 @@
-import 'package:cached_network_image/cached_network_image.dart';
+// ignore_for_file: deprecated_member_use
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:iconsax_plus/iconsax_plus.dart';
+import 'package:text_the_answer/screens/profile/widgets/profile_card.dart';
+import 'package:text_the_answer/screens/profile/widgets/profile_image.dart';
+import 'package:text_the_answer/screens/profile/widgets/profile_stats.dart';
+import 'package:text_the_answer/utils/constants/app_images.dart';
+import 'package:text_the_answer/widgets/app_bar/custom_app_bar.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_state.dart';
 import '../../config/colors.dart';
@@ -11,7 +19,6 @@ import '../../router/routes.dart';
 import '../../services/profile_service.dart';
 import '../../utils/common_ui.dart';
 import '../../utils/font_utility.dart';
-import '../../widgets/app_drawer.dart';
 import '../../widgets/custom_button.dart';
 import 'edit_profile_screen.dart';
 import 'game_history_screen.dart';
@@ -20,8 +27,8 @@ import 'streak_progress_screen.dart';
 // Extension method to capitalize strings
 extension StringExtension on String {
   String capitalize() {
-    if (this.isEmpty) return this;
-    return "${this[0].toUpperCase()}${this.substring(1)}";
+    if (isEmpty) return this;
+    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }
 
@@ -46,6 +53,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     _checkAuthAndFetchProfile();
   }
+
+  // // Note: This is for testing @danielkiing3
+  // Future<void> _checkAuthAndFetchProfile() async {
+  //   setState(() {
+  //     _isLoading = true;
+  //     _errorMessage = null;
+  //   });
+
+  //   final testingProfile = Profile(
+  //     id: 'Testing',
+  //     bio: 'A love gaming',
+  //     location: 'London',
+  //     imageUrl: '',
+  //   );
+
+  //   final testingFullProfile = UserProfileFull(
+  //     id: 'Testing',
+  //     email: '@superhim',
+  //     name: 'Daniel Olayinka',
+  //     profile: testingProfile,
+  //     subscription: Subscription(),
+  //     stats: UserStats(),
+  //     isPremium: true,
+  //     isEducation: false,
+  //   );
+  //   setState(() {
+  //     _userProfile = testingFullProfile;
+  //     _basicProfile = testingProfile;
+  //     _isLoading = false;
+  //   });
+  // }
 
   Future<void> _checkAuthAndFetchProfile() async {
     setState(() {
@@ -77,26 +115,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _fetchBasicProfile() async {
     try {
       final response = await _profileService.getProfile();
-      
-      print('ProfileScreen: Basic profile fetch response - ${response.success}');
-      
+
+      if (kDebugMode) {
+        print(
+          'ProfileScreen: Basic profile fetch response - ${response.success}',
+        );
+      }
+
       if (response.success && response.profile != null) {
         // Store the basic profile
         _basicProfile = response.profile;
-        
+
         // Once we have the basic profile, fetch the full profile
         await _fetchUserProfile();
       } else {
         setState(() {
           _isLoading = false;
           _basicProfile = null;
-          
-          if (response.message?.toLowerCase().contains('not found') ?? false) {
+
+          if (response.message.toLowerCase().contains('not found')) {
             _errorMessage = 'Profile not found. Please create your profile.';
-          } else if (response.message?.toLowerCase().contains('auth') ?? false) {
+          } else if (response.message.toLowerCase().contains('auth')) {
             _errorMessage = 'Authentication required. Please login again.';
           } else {
-            _errorMessage = response.message ?? 'Failed to load profile';
+            _errorMessage = response.message;
           }
         });
       }
@@ -104,7 +146,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         _isLoading = false;
         _basicProfile = null;
-        _errorMessage = 'An error occurred while fetching profile: ${e.toString()}';
+        _errorMessage =
+            'An error occurred while fetching profile: ${e.toString()}';
       });
     }
   }
@@ -117,7 +160,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (response.success && response.profile != null) {
           _userProfile = response.profile;
           _errorMessage = null; // Clear any previous error
-        } else if (response.message?.toLowerCase().contains('no profile') ?? false) {
+        } else if (response.message?.toLowerCase().contains('no profile') ??
+            false) {
           // User is authenticated but doesn't have a full profile yet
           // We might still have the basic profile from _fetchBasicProfile
           _userProfile = null;
@@ -140,7 +184,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _errorMessage = 'An error occurred: ${e.toString()}';
         } else {
           // We have basic profile, so we'll show that instead
-          _errorMessage = 'Failed to load complete profile. Showing basic information.';
+          _errorMessage =
+              'Failed to load complete profile. Showing basic information.';
         }
       });
     }
@@ -149,108 +194,122 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
-      appBar: CommonUI.buildAppBar(
-        context: context,
-        title: 'Profile',
-        isDarkMode: isDarkMode,
-        toggleTheme: widget.toggleTheme,
+      appBar: CustomAppBar(
+        showBackArrow: false,
+        actions: [
+          IconButton(onPressed: () {}, icon: Icon(IconsaxPlusLinear.send_2)),
+          IconButton(
+            onPressed: () {},
+            icon: Icon(IconsaxPlusLinear.message_notif),
+          ),
+          IconButton(onPressed: () {}, icon: Icon(IconsaxPlusLinear.setting_2)),
+        ],
+        title: Row(
+          children: [
+            // -- Logo
+            Image.asset(AppImages.appLogo, height: kToolbarHeight - 10),
+            SizedBox(width: 24),
+
+            // -- Text
+            Text(
+              'Profile',
+
+              style: FontUtility.interRegular(
+                fontSize: 24,
+                //TODO: Checking for dark mode should be in a central location
+                color: isDarkMode ? Colors.white : Colors.black,
+              ),
+            ),
+          ],
+        ),
       ),
       drawer: CommonUI.buildDrawer(
         context: context,
         toggleTheme: widget.toggleTheme,
         isDarkMode: isDarkMode,
       ),
-      body: SafeArea(
-        child: BlocBuilder<AuthBloc, AuthState>(
-          builder: (context, state) {
-            // Loading state
-            if (state is AuthLoading || _isLoading) {
-              return const Center(child: CircularProgressIndicator());
-            } 
-            // Authenticated
-            else if (state is AuthAuthenticated) {
-              // Check if we have any profile data
-              if (_userProfile != null) {
-                // Show full profile
-                return _buildProfileContent();
-              } 
-              else if (_basicProfile != null) {
-                // Show basic profile if available
-                return _buildBasicProfileContent();
-              }
-              else if (_errorMessage != null) {
-                // Show error message when no profile data is available
-                return Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24.w),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 60.sp,
-                          color: Colors.red,
-                        ),
-                        SizedBox(height: 16.h),
-                        Text(
-                          'Error loading profile',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          _errorMessage!,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                          textAlign: TextAlign.center,
-                        ),
-                        SizedBox(height: 24.h),
+      body: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          // Loading state
+          if (state is AuthLoading || _isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          // Authenticated
+          else if (state is AuthAuthenticated) {
+            // Check if we have any profile data
+            if (_userProfile != null) {
+              // Show full profile
+              return _buildProfileContent();
+            } else if (_basicProfile != null) {
+              // Show basic profile if available
+              return _buildBasicProfileContent();
+            } else if (_errorMessage != null) {
+              // Show error message when no profile data is available
+              return Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24.w),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 60.sp, color: Colors.red),
+                      SizedBox(height: 16.h),
+                      Text(
+                        'Error loading profile',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      SizedBox(height: 8.h),
+                      Text(
+                        _errorMessage!,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 24.h),
+                      CustomButton(
+                        text: 'Retry',
+                        onPressed: _checkAuthAndFetchProfile,
+                        bgColor: AppColors.primary,
+                        icon: Icons.refresh,
+                      ),
+                      SizedBox(height: 12.h),
+                      if (_errorMessage!.toLowerCase().contains('not found') ||
+                          _errorMessage!.toLowerCase().contains('create'))
                         CustomButton(
-                          text: 'Retry',
-                          onPressed: _checkAuthAndFetchProfile,
-                          bgColor: AppColors.primary,
-                          icon: Icons.refresh,
+                          text: 'Create Profile',
+                          onPressed: () {
+                            Navigator.pushNamed(context, Routes.profileCreate);
+                          },
+                          bgColor: Colors.green,
+                          icon: Icons.person_add,
                         ),
-                        SizedBox(height: 12.h),
-                        if (_errorMessage!.toLowerCase().contains('not found') ||
-                           _errorMessage!.toLowerCase().contains('create'))
-                          CustomButton(
-                            text: 'Create Profile',
-                            onPressed: () {
-                              Navigator.pushNamed(context, Routes.profileCreate);
-                            },
-                            bgColor: Colors.green,
-                            icon: Icons.person_add,
-                          ),
-                        if (_errorMessage!.toLowerCase().contains('auth') ||
-                            _errorMessage!.toLowerCase().contains('login') ||
-                            _errorMessage!.toLowerCase().contains('token'))
-                          CustomButton(
-                            text: 'Login',
-                            onPressed: () {
-                              Navigator.pushNamed(context, Routes.login);
-                            },
-                            buttonType: CustomButtonType.outline,
-                            borderColor: AppColors.primary,
-                            textColor: AppColors.primary,
-                            icon: Icons.login,
-                          ),
-                      ],
-                    ),
+                      if (_errorMessage!.toLowerCase().contains('auth') ||
+                          _errorMessage!.toLowerCase().contains('login') ||
+                          _errorMessage!.toLowerCase().contains('token'))
+                        CustomButton(
+                          text: 'Login',
+                          onPressed: () {
+                            Navigator.pushNamed(context, Routes.login);
+                          },
+                          buttonType: CustomButtonType.outline,
+                          borderColor: AppColors.primary,
+                          textColor: AppColors.primary,
+                          icon: Icons.login,
+                        ),
+                    ],
                   ),
-                );
-              }
-              else {
-                // No profile data and no errors - show create profile view
-                return _buildNoProfileView();
-              }
+                ),
+              );
+            } else {
+              // No profile data and no errors - show create profile view
+              return _buildNoProfileView();
             }
-            // Not authenticated
-            else {
-              return _buildNotLoggedInView();
-            }
-          },
-        ),
+          }
+          // Not authenticated
+          else {
+            return _buildNotLoggedInView();
+          }
+        },
       ),
     );
   }
@@ -267,17 +326,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 20.h),
-            // Profile Header
-            Text('Profile 👤', style: theme.textTheme.headlineLarge),
+            // -- Profile Card
+            ProfileCard(profile: profile),
             SizedBox(height: 24.h),
 
-            // Profile Card
-            _buildProfileCard(profile),
-            SizedBox(height: 24.h),
-
-            // Stats Card
-            _buildStatsCard(profile.stats),
+            // -- Stats Card
+            ProfileStats(),
             SizedBox(height: 24.h),
 
             // Buttons
@@ -285,171 +339,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SizedBox(height: 24.h),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildProfileCard(UserProfileFull profile) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                // Profile Image
-                _buildProfileImage(profile.profile.imageUrl),
-                SizedBox(width: 16.w),
-
-                // User Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        profile.name,
-                        style: FontUtility.montserratBold(fontSize: 20),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        profile.email,
-                        style: FontUtility.interRegular(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: 8.h),
-                      if (profile.profile.location != null &&
-                          profile.profile.location!.isNotEmpty)
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.location_on_outlined,
-                              size: 16.sp,
-                              color: Colors.grey,
-                            ),
-                            SizedBox(width: 4.w),
-                            Expanded(
-                              child: Text(
-                                profile.profile.location!,
-                                style: FontUtility.interRegular(fontSize: 14),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-
-            // Subscription Badge
-            if (profile.isPremium)
-              Padding(
-                padding: EdgeInsets.only(top: 16.h),
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 8.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.shade100,
-                    borderRadius: BorderRadius.circular(20.r),
-                    border: Border.all(color: Colors.amber.shade700),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.star,
-                        color: Colors.amber.shade700,
-                        size: 18.sp,
-                      ),
-                      SizedBox(width: 8.w),
-                      Text(
-                        'Premium Member',
-                        style: FontUtility.montserratSemiBold(
-                          fontSize: 14,
-                          color: Colors.amber.shade700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-            // Bio
-            if (profile.profile.bio != null && profile.profile.bio!.isNotEmpty)
-              Padding(
-                padding: EdgeInsets.only(top: 16.h),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Bio',
-                      style: FontUtility.montserratSemiBold(fontSize: 16),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      profile.profile.bio!,
-                      style: FontUtility.interRegular(fontSize: 14),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProfileImage(String? imageUrl) {
-    const double imageSize = 80;
-
-    if (imageUrl != null && imageUrl.isNotEmpty) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(40.r),
-        child: CachedNetworkImage(
-          imageUrl: imageUrl,
-          width: imageSize.w,
-          height: imageSize.w,
-          fit: BoxFit.cover,
-          placeholder:
-              (context, url) => Container(
-                width: imageSize.w,
-                height: imageSize.w,
-                color: Colors.grey.shade300,
-                child: Center(child: CircularProgressIndicator()),
-              ),
-          errorWidget:
-              (context, url, error) => Container(
-                width: imageSize.w,
-                height: imageSize.w,
-                color: Colors.grey.shade300,
-                child: Icon(Icons.person, size: 40.sp),
-              ),
-        ),
-      );
-    }
-
-    return Container(
-      width: imageSize.w,
-      height: imageSize.w,
-      decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
-        shape: BoxShape.circle,
-        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
-      ),
-      child: Center(
-        child: Icon(Icons.person, size: 40.sp, color: AppColors.primary),
       ),
     );
   }
@@ -554,7 +443,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               context,
               MaterialPageRoute(
                 builder:
-                    (_) => EditProfileScreen(toggleTheme: widget.toggleTheme),
+                    (_) => EditProfileScreen(profileDetails: _userProfile!),
               ),
             );
           },
@@ -719,16 +608,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final profile = _basicProfile!;
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final cardColor = isDarkMode 
-      ? AppColors.darkPrimaryBg 
-      : AppColors.lightPrimaryBg;
-    final textColor = isDarkMode 
-      ? AppColors.darkPrimaryText 
-      : AppColors.lightPrimaryText;
-    final accentColor = isDarkMode 
-      ? AppColors.darkOutlineBg 
-      : AppColors.lightOutlineBg;
-    
+    final cardColor =
+        isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
+    final textColor =
+        isDarkMode ? AppColors.darkPrimaryText : AppColors.lightPrimaryText;
+    final accentColor =
+        isDarkMode ? AppColors.darkOutlineBg : AppColors.lightOutlineBg;
+
     return RefreshIndicator(
       onRefresh: _checkAuthAndFetchProfile,
       child: SingleChildScrollView(
@@ -746,7 +632,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Card(
               elevation: 4,
               color: cardColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.r),
+              ),
               child: Padding(
                 padding: EdgeInsets.all(16.w),
                 child: Column(
@@ -756,7 +644,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Center(
                       child: Column(
                         children: [
-                          _buildProfileImage(profile.imageUrl),
+                          ProfileImage(imageUrl: profile.imageUrl),
                           SizedBox(height: 16.h),
                           if (profile.bio != null && profile.bio!.isNotEmpty)
                             Text(
@@ -767,11 +655,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ],
                       ),
                     ),
-                    
+
                     SizedBox(height: 16.h),
-                    
+
                     // Location if available
-                    if (profile.location != null && profile.location!.isNotEmpty)
+                    if (profile.location != null &&
+                        profile.location!.isNotEmpty)
                       Padding(
                         padding: EdgeInsets.only(top: 8.h),
                         child: Row(
@@ -791,7 +680,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ],
                         ),
                       ),
-                    
+
                     // Preferences if available
                     if (profile.preferences != null)
                       Padding(
@@ -804,22 +693,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               style: theme.textTheme.titleMedium,
                             ),
                             SizedBox(height: 8.h),
-                            
+
                             // Favorite categories
-                            if (profile.preferences!.favoriteCategories != null &&
-                                profile.preferences!.favoriteCategories!.isNotEmpty)
+                            if (profile.preferences!.favoriteCategories !=
+                                    null &&
+                                profile
+                                    .preferences!
+                                    .favoriteCategories!
+                                    .isNotEmpty)
                               Wrap(
                                 spacing: 8.w,
                                 runSpacing: 8.h,
-                                children: profile.preferences!.favoriteCategories!
-                                    .map((category) => Chip(
-                                          label: Text(category),
-                                          backgroundColor: accentColor.withOpacity(0.1),
-                                          labelStyle: TextStyle(color: accentColor),
-                                        ))
-                                    .toList(),
+                                children:
+                                    profile.preferences!.favoriteCategories!
+                                        .map(
+                                          (category) => Chip(
+                                            label: Text(category),
+                                            backgroundColor: accentColor
+                                                .withOpacity(0.1),
+                                            labelStyle: TextStyle(
+                                              color: accentColor,
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
                               ),
-                            
+
                             // Display theme preference
                             if (profile.preferences!.displayTheme != null)
                               Padding(
@@ -827,7 +726,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 child: Row(
                                   children: [
                                     Icon(
-                                      profile.preferences!.displayTheme == 'dark'
+                                      profile.preferences!.displayTheme ==
+                                              'dark'
                                           ? Icons.dark_mode
                                           : Icons.light_mode,
                                       size: 18.sp,
@@ -848,7 +748,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             ),
-            
+
             SizedBox(height: 24.h),
 
             // Action Buttons
