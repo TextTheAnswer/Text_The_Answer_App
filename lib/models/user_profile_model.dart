@@ -31,7 +31,7 @@ class UserProfileFull {
           : Profile(),
       subscription: json['subscription'] != null 
           ? Subscription.fromJson(json['subscription']) 
-          : Subscription(),
+          : Subscription(status: 'inactive'),
       stats: json['stats'] != null 
           ? UserStats.fromJson(json['stats']) 
           : UserStats(),
@@ -42,24 +42,50 @@ class UserProfileFull {
 }
 
 class Subscription {
+  final String? id;
+  final String? customerId;
+  final String? planId;
   final String status;
-  final DateTime? currentPeriodEnd;
+  final int? currentPeriodStart;
+  final int? currentPeriodEnd;
+  final String? interval;
   final bool cancelAtPeriodEnd;
 
   Subscription({
-    this.status = 'free',
+    this.id,
+    this.customerId,
+    this.planId,
+    required this.status,
+    this.currentPeriodStart,
     this.currentPeriodEnd,
+    this.interval,
     this.cancelAtPeriodEnd = false,
   });
 
   factory Subscription.fromJson(Map<String, dynamic> json) {
     return Subscription(
-      status: json['status'] ?? 'free',
-      currentPeriodEnd: json['currentPeriodEnd'] != null 
-          ? DateTime.parse(json['currentPeriodEnd']) 
-          : null,
+      id: json['id'],
+      customerId: json['customerId'],
+      planId: json['planId'],
+      status: json['status'] ?? 'inactive',
+      currentPeriodStart: json['currentPeriodStart'],
+      currentPeriodEnd: json['currentPeriodEnd'],
+      interval: json['interval'],
       cancelAtPeriodEnd: json['cancelAtPeriodEnd'] ?? false,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'customerId': customerId,
+      'planId': planId,
+      'status': status,
+      'currentPeriodStart': currentPeriodStart,
+      'currentPeriodEnd': currentPeriodEnd,
+      'interval': interval,
+      'cancelAtPeriodEnd': cancelAtPeriodEnd,
+    };
   }
 }
 

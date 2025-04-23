@@ -131,6 +131,18 @@ class AppDrawer extends StatelessWidget {
             
             _buildDrawerItem(
               context,
+              icon: Icons.star,
+              title: 'Premium Subscription',
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, Routes.manageSubscription);
+              },
+              textColor: textColor,
+              accentColor: Colors.amber,
+            ),
+            
+            _buildDrawerItem(
+              context,
               icon: Icons.format_list_bulleted,
               title: 'Leaderboard',
               onTap: () {
@@ -168,11 +180,7 @@ class AppDrawer extends StatelessWidget {
               title: 'Settings',
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  Routes.home,
-                  (route) => false,
-                );
+                Navigator.pushNamed(context, Routes.settings);
               },
               textColor: textColor,
               accentColor: accentColor,

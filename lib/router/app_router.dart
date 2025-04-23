@@ -11,6 +11,8 @@ import 'package:text_the_answer/screens/home/home_screen.dart';
 import 'package:text_the_answer/screens/auth/onboarding_screen.dart';
 import 'package:text_the_answer/screens/auth/splash_screen.dart';
 import 'package:text_the_answer/screens/profile/profile_creation_screen.dart';
+import 'package:text_the_answer/screens/settings/manage_subscription_screen.dart';
+import 'package:text_the_answer/screens/settings_screen.dart';
 
 class AppRouter {
   // This function manages theme state between screens
@@ -72,6 +74,16 @@ class AppRouter {
       case Routes.profileCreate:
         return MaterialPageRoute(
           builder: (_) => const ProfileCreationScreen(),
+        );
+      
+      case Routes.manageSubscription:
+        return MaterialPageRoute(
+          builder: (_) => const ManageSubscriptionScreen(),
+        );
+      
+      case Routes.settings:
+        return MaterialPageRoute(
+          builder: (_) => SettingsScreen(toggleTheme: toggleTheme as VoidCallback),
         );
       
       default:

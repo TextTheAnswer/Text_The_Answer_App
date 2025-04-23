@@ -1,7 +1,20 @@
-abstract class SubscriptionEvent {}
+import 'package:equatable/equatable.dart';
 
-class CreateCheckoutSession extends SubscriptionEvent {}
+abstract class SubscriptionEvent extends Equatable {
+  const SubscriptionEvent();
 
-class FetchSubscriptionDetails extends SubscriptionEvent {}
+  @override
+  List<Object?> get props => [];
+}
 
-class CancelSubscription extends SubscriptionEvent {}
+class CreateCheckoutSession extends SubscriptionEvent {
+  const CreateCheckoutSession();
+}
+
+class CancelSubscription extends SubscriptionEvent {
+  const CancelSubscription();
+}
+
+class FetchSubscriptionDetails extends SubscriptionEvent {
+  const FetchSubscriptionDetails();
+}

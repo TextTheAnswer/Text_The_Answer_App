@@ -75,7 +75,7 @@ class _MyAppState extends State<MyApp> {
               BlocProvider(create: (context) => QuizBloc(apiService: _apiService)),
               BlocProvider(create: (_) => GameBloc()),
               BlocProvider(create: (_) => LeaderboardBloc()),
-              BlocProvider(create: (_) => SubscriptionBloc()),
+              BlocProvider(create: (context) => SubscriptionBloc(apiService: _apiService)),
             ],
             child: MaterialApp(
               debugShowCheckedModeBanner: false,

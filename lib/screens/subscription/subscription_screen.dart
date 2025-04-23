@@ -26,7 +26,7 @@ class SubscriptionScreen extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (_) => PaymentScreen(
-                    sessionUrl: state.url,
+                    sessionUrl: state.checkoutUrl,
                     toggleTheme: toggleTheme,
                   ),
                 ),
@@ -48,14 +48,15 @@ class SubscriptionScreen extends StatelessWidget {
                       style: Theme.of(context).textTheme.headlineLarge,
                     ),
                     const SizedBox(height: 20),
-                    Text('Status: ${subscription['status'] ?? 'N/A'}'),
-                    Text('Plan: ${subscription['plan'] ?? 'N/A'}'),
-                    Text('Ends: ${subscription['currentPeriodEnd'] ?? 'N/A'}'),
+                    Text('Status: ${subscription.status}'),
+                    Text('Plan: ${subscription.planId ?? 'N/A'}'),
+                    Text('Ends: ${subscription.currentPeriodEnd != null ? 
+                        DateTime.fromMillisecondsSinceEpoch(subscription.currentPeriodEnd! * 1000).toString() : 'N/A'}'),
                     const SizedBox(height: 20),
-                    if (subscription['status'] == 'premium')
+                    if (subscription.status == 'active' && subscription.planId?.contains('premium') == true)
                       ElevatedButton(
                         onPressed: () {
-                          context.read<SubscriptionBloc>().add(CancelSubscription());
+                          context.read<SubscriptionBloc>().add(const CancelSubscription());
                         },
                         child: const Text('Cancel Subscription'),
                       ),
@@ -63,6 +64,7 @@ class SubscriptionScreen extends StatelessWidget {
                 ),
               );
             }
+            
             return Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -77,14 +79,14 @@ class SubscriptionScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
-                      context.read<SubscriptionBloc>().add(CreateCheckoutSession());
+                      context.read<SubscriptionBloc>().add(const CreateCheckoutSession());
                     },
                     child: const Text('Choose Plan'),
                   ),
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
-                      context.read<SubscriptionBloc>().add(FetchSubscriptionDetails());
+                      context.read<SubscriptionBloc>().add(const FetchSubscriptionDetails());
                     },
                     child: const Text('View Subscription Details'),
                   ),

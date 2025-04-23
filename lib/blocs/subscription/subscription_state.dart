@@ -1,30 +1,53 @@
-abstract class SubscriptionState {}
+import 'package:equatable/equatable.dart';
+import 'package:text_the_answer/models/user_profile_model.dart';
 
-class SubscriptionInitial extends SubscriptionState {}
+abstract class SubscriptionState extends Equatable {
+  const SubscriptionState();
 
-class SubscriptionLoading extends SubscriptionState {}
+  @override
+  List<Object?> get props => [];
+}
+
+class SubscriptionInitial extends SubscriptionState {
+  const SubscriptionInitial();
+}
+
+class SubscriptionLoading extends SubscriptionState {
+  const SubscriptionLoading();
+}
 
 class CheckoutSessionCreated extends SubscriptionState {
-  final String sessionId;
-  final String url;
+  final String checkoutUrl;
 
-  CheckoutSessionCreated({required this.sessionId, required this.url});
+  const CheckoutSessionCreated(this.checkoutUrl);
+
+  @override
+  List<Object?> get props => [checkoutUrl];
 }
 
 class SubscriptionDetailsLoaded extends SubscriptionState {
-  final Map<String, dynamic> subscription;
+  final Subscription subscription;
 
-  SubscriptionDetailsLoaded({required this.subscription});
+  const SubscriptionDetailsLoaded(this.subscription);
+
+  @override
+  List<Object?> get props => [subscription];
 }
 
 class SubscriptionCancelled extends SubscriptionState {
-  final Map<String, dynamic> subscription;
+  final Subscription subscription;
 
-  SubscriptionCancelled({required this.subscription});
+  const SubscriptionCancelled(this.subscription);
+
+  @override
+  List<Object?> get props => [subscription];
 }
 
 class SubscriptionError extends SubscriptionState {
   final String message;
 
-  SubscriptionError({required this.message});
+  const SubscriptionError(this.message);
+
+  @override
+  List<Object?> get props => [message];
 }
