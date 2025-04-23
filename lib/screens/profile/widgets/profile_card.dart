@@ -13,135 +13,135 @@ class ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(12.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              // -- Profile Image
-              ProfileImage(imageUrl: profile.profile.imageUrl),
-              SizedBox(width: 16.w),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(height: 12),
+        Row(
+          children: [
+            // -- Profile Image
+            ProfileImage(imageUrl: profile.profile.imageUrl),
+            SizedBox(width: 10.w),
 
-              // -- User Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // -- Name
-                    Text(
-                      profile.name,
-                      style: FontUtility.montserratBold(fontSize: 20),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: 4.h),
-
-                    // -- Email
-                    Text(
-                      profile.email,
-                      style: FontUtility.interRegular(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-
-                    // -- Location
-                    SizedBox(height: 8.h),
-                    if (profile.profile.location != null &&
-                        profile.profile.location!.isNotEmpty)
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.location_on_outlined,
-                            size: 16.sp,
-                            color: Colors.grey,
-                          ),
-                          SizedBox(width: 4.w),
-                          Expanded(
-                            child: Text(
-                              profile.profile.location!,
-                              style: FontUtility.interRegular(fontSize: 14),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
-              ),
-
-              // -- Edit Profile
-              GestureDetector(
-                onTap: () {},
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    color: AppColors.buttonPrimary,
+            // -- User Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // -- Name
+                  Text(
+                    profile.name,
+                    style: FontUtility.montserratBold(fontSize: 20),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  child: Text('Edit Profile'),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 4),
+                  SizedBox(height: 4.h),
 
-          // Subscription Badge
-          if (profile.isPremium)
-            Padding(
-              padding: EdgeInsets.only(top: 16.h),
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                decoration: BoxDecoration(
-                  color: Colors.amber.shade100,
-                  borderRadius: BorderRadius.circular(20.r),
-                  border: Border.all(color: Colors.amber.shade700),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.star, color: Colors.amber.shade700, size: 18.sp),
-                    SizedBox(width: 8.w),
-                    Text(
-                      'Premium Member',
-                      style: FontUtility.montserratSemiBold(
-                        fontSize: 14,
-                        color: Colors.amber.shade700,
-                      ),
+                  // -- Email
+                  Text(
+                    profile.email,
+                    style: FontUtility.interRegular(
+                      fontSize: 14,
+                      color: Colors.grey,
                     ),
-                  ],
-                ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
+                  // -- Location
+                  // SizedBox(height: 8.h),
+                  // if (profile.profile.location != null &&
+                  //     profile.profile.location!.isNotEmpty)
+                  //   Row(
+                  //     children: [
+                  //       Icon(
+                  //         Icons.location_on_outlined,
+                  //         size: 16.sp,
+                  //         color: Colors.grey,
+                  //       ),
+                  //       SizedBox(width: 4.w),
+                  //       Expanded(
+                  //         child: Text(
+                  //           profile.profile.location!,
+                  //           style: FontUtility.interRegular(fontSize: 14),
+                  //           maxLines: 1,
+                  //           overflow: TextOverflow.ellipsis,
+                  //         ),
+                  //       ),
+                  //     ],
+                  //   ),
+                ],
               ),
             ),
 
-          // -- Bio
-          if (profile.profile.bio != null && profile.profile.bio!.isNotEmpty)
-            Padding(
-              padding: EdgeInsets.only(top: 16.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            // -- Edit Profile
+            GestureDetector(
+              onTap: () {
+                //TODO: Navigate the Edit profile page
+              },
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  color: AppColors.buttonPrimary,
+                ),
+                child: Text('Edit Profile'),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 4),
+
+        // Subscription Badge
+        if (profile.isPremium)
+          Padding(
+            padding: EdgeInsets.only(top: 16.h),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade100,
+                borderRadius: BorderRadius.circular(20.r),
+                border: Border.all(color: Colors.amber.shade700),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
+                  Icon(Icons.star, color: Colors.amber.shade700, size: 18.sp),
+                  SizedBox(width: 8.w),
                   Text(
-                    'Bio',
-                    style: FontUtility.montserratSemiBold(fontSize: 16),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    profile.profile.bio!,
-                    style: FontUtility.interRegular(fontSize: 14),
+                    'Premium Member',
+                    style: FontUtility.montserratSemiBold(
+                      fontSize: 14,
+                      color: Colors.amber.shade700,
+                    ),
                   ),
                 ],
               ),
             ),
-        ],
-      ),
+          ),
+
+        // -- Bio
+        if (profile.profile.bio != null && profile.profile.bio!.isNotEmpty)
+          Padding(
+            padding: EdgeInsets.only(top: 16.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Bio',
+                  style: FontUtility.montserratSemiBold(fontSize: 16),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  profile.profile.bio!,
+                  style: FontUtility.interRegular(fontSize: 14),
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }
