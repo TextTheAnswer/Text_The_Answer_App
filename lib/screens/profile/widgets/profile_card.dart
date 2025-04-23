@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:text_the_answer/config/colors.dart';
 import 'package:text_the_answer/models/user_profile_model.dart';
+import 'package:text_the_answer/screens/profile/edit_profile_screen.dart';
 import 'package:text_the_answer/screens/profile/widgets/profile_image.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
 
@@ -79,7 +80,12 @@ class ProfileCard extends StatelessWidget {
             // -- Edit Profile
             GestureDetector(
               onTap: () {
-                //TODO: Navigate the Edit profile page
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EditProfileScreen(profileDetails: profile),
+                  ),
+                );
               },
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
