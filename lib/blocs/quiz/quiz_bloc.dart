@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/widgets.dart';
 import '../../services/api_service.dart';
+import '../../models/question.dart';
 import 'quiz_event.dart';
 import 'quiz_state.dart';
 
@@ -20,8 +21,16 @@ class QuizBloc extends Bloc<QuizEvent, QuizState> {
         // Log the response structure for debugging
         print('QuizBloc: Response received with ${response['questions']?.length ?? 0} questions');
         
+        // Convert questions to proper Question objects
+        final questionsList = (response['questions'] as List?)?.map((q) {
+          if (q is Map<String, dynamic>) {
+            return Question.fromJson(q);
+          }
+          return null;
+        }).whereType<Question>().toList() ?? [];
+        
         emit(QuizLoaded(
-          questions: response['questions'] ?? [],
+          questions: questionsList,
           questionsAnswered: response['questionsAnswered'] ?? 0,
           correctAnswers: response['correctAnswers'] ?? 0,
         ));
@@ -36,14 +45,19 @@ class QuizBloc extends Bloc<QuizEvent, QuizState> {
       try {
         print('QuizBloc: Submitting answer for question ${event.questionId}');
         final response = await _apiService.submitDailyQuizAnswer(
-            event.questionId, event.answer);
+            event.questionId.toString(), event.answer);
         
         // Log response for debugging
         print('QuizBloc: Answer submission response received');
         
+        // Ensure correct type conversion
+        final correctAnswer = response['correctAnswer'] is String 
+            ? int.tryParse(response['correctAnswer']) ?? 0 
+            : response['correctAnswer'] ?? 0;
+        
         emit(QuizAnswerSubmitted(
           isCorrect: response['isCorrect'] ?? false,
-          correctAnswer: response['correctAnswer'] ?? 0,
+          correctAnswer: correctAnswer,
           explanation: response['explanation'] ?? 'No explanation available',
           questionsAnswered: response['questionsAnswered'] ?? 0,
           correctAnswers: response['correctAnswers'] ?? 0,
