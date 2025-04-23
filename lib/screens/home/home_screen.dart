@@ -1,17 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:text_the_answer/config/colors.dart';
 import 'package:text_the_answer/screens/profile/profile_screen.dart';
 import 'package:text_the_answer/utils/common_ui.dart';
-import 'package:text_the_answer/widgets/app_drawer.dart';
 import 'package:text_the_answer/widgets/bottom_nav_bar.dart';
 import '../daily_quiz_screen.dart';
 import '../game/game_mode_screen.dart';
-import '../leaderboard_screen.dart';
-import '../profile/profile_screen.dart';
-import '../subscription/subscription_screen.dart';
-import '../settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final VoidCallback toggleTheme;
@@ -28,37 +22,37 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDarkMode 
-        ? AppColors.darkBackground 
-        : AppColors.lightBackground;
-        
+    final backgroundColor =
+        isDarkMode ? AppColors.darkBackground : AppColors.lightBackground;
+
     String title = 'Text the Answer';
-    if (_currentIndex == 1) title = 'Library';
-    else if (_currentIndex == 2) title = 'Games';
-    else if (_currentIndex == 3) title = 'Daily Quiz';
-    else if (_currentIndex == 4) title = 'Profile';
-        
+    if (_currentIndex == 1) {
+      title = 'Library';
+    } else if (_currentIndex == 2)
+      title = 'Games';
+    else if (_currentIndex == 3)
+      title = 'Daily Quiz';
+    else if (_currentIndex == 4)
+      title = 'Profile';
+
     return Scaffold(
       backgroundColor: backgroundColor,
-      appBar: _currentIndex == 0 
-        ? CommonUI.buildAppBar(
-            context: context,
-            title: title,
-            isDarkMode: isDarkMode,
-            toggleTheme: widget.toggleTheme,
-          )
-        : AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-          ),
+      appBar:
+          _currentIndex == 0
+              ? CommonUI.buildAppBar(
+                context: context,
+                title: title,
+                isDarkMode: isDarkMode,
+                toggleTheme: widget.toggleTheme,
+              )
+              : null,
+      // : AppBar(backgroundColor: Colors.transparent, elevation: 0),
       drawer: CommonUI.buildDrawer(
-        context: context, 
-        toggleTheme: widget.toggleTheme, 
+        context: context,
+        toggleTheme: widget.toggleTheme,
         isDarkMode: isDarkMode,
       ),
-      body: SafeArea(
-        child: _buildCurrentScreen(),
-      ),
+      body: SafeArea(child: _buildCurrentScreen()),
       bottomNavigationBar: BottomNavBar(
         currentIndex: _currentIndex,
         onTap: _onTabTapped,
@@ -91,19 +85,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildHomeTabContent() {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDarkMode 
-        ? AppColors.darkPrimaryText 
-        : AppColors.lightPrimaryText;
-    final secondaryTextColor = isDarkMode 
-        ? AppColors.darkLabelText 
-        : AppColors.lightLabelText;
-    final cardColor = isDarkMode 
-        ? AppColors.darkPrimaryBg 
-        : AppColors.lightPrimaryBg;
-    final accentColor = isDarkMode 
-        ? AppColors.darkOutlineBg 
-        : AppColors.lightOutlineBg;
-        
+    final textColor =
+        isDarkMode ? AppColors.darkPrimaryText : AppColors.lightPrimaryText;
+    final secondaryTextColor =
+        isDarkMode ? AppColors.darkLabelText : AppColors.lightLabelText;
+    final cardColor =
+        isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
+    final accentColor =
+        isDarkMode ? AppColors.darkOutlineBg : AppColors.lightOutlineBg;
+
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
       child: Padding(
@@ -133,17 +123,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 CircleAvatar(
                   radius: 24.r,
                   backgroundColor: accentColor.withOpacity(0.2),
-                  child: Icon(
-                    Icons.person,
-                    color: accentColor,
-                    size: 24.sp,
-                  ),
+                  child: Icon(Icons.person, color: accentColor, size: 24.sp),
                 ),
               ],
             ),
-            
+
             SizedBox(height: 24.h),
-            
+
             // Stats Card
             Container(
               width: double.infinity,
@@ -159,10 +145,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
                     'Your Stats',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
@@ -170,17 +156,32 @@ class _HomeScreenState extends State<HomeScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildStatItem(context, '24', 'Games Played', Icons.gamepad),
-                      _buildStatItem(context, '18', 'Correct Answers', Icons.check_circle),
-                      _buildStatItem(context, '320', 'Total Points', Icons.star),
+                      _buildStatItem(
+                        context,
+                        '24',
+                        'Games Played',
+                        Icons.gamepad,
+                      ),
+                      _buildStatItem(
+                        context,
+                        '18',
+                        'Correct Answers',
+                        Icons.check_circle,
+                      ),
+                      _buildStatItem(
+                        context,
+                        '320',
+                        'Total Points',
+                        Icons.star,
+                      ),
                     ],
                   ),
                 ],
               ),
             ),
-            
+
             SizedBox(height: 24.h),
-            
+
             // Daily Challenge
             Text(
               'Daily Challenge',
@@ -225,9 +226,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           Text(
                             '10 questions · 5 min',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: secondaryTextColor,
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: secondaryTextColor),
                           ),
                         ],
                       ),
@@ -250,9 +250,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            
+
             SizedBox(height: 24.h),
-            
+
             // Recent Games
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -261,26 +261,23 @@ class _HomeScreenState extends State<HomeScreen> {
                   'Recent Games',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
-                TextButton(
-                  onPressed: () {},
-                  child: Text('See All'),
-                ),
+                TextButton(onPressed: () {}, child: Text('See All')),
               ],
             ),
             SizedBox(height: 16.h),
             _buildRecentGameItem(
-              context, 
-              'Science Trivia', 
-              '8/10 correct', 
-              Icons.science, 
+              context,
+              'Science Trivia',
+              '8/10 correct',
+              Icons.science,
               accentColor,
             ),
             SizedBox(height: 12.h),
             _buildRecentGameItem(
-              context, 
-              'History Masters', 
-              '6/10 correct', 
-              Icons.history_edu, 
+              context,
+              'History Masters',
+              '6/10 correct',
+              Icons.history_edu,
               Colors.amber,
             ),
           ],
@@ -288,16 +285,19 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-  
-  Widget _buildStatItem(BuildContext context, String value, String label, IconData icon) {
+
+  Widget _buildStatItem(
+    BuildContext context,
+    String value,
+    String label,
+    IconData icon,
+  ) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final accentColor = isDarkMode 
-        ? AppColors.darkOutlineBg 
-        : AppColors.lightOutlineBg;
-    final secondaryTextColor = isDarkMode 
-        ? AppColors.darkLabelText 
-        : AppColors.lightLabelText;
-        
+    final accentColor =
+        isDarkMode ? AppColors.darkOutlineBg : AppColors.lightOutlineBg;
+    final secondaryTextColor =
+        isDarkMode ? AppColors.darkLabelText : AppColors.lightLabelText;
+
     return Column(
       children: [
         Container(
@@ -306,43 +306,34 @@ class _HomeScreenState extends State<HomeScreen> {
             color: accentColor.withOpacity(0.1),
             shape: BoxShape.circle,
           ),
-          child: Icon(
-            icon,
-            color: accentColor,
-            size: 20.sp,
-          ),
+          child: Icon(icon, color: accentColor, size: 20.sp),
         ),
         SizedBox(height: 8.h),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
+        Text(value, style: Theme.of(context).textTheme.titleLarge),
         SizedBox(height: 4.h),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: secondaryTextColor,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: secondaryTextColor),
         ),
       ],
     );
   }
-  
+
   Widget _buildRecentGameItem(
-    BuildContext context, 
-    String title, 
-    String subtitle, 
+    BuildContext context,
+    String title,
+    String subtitle,
     IconData icon,
     Color iconColor,
   ) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDarkMode 
-        ? AppColors.darkPrimaryBg 
-        : AppColors.lightPrimaryBg;
-    final secondaryTextColor = isDarkMode 
-        ? AppColors.darkLabelText 
-        : AppColors.lightLabelText;
-        
+    final cardColor =
+        isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
+    final secondaryTextColor =
+        isDarkMode ? AppColors.darkLabelText : AppColors.lightLabelText;
+
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -364,36 +355,25 @@ class _HomeScreenState extends State<HomeScreen> {
               color: iconColor.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              icon,
-              color: iconColor,
-              size: 24.sp,
-            ),
+            child: Icon(icon, color: iconColor, size: 24.sp),
           ),
           SizedBox(width: 16.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
+                Text(title, style: Theme.of(context).textTheme.titleMedium),
                 SizedBox(height: 4.h),
                 Text(
                   subtitle,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: secondaryTextColor,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: secondaryTextColor),
                 ),
               ],
             ),
           ),
-          Icon(
-            Icons.arrow_forward_ios,
-            color: secondaryTextColor,
-            size: 16.sp,
-          ),
+          Icon(Icons.arrow_forward_ios, color: secondaryTextColor, size: 16.sp),
         ],
       ),
     );

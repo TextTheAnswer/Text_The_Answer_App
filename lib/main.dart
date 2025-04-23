@@ -9,11 +9,11 @@ import 'package:text_the_answer/services/api_service.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
 import 'blocs/auth/auth_bloc.dart';
 import 'blocs/auth/auth_event.dart';
-import 'blocs/auth/auth_state.dart'; // This is your custom AuthState
-import 'blocs/quiz/quiz_bloc.dart'; // Add missing import
-import 'blocs/game/game_bloc.dart'; // Add missing import
-import 'blocs/leaderboard/leaderboard_bloc.dart'; // Add missing import
-import 'blocs/subscription/subscription_bloc.dart'; // Add missing import
+import 'blocs/auth/auth_state.dart';
+import 'blocs/quiz/quiz_bloc.dart';
+import 'blocs/game/game_bloc.dart';
+import 'blocs/leaderboard/leaderboard_bloc.dart';
+import 'blocs/subscription/subscription_bloc.dart';
 import 'utils/theme.dart';
 
 void main() async {
@@ -35,7 +35,6 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   bool isDarkMode = false;
-  // Create shared API service instance
   final ApiService _apiService = ApiService();
 
   void toggleTheme() {
@@ -47,10 +46,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    // Set the toggleTheme function in AppRouter
     AppRouter.toggleTheme = toggleTheme;
-    
-    // Enable the mock data fallback for development
     _apiService.useMockDataOnFailure = true;
     print('Mock data fallback enabled for development');
   }
@@ -58,7 +54,6 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
-      // Design size based on iPhone 12 Pro dimensions
       designSize: const Size(390, 844),
       minTextAdapt: true,
       splitScreenMode: true,
@@ -83,19 +78,21 @@ class _MyAppState extends State<MyApp> {
               theme: AppTheme.lightTheme(),
               darkTheme: AppTheme.darkTheme(),
               themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
-              initialRoute: Routes.login,
+              initialRoute: Routes.home,
               onGenerateRoute: AppRouter.generateRoute,
               builder: (context, child) {
                 return BlocListener<AuthBloc, AuthState>(
                   listener: (context, state) {
                     if (state is AuthAuthenticated) {
-                      Navigator.of(
-                        context,
-                      ).pushNamedAndRemoveUntil(Routes.splash, (route) => false);
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                        Routes.home,
+                        (route) => false,
+                      );
                     } else if (state is AuthInitial) {
-                      Navigator.of(
-                        context,
-                      ).pushNamedAndRemoveUntil(Routes.onboard, (route) => false);
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                        Routes.onboard,
+                        (route) => false,
+                      );
                     }
                   },
                   child: child ?? Container(),
