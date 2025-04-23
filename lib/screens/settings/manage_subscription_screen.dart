@@ -180,7 +180,9 @@ class ManageSubscriptionScreen extends StatelessWidget {
         if (!isPremium || !isActive)
           ElevatedButton(
             onPressed: () {
-              context.read<SubscriptionBloc>().add(const CreateCheckoutSession());
+              context.read<SubscriptionBloc>().add(
+                const CreateCheckoutSession(priceId: 'price_premium_monthly')
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue,
@@ -276,4 +278,4 @@ class ManageSubscriptionScreen extends StatelessWidget {
       throw 'Could not launch $url';
     }
   }
-} 
+}
