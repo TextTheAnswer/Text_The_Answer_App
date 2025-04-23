@@ -16,12 +16,24 @@ import 'blocs/leaderboard/leaderboard_bloc.dart';
 import 'blocs/subscription/subscription_bloc.dart';
 import 'utils/theme.dart';
 
+// Create a global key for the navigator to access it from anywhere
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+// Create a singleton instance of the AuthBloc to ensure it's the same throughout the app
+final AuthBloc authBloc = AuthBloc();
+
+// Flag to prevent multiple redirects during navigation
+bool _isNavigating = false;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
 
   // Configure Google Fonts to use local fonts as fallbacks
   FontUtility.configureGoogleFonts();
+  
+  // Initialize authentication - with silentCheck to avoid immediate loading state
+  authBloc.add(CheckAuthStatusEvent(silentCheck: true));
 
   runApp(const MyApp());
 }
@@ -47,7 +59,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     AppRouter.toggleTheme = toggleTheme;
-    _apiService.useMockDataOnFailure = true;
+    // _apiService.useMockDataOnFailure = true;
     print('Mock data fallback enabled for development');
   }
 
@@ -64,34 +76,49 @@ class _MyAppState extends State<MyApp> {
           ],
           child: MultiBlocProvider(
             providers: [
-              BlocProvider(
-                create: (context) => AuthBloc()..add(CheckAuthStatusEvent()),
-              ),
+              // Use the global authBloc instance instead of creating a new one
+              BlocProvider<AuthBloc>.value(value: authBloc),
               BlocProvider(create: (context) => QuizBloc(apiService: _apiService)),
               BlocProvider(create: (_) => GameBloc()),
               BlocProvider(create: (_) => LeaderboardBloc()),
               BlocProvider(create: (context) => SubscriptionBloc(apiService: _apiService)),
             ],
             child: MaterialApp(
+              navigatorKey: navigatorKey, // Add the navigator key
               debugShowCheckedModeBanner: false,
               title: 'Text the Answer',
               theme: AppTheme.lightTheme(),
               darkTheme: AppTheme.darkTheme(),
               themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
-              initialRoute: Routes.home,
+              initialRoute: Routes.splash,
               onGenerateRoute: AppRouter.generateRoute,
               builder: (context, child) {
                 return BlocListener<AuthBloc, AuthState>(
                   listener: (context, state) {
+                    // Prevent navigation while another navigation is in progress
+                    if (_isNavigating) return;
+                    
+                    print('Auth state changed: ${state.runtimeType}');
+                    
                     if (state is AuthAuthenticated) {
-                      Navigator.of(context).pushNamedAndRemoveUntil(
+                      _isNavigating = true;
+                      navigatorKey.currentState?.pushNamedAndRemoveUntil(
                         Routes.home,
                         (route) => false,
-                      );
+                      ).then((_) => _isNavigating = false);
                     } else if (state is AuthInitial) {
-                      Navigator.of(context).pushNamedAndRemoveUntil(
+                      _isNavigating = true;
+                      navigatorKey.currentState?.pushNamedAndRemoveUntil(
                         Routes.onboard,
                         (route) => false,
+                      ).then((_) => _isNavigating = false);
+                    } else if (state is AuthError) {
+                      // Show a snackbar with the error message
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Auth error: ${state.message}'),
+                          backgroundColor: Colors.red,
+                        ),
                       );
                     }
                   },

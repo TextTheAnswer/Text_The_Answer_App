@@ -120,15 +120,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
         print(
           'ProfileScreen: Basic profile fetch response - ${response.success}',
         );
+        print('ProfileScreen: Response message - "${response.message}"');
+        print('ProfileScreen: Profile data available - ${response.profile != null}');
+        
+        if (response.profile != null) {
+          print('ProfileScreen: Profile ID - ${response.profile?.id}');
+          print('ProfileScreen: Profile Bio - ${response.profile?.bio}');
+          print('ProfileScreen: Profile ImageUrl - ${response.profile?.imageUrl}');
+        }
       }
 
       if (response.success && response.profile != null) {
         // Store the basic profile
         _basicProfile = response.profile;
 
+        // Debug the basic profile data after storing it
+        if (kDebugMode) {
+          print('ProfileScreen: Basic profile stored successfully');
+          print('ProfileScreen: Stored profile ID - ${_basicProfile?.id}');
+        }
+
         // Once we have the basic profile, fetch the full profile
         await _fetchUserProfile();
       } else {
+        // Debug failure case
+        if (kDebugMode) {
+          print('ProfileScreen: Failed to get profile data');
+          print('ProfileScreen: Success flag - ${response.success}');
+          print('ProfileScreen: Error message - "${response.message}"');
+        }
+        
         setState(() {
           _isLoading = false;
           _basicProfile = null;
@@ -137,12 +158,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _errorMessage = 'Profile not found. Please create your profile.';
           } else if (response.message.toLowerCase().contains('auth')) {
             _errorMessage = 'Authentication required. Please login again.';
+          } else if (response.message.toLowerCase().contains('no profile data')) {
+            _errorMessage = 'No profile data was returned from the server. Please try again or create your profile.';
           } else {
             _errorMessage = response.message;
+          }
+          
+          // Debug error state
+          if (kDebugMode) {
+            print('ProfileScreen: Error message set to - "${_errorMessage}"');
           }
         });
       }
     } catch (e) {
+      if (kDebugMode) {
+        print('ProfileScreen: Exception in _fetchBasicProfile - $e');
+      }
+      
       setState(() {
         _isLoading = false;
         _basicProfile = null;
@@ -155,11 +187,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _fetchUserProfile() async {
     try {
       final response = await _profileService.getFullProfile();
+      
+      // Debug full profile response
+      if (kDebugMode) {
+        print('ProfileScreen: Full profile fetch response - ${response.success}');
+        print('ProfileScreen: Full profile message - "${response.message}"');
+        print('ProfileScreen: Full profile data available - ${response.profile != null}');
+        
+        if (response.profile != null) {
+          print('ProfileScreen: Full profile user ID - ${response.profile?.id}');
+          print('ProfileScreen: Full profile name - ${response.profile?.name}');
+          print('ProfileScreen: Full profile email - ${response.profile?.email}');
+          print('ProfileScreen: Full profile has profile data - ${response.profile?.profile != null}');
+        }
+      }
+      
       setState(() {
         _isLoading = false;
         if (response.success && response.profile != null) {
           _userProfile = response.profile;
           _errorMessage = null; // Clear any previous error
+          
+          if (kDebugMode) {
+            print('ProfileScreen: Full profile stored successfully');
+          }
         } else if (response.message?.toLowerCase().contains('no profile') ??
             false) {
           // User is authenticated but doesn't have a full profile yet
@@ -168,24 +219,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // Only set error message if we don't have basic profile
           if (_basicProfile == null) {
             _errorMessage = 'Profile not found. Please create your profile.';
+            
+            if (kDebugMode) {
+              print('ProfileScreen: No basic profile available, showing error');
+            }
           } else {
             _errorMessage = null; // We'll show the basic profile instead
+            
+            if (kDebugMode) {
+              print('ProfileScreen: Using basic profile as fallback');
+            }
           }
         } else {
           // There's an error but we might still have basic profile
           _errorMessage = response.message ?? 'Failed to load complete profile';
+          
+          if (kDebugMode) {
+            print('ProfileScreen: Error getting full profile - "$_errorMessage"');
+            print('ProfileScreen: Having basic profile as fallback - ${_basicProfile != null}');
+          }
         }
       });
     } catch (e) {
+      if (kDebugMode) {
+        print('ProfileScreen: Exception in _fetchUserProfile - $e');
+      }
+      
       setState(() {
         _isLoading = false;
         // Only set error message if we don't have basic profile
         if (_basicProfile == null) {
           _errorMessage = 'An error occurred: ${e.toString()}';
+          
+          if (kDebugMode) {
+            print('ProfileScreen: No basic profile to fall back on');
+          }
         } else {
           // We have basic profile, so we'll show that instead
           _errorMessage =
               'Failed to load complete profile. Showing basic information.';
+              
+          if (kDebugMode) {
+            print('ProfileScreen: Using basic profile despite error');
+          }
         }
       });
     }

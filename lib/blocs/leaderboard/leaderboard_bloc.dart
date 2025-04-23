@@ -22,7 +22,11 @@ class LeaderboardBloc extends Bloc<LeaderboardEvent, LeaderboardState> {
             .map((entry) => LeaderboardEntry.fromJson(entry as Map<String, dynamic>))
             .toList();
         
-        final userRank = int.parse(response['userRank'].toString());
+        // Ensure userRank is an int
+        int userRank = 0;
+        if (response['userRank'] != null) {
+          userRank = int.tryParse(response['userRank'].toString()) ?? 0;
+        }
         
         emit(LeaderboardLoaded(
           leaderboard: leaderboardEntries,
@@ -46,7 +50,11 @@ class LeaderboardBloc extends Bloc<LeaderboardEvent, LeaderboardState> {
             .map((entry) => LeaderboardEntry.fromJson(entry as Map<String, dynamic>))
             .toList();
         
-        final userRank = int.parse(response['userRank'].toString());
+        // Ensure userRank is an int
+        int userRank = 0;
+        if (response['userRank'] != null) {
+          userRank = int.tryParse(response['userRank'].toString()) ?? 0;
+        }
         
         emit(LeaderboardLoaded(
           leaderboard: leaderboardEntries,

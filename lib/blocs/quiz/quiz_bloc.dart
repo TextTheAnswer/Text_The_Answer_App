@@ -44,8 +44,12 @@ class QuizBloc extends Bloc<QuizEvent, QuizState> {
       emit(QuizLoading());
       try {
         print('QuizBloc: Submitting answer for question ${event.questionId}');
+        
+        // Make sure to convert answer to string since the API expects a string
+        final answerStr = event.answer.toString();
+        
         final response = await _apiService.submitDailyQuizAnswer(
-            event.questionId.toString(), event.answer);
+            event.questionId, answerStr);
         
         // Log response for debugging
         print('QuizBloc: Answer submission response received');

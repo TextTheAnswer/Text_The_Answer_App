@@ -78,7 +78,7 @@ class _GameScreenState extends State<GameScreen> {
                               SubmitGameAnswer(
                                 gameId: widget.gameId,
                                 questionIndex: currentQuestionIndex,
-                                answer: index,
+                                answer: question.options[index],
                               ),
                             );
                       },

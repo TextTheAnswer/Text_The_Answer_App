@@ -8,7 +8,7 @@ import '../../blocs/subscription/subscription_state.dart';
 import '../../config/colors.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/subscription_modal.dart';
-import 'package:text_the_answer/models/user_profile_model.dart';
+import 'package:text_the_answer/models/subscription.dart';
 import 'package:text_the_answer/services/api_service.dart';
 import 'package:text_the_answer/widgets/common/app_loading_indicator.dart';
 import 'package:url_launcher/url_launcher.dart';

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -10,9 +11,13 @@ import 'package:text_the_answer/config/colors.dart';
 import 'package:text_the_answer/models/profile_model.dart';
 import 'package:text_the_answer/router/routes.dart';
 import 'package:text_the_answer/services/profile_service.dart';
+import 'package:text_the_answer/services/auth_token_service.dart';
+import 'package:text_the_answer/utils/auth_helper.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
 import 'package:text_the_answer/widgets/custom_button.dart';
 import 'package:text_the_answer/widgets/custom_text_field.dart';
+import 'package:http/http.dart' as http;
+import 'package:text_the_answer/config/api_config.dart';
 
 class ProfileCreationScreen extends StatefulWidget {
   const ProfileCreationScreen({super.key});
@@ -52,17 +57,30 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
     _selectedAvatar = _avatarOptions[0]['path'];
 
     print(
-      'ProfileCreationScreen: initState - Will dispatch CheckAuthStatusEvent after build',
+      'ProfileCreationScreen: initState - Will verify authentication status',
     );
 
-    // Add auth check after the widget is fully built
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // Check auth status silently after widget is built, without emitting loading state
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (mounted) {
         print(
-          'ProfileCreationScreen: Post-build - Dispatching CheckAuthStatusEvent',
+          'ProfileCreationScreen: Post-build - Checking authentication silently',
         );
-        // Force a fresh token check from the AuthBloc
-        BlocProvider.of<AuthBloc>(context).add(CheckAuthStatusEvent());
+        
+        // Verify authentication silently first
+        final isAuth = await AuthHelper.verifyAuthentication(silentCheck: true);
+        
+        // If not authenticated, try a token refresh
+        if (!isAuth && mounted) {
+          print('ProfileCreationScreen: Not authenticated initially, forcing token refresh');
+          await AuthHelper.refreshToken();
+        }
+        
+        // Print final authentication status
+        if (mounted) {
+          final finalAuthStatus = AuthHelper.isAuthenticated();
+          print('ProfileCreationScreen: Final authentication status: $finalAuthStatus');
+        }
       }
     });
   }
@@ -219,19 +237,40 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
     );
   }
 
-  // Force a token refresh
+  // Updated method to force token refresh using AuthHelper
   void _forceTokenRefresh() {
     print('ProfileCreationScreen: Forcing token refresh');
-    // Only dispatch if the widget is mounted
-    if (mounted) {
-      BlocProvider.of<AuthBloc>(context).add(CheckAuthStatusEvent());
-    }
+    AuthHelper.refreshToken();
+    
+    // Also add a direct check to verify authentication status
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        print('ProfileCreationScreen: Verifying authentication after token refresh');
+        
+        // Check if auth succeeded
+        final isAuth = _isAuthenticated();
+        print('ProfileCreationScreen: Authentication status after refresh: $isAuth');
+      }
+    });
+  }
+
+  // Check if user is authenticated directly from the global auth state
+  bool _isAuthenticated() {
+    // Direct read from authBloc without triggering state changes
+    return AuthHelper.isAuthenticated();
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
+      listenWhen: (previous, current) {
+        // Only listen to transitions from authenticated to unauthenticated
+        // or when an auth error occurs
+        return (previous is AuthAuthenticated && current is! AuthAuthenticated) ||
+               (current is AuthError);
+      },
       listener: (context, state) {
+        // Only handle auth errors or transitions to unauthenticated state
         if (state is AuthError) {
           print(
             'ProfileCreationScreen: BlocListener detected AuthError - ${state.message}',
@@ -259,7 +298,7 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
           });
         } else if (state is AuthInitial) {
           print(
-            'ProfileCreationScreen: BlocListener detected AuthInitial state',
+            'ProfileCreationScreen: BlocListener detected unauthenticated state',
           );
 
           // Handle unauthenticated state
@@ -277,69 +316,45 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
               ),
             );
 
-            // Navigate to login screen - use Navigator.of(context) pattern
+            // Navigate to login screen
             Navigator.of(context).pushReplacementNamed(Routes.login);
           });
-        } else if (state is AuthAuthenticated) {
-          print(
-            'ProfileCreationScreen: BlocListener detected AuthAuthenticated state',
-          );
-          // No navigation needed here
         }
       },
-      child: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          // Show loading indicator while checking auth status
-          if (state is AuthLoading) {
-            return Scaffold(
-              backgroundColor: AppColors.primary,
-              body: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(color: Colors.white),
-                    SizedBox(height: 20.h),
-                    Text(
-                      'Checking authentication...',
-                      style: FontUtility.montserratMedium(
-                        fontSize: 16,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          // If authenticated, show the main profile creation screen
-          if (state is AuthAuthenticated) {
-            return _buildMainScreen();
-          }
-
-          // Handle unauthenticated or error states (initial/error)
-          // The BlocListener will handle redirection, show a temporary message here
-          return Scaffold(
-            backgroundColor: AppColors.primary,
-            body: Center(
-              child: Padding(
-                padding: EdgeInsets.all(30.w),
-                child: Text(
-                  state is AuthError
-                      ? 'Error: ${state.message}'
-                      : 'Authentication Required. Redirecting...',
-                  textAlign: TextAlign.center,
-                  style: FontUtility.montserratMedium(
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
+      child: _buildScreenContent(),
     );
+  }
+
+  // Extract screen content to a separate method
+  Widget _buildScreenContent() {
+    // Check authentication state directly
+    final isAuthenticated = _isAuthenticated();
+    
+    // If not authenticated, show a message that we're checking auth status
+    if (!isAuthenticated) {
+      return Scaffold(
+        backgroundColor: AppColors.primary,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: Colors.white),
+              SizedBox(height: 20.h),
+              Text(
+                'Verifying authentication...',
+                style: FontUtility.montserratMedium(
+                  fontSize: 16,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    
+    // If authenticated, show the main screen
+    return _buildMainScreen();
   }
 
   Widget _buildMainScreen() {
@@ -502,6 +517,44 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
                         SizedBox(width: 8.w),
                         Text(
                           'Test API Integration',
+                          style: FontUtility.montserratMedium(
+                            fontSize: 12,
+                            color: Colors.white.withOpacity(0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              
+              // Add API Connection test button
+              SizedBox(height: 10.h),
+              Align(
+                alignment: Alignment.center,
+                child: GestureDetector(
+                  onTap: _isLoading ? null : _testApiConnection,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(16.r),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.2),
+                        width: 1.w,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.wifi,
+                          color: Colors.green.withOpacity(0.7),
+                          size: 18.sp,
+                        ),
+                        SizedBox(width: 8.w),
+                        Text(
+                          'Test API Connection',
                           style: FontUtility.montserratMedium(
                             fontSize: 12,
                             color: Colors.white.withOpacity(0.7),
@@ -864,34 +917,80 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
 
   Future<void> _saveProfile() async {
     try {
-      // First check authentication using the AuthBloc
-      final authState = BlocProvider.of<AuthBloc>(context).state;
-      bool isAuth = authState is AuthAuthenticated;
-
-      print(
-        'ProfileCreationScreen: _saveProfile - AuthBloc state is ${authState.runtimeType}',
-      );
-
-      // If not authenticated in the bloc, force a token refresh and abort
-      if (!isAuth) {
-        print(
-          'ProfileCreationScreen: _saveProfile - Not authenticated, forcing refresh',
-        );
-        _forceTokenRefresh();
-
-        // Show message and abort the save
+      // Debug token directly
+      final authTokenService = AuthTokenService();
+      final token = await authTokenService.getToken();
+      print('ProfileCreationScreen: Checking token directly before profile creation');
+      if (token == null || token.isEmpty) {
+        print('ProfileCreationScreen: No token available!');
+        
         if (!mounted) return;
-
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
-              'Refreshing your session. Please try again in a moment.',
-            ),
-            backgroundColor: Colors.orange,
+            content: Text('No authentication token found. Please login again.'),
+            backgroundColor: Colors.red,
           ),
         );
+        
+        // Navigate to login after a short delay
+        Future.delayed(const Duration(seconds: 2), () {
+          if (!mounted) return;
+          Navigator.of(context).pushReplacementNamed(Routes.login);
+        });
         return;
       }
+      
+      print('ProfileCreationScreen: Token found: ${token.substring(0, min(10, token.length))}...');
+      
+      // Check authentication directly - without triggering state changes
+      final isAuth = _isAuthenticated();
+
+      print(
+        'ProfileCreationScreen: _saveProfile - Auth check result: $isAuth',
+      );
+
+      // If not authenticated, force a token refresh first
+      if (!isAuth) {
+        print(
+          'ProfileCreationScreen: _saveProfile - Not authenticated, trying token refresh first',
+        );
+        
+        // Force token refresh
+        _forceTokenRefresh();
+        
+        // Give it a moment to refresh
+        await Future.delayed(const Duration(milliseconds: 500));
+        
+        // Check auth status again 
+        final isAuthAfterRefresh = _isAuthenticated();
+        print('ProfileCreationScreen: Auth after refresh: $isAuthAfterRefresh');
+        
+        if (!isAuthAfterRefresh) {
+          if (!mounted) return;
+          
+          // If still not authenticated, redirect to login
+          print('ProfileCreationScreen: Still not authenticated after refresh, redirecting to login');
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Authentication required. Please login again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          
+          // Use direct navigation instead of helper to avoid potential circular issues
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) {
+              print('ProfileCreationScreen: Navigating to login screen');
+              Navigator.of(context).pushReplacementNamed(Routes.login);
+            }
+          });
+          
+          return;
+        }
+      }
+      
+      // Continue with the profile creation if authenticated
+      print('ProfileCreationScreen: User is authenticated, proceeding with profile creation');
 
       // Validate input
       if (_displayNameController.text.trim().isEmpty) {
@@ -912,6 +1011,9 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
         return;
       }
 
+      // Get the display name
+      final displayName = _displayNameController.text.trim();
+      
       setState(() {
         _isLoading = true;
       });
@@ -942,6 +1044,12 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
           return;
         }
       }
+      
+      // If we're using a default avatar, set the image URL to the path
+      else if (_selectedAvatar != null) {
+        // Using a default avatar - no need to upload, just pass the local path
+        print('ProfileCreationScreen: Using default avatar: $_selectedAvatar');
+      }
 
       // Create notification settings
       final notificationSettings = NotificationSettings(
@@ -957,19 +1065,12 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
       );
 
       print(
-        'ProfileCreationScreen: Creating profile with image URL: $imageUrl',
-      );
-
-      // Create a profile with the image URL (or null if using default avatar)
-      final profile = Profile(
-        bio: _bioController.text.trim(),
-        location: _locationController.text.trim(),
-        imageUrl: imageUrl, // Use the URL from the separate upload
-        preferences: preferences,
+        'ProfileCreationScreen: Creating profile with display name: $displayName, image URL: $imageUrl',
       );
 
       // Call the profile service to create the profile without the image file
       final response = await _profileService.createProfile(
+        displayName: displayName,
         bio: _bioController.text.trim(),
         location: _locationController.text.trim(),
         // Don't pass the image file here as we already uploaded it
@@ -1017,7 +1118,8 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
             ),
           );
 
-          // Force a reauthentication
+          // Force a reauthentication and show debug info
+          print('ProfileCreationScreen: Forcing token refresh due to auth error');
           _forceTokenRefresh();
 
           // Redirect to login after a short delay
@@ -1103,6 +1205,100 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error in API test: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // Add a test for API connection
+  Future<void> _testApiConnection() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final authTokenService = AuthTokenService();
+      final token = await authTokenService.getToken();
+      
+      if (token == null || token.isEmpty) {
+        print('Test API: No token available');
+        
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No auth token found. Please login again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+      
+      print('Test API: Using token: ${token.substring(0, min(10, token.length))}...');
+      
+      // Make a simple GET request to the API
+      try {
+        final baseUrl = ApiConfig.baseUrl;
+        // Construct the proper URL with the correct API path
+        final testUrl = '${baseUrl}/auth/me';
+            
+        print('Test API: Making GET request to: $testUrl');
+        
+        final response = await http.get(
+          Uri.parse(testUrl),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        );
+        
+        print('Test API: Response status: ${response.statusCode}');
+        print('Test API: Response body: ${response.body}');
+        
+        if (!mounted) return;
+        
+        if (response.statusCode == 200) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('API connection successful!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('API connection failed: ${response.statusCode}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        print('Test API: Error connecting to API: $e');
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('API connection error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Test API: Exception: $e');
+      setState(() {
+        _isLoading = false;
+      });
+      
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
           backgroundColor: Colors.red,
         ),
       );

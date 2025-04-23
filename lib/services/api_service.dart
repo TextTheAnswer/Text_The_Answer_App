@@ -7,11 +7,9 @@ import 'package:text_the_answer/models/question.dart';
 import 'package:text_the_answer/models/study_material.dart';
 import 'package:text_the_answer/models/theme.dart';
 import 'package:text_the_answer/models/user.dart';
-<<<<<<< HEAD
 import 'package:text_the_answer/models/lobby.dart';
-=======
 import 'package:text_the_answer/models/leaderboard.dart';
->>>>>>> c5717fde34d46e5ed135a7fad1588df3cb6af1d5
+import 'package:text_the_answer/services/auth_token_service.dart';
 
 class ApiService {
   final String baseUrl = ApiConfig.baseUrl;
@@ -56,13 +54,18 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> appleLogin(String appleToken) async {
+  Future<Map<String, dynamic>> appleLogin(String appleToken, [String? email, String? name]) async {
+    final Map<String, dynamic> requestBody = {
+      'token': appleToken,
+    };
+    
+    if (email != null) requestBody['email'] = email;
+    if (name != null) requestBody['name'] = name;
+    
     final response = await http.post(
       Uri.parse('$baseUrl/auth/apple'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'token': appleToken,
-      }),
+      body: jsonEncode(requestBody),
     );
 
     if (response.statusCode == 200) {
@@ -114,7 +117,7 @@ class ApiService {
   Future<User> getProfile() async {
     final token = await _getToken();
     final response = await http.get(
-      Uri.parse('$baseUrl/users/profile'),
+      Uri.parse('$baseUrl/auth/profile'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -136,7 +139,7 @@ class ApiService {
   Future<User> updateProfile(Map<String, dynamic> profileData) async {
     final token = await _getToken();
     final response = await http.put(
-      Uri.parse('$baseUrl/users/profile'),
+      Uri.parse('$baseUrl /api/profile'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -557,17 +560,9 @@ class ApiService {
     }
   }
 
-<<<<<<< HEAD
-  Future<Map<String, dynamic>> createCheckoutSession([String? priceId]) async {
-=======
   Future<Map<String, dynamic>> createCheckoutSession({required String priceId}) async {
->>>>>>> c5717fde34d46e5ed135a7fad1588df3cb6af1d5
     final token = await _getToken();
-    final Map<String, dynamic> requestBody = {};
-    
-    if (priceId != null) {
-      requestBody['priceId'] = priceId;
-    }
+    final Map<String, dynamic> requestBody = {'priceId': priceId};
     
     final response = await http.post(
       Uri.parse('$baseUrl/subscriptions/create-checkout-session'),
@@ -604,7 +599,23 @@ class ApiService {
 
   // Auth methods
   Future<Map<String, dynamic>> registerUser(String email, String password, String name) async {
-    return await register(name, email, password);
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/register'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'name': name,
+        'email': email,
+        'password': password,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      await _saveToken(data['token']);
+      return data;
+    } else {
+      throw Exception('Failed to register: ${response.body}');
+    }
   }
   
   Future<Map<String, dynamic>> loginUser(String email, String password) async {
@@ -612,27 +623,23 @@ class ApiService {
   }
   
   Future<Map<String, dynamic>> appleAuth(String appleId, String email, String name) async {
-    return await appleLogin(appleId);
+    return await appleLogin(appleId, email, name);
   }
   
   // Quiz methods
-  Future<Map<String, dynamic>> getDailyQuiz() async {
-    return await getDailyQuestions();
+  Future<Map<String, dynamic>> getDailyQuestions() async {
+    return await getDailyQuiz();
   }
   
-  Future<Map<String, dynamic>> submitDailyQuizAnswer(String questionId, String answer) async {
-    return await submitAnswer(questionId, answer);
+  Future<Map<String, dynamic>> submitAnswer(String questionId, String answer) async {
+    return await submitDailyQuizAnswer(questionId, answer);
   }
   
   // Leaderboard methods
-  Future<List<Map<String, dynamic>>> getDailyLeaderboard() async {
-    return await getLeaderboard();
-  }
-  
-  Future<List<Map<String, dynamic>>> getGameLeaderboard(String gameId) async {
+  Future<List<Map<String, dynamic>>> getLeaderboard() async {
     final token = await _getToken();
     final response = await http.get(
-      Uri.parse('$baseUrl/leaderboard/game/$gameId'),
+      Uri.parse('$baseUrl/leaderboard/daily'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -643,7 +650,7 @@ class ApiService {
       final data = jsonDecode(response.body);
       return List<Map<String, dynamic>>.from(data['leaderboard']);
     } else {
-      throw Exception('Failed to get game leaderboard: ${response.body}');
+      throw Exception('Failed to get daily leaderboard: ${response.body}');
     }
   }
   
@@ -707,8 +714,21 @@ class ApiService {
   }
   
   // Subscription methods
-  Future<Map<String, dynamic>> getSubscriptionDetails() async {
-    return await getSubscriptionStatus();
+  Future<Map<String, dynamic>> getSubscriptionStatus() async {
+    final token = await _getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/subscriptions/status'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to get subscription status: ${response.body}');
+    }
   }
   
   // Mock data setting
@@ -722,17 +742,25 @@ class ApiService {
 
   // Token Management
   Future<void> _saveToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('auth_token', token);
+    final authTokenService = AuthTokenService();
+    await authTokenService.saveToken(token);
+    print('ApiService: Token saved successfully');
   }
 
   Future<String?> _getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('auth_token');
+    final authTokenService = AuthTokenService();
+    final token = await authTokenService.getToken();
+    if (token == null) {
+      print('ApiService: No token found');
+    } else {
+      print('ApiService: Token retrieved successfully');
+    }
+    return token;
   }
 
   Future<void> _clearToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('auth_token');
+    final authTokenService = AuthTokenService();
+    await authTokenService.deleteToken();
+    print('ApiService: Token cleared successfully');
   }
 }

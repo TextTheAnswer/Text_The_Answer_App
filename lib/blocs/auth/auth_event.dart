@@ -25,4 +25,16 @@ class AppleSignInEvent extends AuthEvent {
 
 class SignOutEvent extends AuthEvent {}
 
-class CheckAuthStatusEvent extends AuthEvent {}
+class CheckAuthStatusEvent extends AuthEvent {
+  final bool silentCheck;
+  
+  CheckAuthStatusEvent({this.silentCheck = false});
+}
+
+class RefreshTokenEvent extends AuthEvent {}
+
+class AuthErrorEvent extends AuthEvent {
+  final String message;
+  
+  AuthErrorEvent(this.message);
+}

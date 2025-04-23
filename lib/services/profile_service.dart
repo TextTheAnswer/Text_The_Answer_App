@@ -7,9 +7,11 @@ import 'package:text_the_answer/models/profile_model.dart';
 import 'package:text_the_answer/models/user_profile_model.dart';
 import 'package:text_the_answer/services/auth_token_service.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:text_the_answer/config/api_config.dart';
 
 class ProfileService {
-  final String baseUrl = dotenv.env['API_URL'] ?? 'http://localhost:3000/api/';
+  // Get the API URL from ApiConfig to ensure consistency
+  final String baseUrl = ApiConfig.baseUrl;
   final AuthTokenService _tokenService = AuthTokenService();
 
   // Ensure the token is valid and refreshed
@@ -29,7 +31,7 @@ class ProfileService {
         return null;
       }
       
-      print('ProfileService: Token validated');
+      print('ProfileService: Token validated: ${token.substring(0, 10)}...');
       return token;
     } catch (e) {
       print('ProfileService: Error getting token: $e');
@@ -39,6 +41,7 @@ class ProfileService {
 
   // Create or update user profile
   Future<ProfileResponse> createProfile({
+    required String displayName,
     String? bio,
     String? location,
     File? profileImageFile,
@@ -73,6 +76,7 @@ class ProfileService {
 
       // Create profile data
       final Map<String, dynamic> profileData = {
+        'displayName': displayName,
         'bio': bio,
         'location': location,
       };
@@ -85,12 +89,18 @@ class ProfileService {
         profileData['imageUrl'] = imageUrl;
       }
 
-      print('ProfileService: Calling profile/create endpoint with token');
+      // Construct the proper URL with the correct API path
+      // The baseUrl from ApiConfig is already http://localhost:3000/api
+      // So we just need to append /profile/create directly
+      final url = '${baseUrl}/profile/create';
+      
+      print('ProfileService: Calling profile API endpoint: $url');
       print('ProfileService: Profile data: $profileData');
+      print('ProfileService: Using token: ${token.substring(0, min(10, token.length))}...');
       
       // Make API request to create the profile using the proper endpoint
       final response = await http.post(
-        Uri.parse('${baseUrl}profile/create'),
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -154,10 +164,15 @@ class ProfileService {
     try {
       print('ProfileService: Creating multipart request for image upload');
       
+      // Construct the proper URL with the correct API path
+      final url = '${baseUrl}/profile/image';
+          
+      print('ProfileService: Upload image URL: $url');
+      
       // Create a multipart request for the endpoint
       final request = http.MultipartRequest(
         'POST',
-        Uri.parse('${baseUrl}profile/image'),
+        Uri.parse(url),
       );
 
       // Add authorization header
@@ -221,16 +236,18 @@ class ProfileService {
       final shortToken = token.length > 10 ? '${token.substring(0, 10)}...' : token;
       print('ProfileService: Using token starting with: $shortToken');
 
-      // Construct the correct URL
-      final url = '${baseUrl}auth/profile';
+      // Construct the correct URL - use the /auth/profile endpoint for basic profile info
+      final url = '${baseUrl}/auth/profile';
       print('ProfileService: Calling API endpoint: $url');
 
-      // Make API request
+      // Make API request with cache control headers to prevent 304 responses
       final response = await http.get(
         Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
         },
       );
       
@@ -241,14 +258,57 @@ class ProfileService {
       if (response.statusCode == 200) {
         try {
           final data = jsonDecode(response.body);
-          print('ProfileService: Successfully parsed profile response');
+          print('ProfileService: Successfully parsed profile response to JSON');
+          print('ProfileService: Data structure: ${data.keys.toList()}');
           
-          // Check if the data contains a profile object
+          // Debug data structure in detail
+          if (data.containsKey('user')) {
+            print('ProfileService: Found user key at root level');
+            print('ProfileService: User data structure: ${data['user'].keys.toList()}');
+            
+            // Check if profile is inside user
+            if (data['user'] != null && data['user'].containsKey('profile')) {
+              print('ProfileService: Found profile inside user object');
+              return ProfileResponse(
+                success: true,
+                message: 'Profile retrieved successfully',
+                profile: Profile.fromJson(data['user']['profile']),
+              );
+            }
+          }
+          
+          // Standard check for profile at root level
           if (data.containsKey('profile') && data['profile'] != null) {
             print('ProfileService: Profile data found in response');
             return ProfileResponse.fromJson(data);
           } else {
-            print('ProfileService: No profile data in the response');
+            // Try other common patterns seen in APIs
+            if (data.containsKey('data') && data['data'] != null) {
+              print('ProfileService: Found data key at root level');
+              
+              // Check if profile is inside data
+              if (data['data'].containsKey('profile')) {
+                print('ProfileService: Found profile inside data object');
+                return ProfileResponse(
+                  success: true,
+                  message: 'Profile retrieved successfully',
+                  profile: Profile.fromJson(data['data']['profile']),
+                );
+              }
+              
+              // Check if data itself is the profile
+              if (data['data'] is Map<String, dynamic>) {
+                print('ProfileService: Data object might be the profile');
+                return ProfileResponse(
+                  success: true,
+                  message: 'Profile retrieved successfully',
+                  profile: Profile.fromJson(data['data']),
+                );
+              }
+            }
+            
+            print('ProfileService: No profile data in the response structure');
+            print('ProfileService: Available keys in response: ${data.keys.toList()}');
             return ProfileResponse(
               success: false,
               message: 'No profile data in the response',
@@ -256,11 +316,64 @@ class ProfileService {
           }
         } catch (e) {
           print('ProfileService: Error parsing profile response: $e');
+          print('ProfileService: Raw response: ${response.body}');
           return ProfileResponse(
             success: false,
             message: 'Invalid response format',
           );
         }
+      } else if (response.statusCode == 304) {
+        // Handle 304 Not Modified - we need to fetch again with cache busting
+        print('ProfileService: Received 304 Not Modified, refetching with cache busting');
+        
+        // Add a timestamp to force a fresh request
+        final timestampedUrl = '$url?_t=${DateTime.now().millisecondsSinceEpoch}';
+        
+        final freshResponse = await http.get(
+          Uri.parse(timestampedUrl),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+          },
+        );
+        
+        print('ProfileService: Fresh response status: ${freshResponse.statusCode}');
+        
+        if (freshResponse.statusCode == 200) {
+          try {
+            final data = jsonDecode(freshResponse.body);
+            print('ProfileService: Fresh response data keys: ${data.keys.toList()}');
+            
+            if (data.containsKey('profile') && data['profile'] != null) {
+              return ProfileResponse.fromJson(data);
+            } else if (data.containsKey('user') && data['user']?.containsKey('profile')) {
+              return ProfileResponse(
+                success: true,
+                message: 'Profile retrieved successfully',
+                profile: Profile.fromJson(data['user']['profile']),
+              );
+            } else if (data.containsKey('data') && data['data'] != null) {
+              // Data might be the profile or contain the profile
+              return ProfileResponse(
+                success: true,
+                message: 'Profile retrieved successfully',
+                profile: data['data'].containsKey('profile') 
+                    ? Profile.fromJson(data['data']['profile'])
+                    : Profile.fromJson(data['data']),
+              );
+            }
+          } catch (e) {
+            print('ProfileService: Error parsing fresh response: $e');
+          }
+        }
+        
+        // If we still can't get the data, return an error
+        return ProfileResponse(
+          success: false,
+          message: 'Unable to retrieve profile data. Please try again.',
+        );
       } else if (response.statusCode == 404) {
         print('ProfileService: Profile not found (404)');
         return ProfileResponse(
@@ -322,16 +435,21 @@ class ProfileService {
       final shortToken = token.length > 10 ? '${token.substring(0, 10)}...' : token;
       print('ProfileService: Using token starting with: $shortToken');
 
-      // Construct the correct URL
-      final url = '${baseUrl}profile/full';
+      // Construct the correct URL for full profile data
+      final url = '${baseUrl}/profile/full';
       print('ProfileService: Calling API endpoint: $url');
 
-      // Make API request
+      // Add cache busting parameter and cache control headers
+      final timestampedUrl = '$url?_t=${DateTime.now().millisecondsSinceEpoch}';
+      
+      // Make API request with cache control headers to prevent 304 responses
       final response = await http.get(
-        Uri.parse(url),
+        Uri.parse(timestampedUrl),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
         },
       );
       
@@ -342,13 +460,83 @@ class ProfileService {
       if (response.statusCode == 200) {
         try {
           final data = jsonDecode(response.body);
-          print('ProfileService: Successfully parsed full profile response');
+          print('ProfileService: Successfully parsed full profile response to JSON');
+          print('ProfileService: Full profile data structure: ${data.keys.toList()}');
           
+          // Debug data structure in detail
+          if (data.containsKey('user')) {
+            print('ProfileService: Found user key at root level in full profile');
+            print('ProfileService: User data structure: ${data['user'].keys.toList()}');
+            
+            // Return user object as profile if it has the right structure
+            if (data['user'] != null && data['user'] is Map<String, dynamic>) {
+              try {
+                return ProfileFullResponse(
+                  success: true,
+                  message: 'Full profile retrieved successfully',
+                  profile: UserProfileFull.fromJson(data['user']),
+                );
+              } catch (e) {
+                print('ProfileService: Error creating UserProfileFull from user object: $e');
+              }
+            }
+          }
+          
+          // Standard check for profile at root level
           if (data.containsKey('profile') && data['profile'] != null) {
             print('ProfileService: Full profile data found in response');
             return ProfileFullResponse.fromJson(data);
           } else {
-            print('ProfileService: No profile data in the full profile response');
+            // Try other common patterns seen in APIs
+            if (data.containsKey('data') && data['data'] != null) {
+              print('ProfileService: Found data key at root level in full profile');
+              
+              // Check if profile is inside data
+              if (data['data'].containsKey('profile')) {
+                print('ProfileService: Found profile inside data object');
+                try {
+                  return ProfileFullResponse(
+                    success: true,
+                    message: 'Full profile retrieved successfully',
+                    profile: UserProfileFull.fromJson(data['data']['profile']),
+                  );
+                } catch (e) {
+                  print('ProfileService: Error creating UserProfileFull from data.profile: $e');
+                }
+              }
+              
+              // Check if data itself is the profile
+              if (data['data'] is Map<String, dynamic>) {
+                print('ProfileService: Data object might be the full profile');
+                try {
+                  return ProfileFullResponse(
+                    success: true,
+                    message: 'Full profile retrieved successfully',
+                    profile: UserProfileFull.fromJson(data['data']),
+                  );
+                } catch (e) {
+                  print('ProfileService: Error creating UserProfileFull from data: $e');
+                }
+              }
+            }
+            
+            // As a last resort, see if the root object is the profile
+            if (data is Map<String, dynamic> && 
+                (data.containsKey('id') || data.containsKey('email'))) {
+              print('ProfileService: Root object might be the profile');
+              try {
+                return ProfileFullResponse(
+                  success: true,
+                  message: 'Full profile retrieved successfully',
+                  profile: UserProfileFull.fromJson(data),
+                );
+              } catch (e) {
+                print('ProfileService: Error creating UserProfileFull from root: $e');
+              }
+            }
+            
+            print('ProfileService: No profile data in the full profile response structure');
+            print('ProfileService: Available keys in response: ${data.keys.toList()}');
             return ProfileFullResponse(
               success: false,
               message: 'No profile data in the response',
@@ -356,11 +544,75 @@ class ProfileService {
           }
         } catch (e) {
           print('ProfileService: Error parsing full profile response: $e');
+          print('ProfileService: Raw response: ${response.body}');
           return ProfileFullResponse(
             success: false,
             message: 'Invalid response format',
           );
         }
+      } else if (response.statusCode == 304) {
+        // Handle 304 Not Modified with an additional attempt
+        print('ProfileService: Received 304 Not Modified, retrying with stronger cache busting');
+        
+        // Try one more time with an even stronger cache busting approach
+        final strongCacheBustUrl = '$url?_t=${DateTime.now().millisecondsSinceEpoch}&_r=${Random().nextInt(1000)}';
+        
+        final freshResponse = await http.get(
+          Uri.parse(strongCacheBustUrl),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'If-Modified-Since': 'Mon, 01 Jan 1990 00:00:00 GMT', // Force server to ignore If-Modified-Since
+          },
+        );
+        
+        if (freshResponse.statusCode == 200) {
+          try {
+            final data = jsonDecode(freshResponse.body);
+            print('ProfileService: Fresh full profile response data keys: ${data.keys.toList()}');
+            
+            // Try multiple places the profile might be
+            if (data.containsKey('profile') && data['profile'] != null) {
+              return ProfileFullResponse.fromJson(data);
+            } else if (data.containsKey('user') && data['user'] is Map<String, dynamic>) {
+              return ProfileFullResponse(
+                success: true,
+                message: 'Full profile retrieved successfully',
+                profile: UserProfileFull.fromJson(data['user']),
+              );
+            } else if (data.containsKey('data') && data['data'] != null) {
+              if (data['data'].containsKey('profile')) {
+                return ProfileFullResponse(
+                  success: true,
+                  message: 'Full profile retrieved successfully',
+                  profile: UserProfileFull.fromJson(data['data']['profile']),
+                );
+              } else {
+                return ProfileFullResponse(
+                  success: true,
+                  message: 'Full profile retrieved successfully',
+                  profile: UserProfileFull.fromJson(data['data']),
+                );
+              }
+            } else if (data is Map<String, dynamic> && 
+                       (data.containsKey('id') || data.containsKey('email'))) {
+              return ProfileFullResponse(
+                success: true,
+                message: 'Full profile retrieved successfully',
+                profile: UserProfileFull.fromJson(data),
+              );
+            }
+          } catch (e) {
+            print('ProfileService: Error parsing fresh full profile response: $e');
+          }
+        }
+        
+        return ProfileFullResponse(
+          success: false,
+          message: 'Unable to retrieve full profile data. Please try again.',
+        );
       } else if (response.statusCode == 404) {
         // User found but no profile data exists yet
         print('ProfileService: No profile data exists yet (404)');
@@ -477,6 +729,7 @@ class ProfileService {
 
       // Create test profile data with all required fields
       final Map<String, dynamic> testProfileData = {
+        'displayName': 'Test User', // Required field
         'bio': 'Test bio from mobile app',
         'location': 'Test location',
         'preferences': {
@@ -486,11 +739,15 @@ class ProfileService {
         }
       };
 
-      print('ProfileService: Sending test profile data to profile/create endpoint');
+      // Construct proper URL with correct API path
+      final url = '${baseUrl}/profile/create';
+          
+      print('ProfileService: Test profile API URL: $url');
+      print('ProfileService: Sending test profile data with token: ${token.substring(0, min(10, token.length))}...');
       
       // Make API request to create the profile
       final response = await http.post(
-        Uri.parse('${baseUrl}profile/create'),
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
