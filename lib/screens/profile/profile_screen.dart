@@ -1,6 +1,5 @@
 // ignore_for_file: deprecated_member_use
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 import 'package:text_the_answer/screens/profile/widgets/profile_card.dart';
 import 'package:text_the_answer/screens/profile/widgets/profile_image.dart';
+import 'package:text_the_answer/screens/profile/widgets/profile_stats.dart';
 import 'package:text_the_answer/utils/constants/app_images.dart';
 import 'package:text_the_answer/widgets/app_bar/custom_app_bar.dart';
 import '../../blocs/auth/auth_bloc.dart';
@@ -54,53 +54,61 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _checkAuthAndFetchProfile();
   }
 
+  // // Note: This is for testing @danielkiing3
+  // Future<void> _checkAuthAndFetchProfile() async {
+  //   setState(() {
+  //     _isLoading = true;
+  //     _errorMessage = null;
+  //   });
+
+  //   final testingProfile = Profile(
+  //     id: 'Testing',
+  //     bio: 'A love gaming',
+  //     location: 'London',
+  //     imageUrl: '',
+  //   );
+
+  //   final testingFullProfile = UserProfileFull(
+  //     id: 'Testing',
+  //     email: '@superhim',
+  //     name: 'Daniel Olayinka',
+  //     profile: testingProfile,
+  //     subscription: Subscription(),
+  //     stats: UserStats(),
+  //     isPremium: true,
+  //     isEducation: false,
+  //   );
+  //   setState(() {
+  //     _userProfile = testingFullProfile;
+  //     _basicProfile = testingProfile;
+  //     _isLoading = false;
+  //   });
+  // }
+
   Future<void> _checkAuthAndFetchProfile() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    final testingProfile = Profile(
-      id: 'Testing',
-      bio: 'A love gaming',
-      location: 'London',
-      imageUrl: '',
-    );
+    try {
+      final isAuth = await _profileService.isAuthenticated();
 
-    final testingFullProfile = UserProfileFull(
-      id: 'Testing',
-      email: 'oluwaferanmiidaniel@gmail.com',
-      name: 'Daniel Olayinka',
-      profile: testingProfile,
-      subscription: Subscription(),
-      stats: UserStats(),
-      isPremium: true,
-      isEducation: false,
-    );
-    setState(() {
-      _userProfile = testingFullProfile;
-      // _basicProfile = testingProfile;
-      _isLoading = false;
-    });
-
-    // try {
-    //   final isAuth = await _profileService.isAuthenticated();
-
-    //   if (isAuth) {
-    //     // User is authenticated, fetch profile using the updated endpoint
-    //     await _fetchBasicProfile();
-    //   } else {
-    //     // User is not authenticated, don't try to fetch profile
-    //     setState(() {
-    //       _isLoading = false;
-    //     });
-    //   }
-    // } catch (e) {
-    //   setState(() {
-    //     _isLoading = false;
-    //     _errorMessage = 'An error occurred: ${e.toString()}';
-    //   });
-    // }
+      if (isAuth) {
+        // User is authenticated, fetch profile using the updated endpoint
+        await _fetchBasicProfile();
+      } else {
+        // User is not authenticated, don't try to fetch profile
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'An error occurred: ${e.toString()}';
+      });
+    }
   }
 
   // New method to fetch basic profile from /api/auth/profile
@@ -318,16 +326,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 20.h),
-
-            SizedBox(height: 24.h),
-
-            // Profile Card
+            // -- Profile Card
             ProfileCard(profile: profile),
             SizedBox(height: 24.h),
 
-            // Stats Card
-            _buildStatsCard(profile.stats),
+            // -- Stats Card
+            ProfileStats(),
             SizedBox(height: 24.h),
 
             // Buttons
