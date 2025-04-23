@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../services/api_service.dart';
-import '../../models/user_profile_model.dart';
+import '../../models/subscription.dart';
 import 'subscription_event.dart';
 import 'subscription_state.dart';
 
@@ -22,7 +22,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
     emit(SubscriptionLoading());
     
     try {
-      final response = await _apiService.createCheckoutSession();
+      final response = await _apiService.createCheckoutSession(event.priceId);
       
       if (response.containsKey('url')) {
         emit(CheckoutSessionCreated(response['url']));

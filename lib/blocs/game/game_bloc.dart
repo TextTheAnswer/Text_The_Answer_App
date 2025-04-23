@@ -12,7 +12,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     on<CreateLobby>((event, emit) async {
       emit(GameLoading());
       try {
-        final lobby = await _apiService.createLobby(
+        final lobby = await _apiService.createGameLobby(
             event.name, event.isPublic, event.maxPlayers);
         _socketService.joinGameLobby(lobby.id);
         emit(LobbyCreated(lobby: lobby));
@@ -36,7 +36,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     on<JoinLobby>((event, emit) async {
       emit(GameLoading());
       try {
-        final lobby = await _apiService.joinLobby(event.code);
+        final lobby = await _apiService.joinGameLobby(event.code);
         _socketService.joinGameLobby(lobby.id);
         emit(LobbyJoined(lobby: lobby));
       } catch (e) {
@@ -77,7 +77,7 @@ class GameBloc extends Bloc<GameEvent, GameState> {
       emit(GameLoading());
       try {
         final result = await _apiService.submitGameAnswer(
-            event.gameId, event.questionIndex, event.answer);
+            event.gameId, event.questionIndex.toString(), event.answer);
         emit(GameAnswerSubmitted(
           isCorrect: result['isCorrect'],
           correctAnswer: result['correctAnswer'],

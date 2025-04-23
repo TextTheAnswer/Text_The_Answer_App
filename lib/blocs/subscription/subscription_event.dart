@@ -8,7 +8,11 @@ abstract class SubscriptionEvent extends Equatable {
 }
 
 class CreateCheckoutSession extends SubscriptionEvent {
-  const CreateCheckoutSession();
+  final String priceId;
+  const CreateCheckoutSession({required this.priceId});
+  
+  @override
+  List<Object?> get props => [priceId];
 }
 
 class CancelSubscription extends SubscriptionEvent {

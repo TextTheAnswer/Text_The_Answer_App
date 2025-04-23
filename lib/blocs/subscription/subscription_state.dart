@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:text_the_answer/models/user_profile_model.dart';
+import 'package:text_the_answer/models/subscription.dart';
+import 'package:text_the_answer/models/user_profile_model.dart' as user_profile;
 
 abstract class SubscriptionState extends Equatable {
   const SubscriptionState();

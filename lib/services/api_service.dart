@@ -7,6 +7,7 @@ import 'package:text_the_answer/models/question.dart';
 import 'package:text_the_answer/models/study_material.dart';
 import 'package:text_the_answer/models/theme.dart';
 import 'package:text_the_answer/models/user.dart';
+import 'package:text_the_answer/models/lobby.dart';
 
 class ApiService {
   final String baseUrl = ApiConfig.baseUrl;
@@ -122,6 +123,10 @@ class ApiService {
     } else {
       throw Exception('Failed to get profile: ${response.body}');
     }
+  }
+
+  Future<User> getUserProfile() async {
+    return await getProfile();
   }
 
   Future<User> updateProfile(Map<String, dynamic> profileData) async {
@@ -325,6 +330,29 @@ class ApiService {
     }
   }
 
+  Future<Lobby> createGameLobby(String name, bool isPublic, int maxPlayers) async {
+    final token = await _getToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/lobbies'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'name': name,
+        'isPublic': isPublic,
+        'maxPlayers': maxPlayers
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      return Lobby.fromJson(data['lobby']);
+    } else {
+      throw Exception('Failed to create lobby: ${response.body}');
+    }
+  }
+
   Future<Map<String, dynamic>> joinLobby(String lobbyId) async {
     final token = await _getToken();
     final response = await http.post(
@@ -337,6 +365,24 @@ class ApiService {
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to join lobby: ${response.body}');
+    }
+  }
+
+  Future<Lobby> joinGameLobby(String lobbyId) async {
+    final token = await _getToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/lobbies/$lobbyId/join'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return Lobby.fromJson(data['lobby']);
     } else {
       throw Exception('Failed to join lobby: ${response.body}');
     }
@@ -471,17 +517,21 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> createCheckoutSession(String priceId) async {
+  Future<Map<String, dynamic>> createCheckoutSession([String? priceId]) async {
     final token = await _getToken();
+    final Map<String, dynamic> requestBody = {};
+    
+    if (priceId != null) {
+      requestBody['priceId'] = priceId;
+    }
+    
     final response = await http.post(
       Uri.parse('$baseUrl/subscriptions/create-checkout-session'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       },
-      body: jsonEncode({
-        'priceId': priceId,
-      }),
+      body: jsonEncode(requestBody),
     );
 
     if (response.statusCode == 200) {
@@ -507,6 +557,124 @@ class ApiService {
       throw Exception('Failed to cancel subscription: ${response.body}');
     }
   }
+
+  // Auth methods
+  Future<Map<String, dynamic>> registerUser(String email, String password, String name) async {
+    return await register(name, email, password);
+  }
+  
+  Future<Map<String, dynamic>> loginUser(String email, String password) async {
+    return await login(email, password);
+  }
+  
+  Future<Map<String, dynamic>> appleAuth(String appleId, String email, String name) async {
+    return await appleLogin(appleId);
+  }
+  
+  // Quiz methods
+  Future<Map<String, dynamic>> getDailyQuiz() async {
+    return await getDailyQuestions();
+  }
+  
+  Future<Map<String, dynamic>> submitDailyQuizAnswer(String questionId, String answer) async {
+    return await submitAnswer(questionId, answer);
+  }
+  
+  // Leaderboard methods
+  Future<List<Map<String, dynamic>>> getDailyLeaderboard() async {
+    return await getLeaderboard();
+  }
+  
+  Future<List<Map<String, dynamic>>> getGameLeaderboard(String gameId) async {
+    final token = await _getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/leaderboard/game/$gameId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return List<Map<String, dynamic>>.from(data['leaderboard']);
+    } else {
+      throw Exception('Failed to get game leaderboard: ${response.body}');
+    }
+  }
+  
+  // Game methods
+  Future<Map<String, dynamic>> startGame(String lobbyId) async {
+    final token = await _getToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/games/start'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'lobbyId': lobbyId,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to start game: ${response.body}');
+    }
+  }
+  
+  Future<Map<String, dynamic>> submitGameAnswer(String gameId, String questionId, String answer) async {
+    final token = await _getToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/games/$gameId/submit'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'questionId': questionId,
+        'answer': answer,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to submit game answer: ${response.body}');
+    }
+  }
+  
+  Future<Map<String, dynamic>> getGameResults(String gameId) async {
+    final token = await _getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/games/$gameId/results'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to get game results: ${response.body}');
+    }
+  }
+  
+  // Subscription methods
+  Future<Map<String, dynamic>> getSubscriptionDetails() async {
+    return await getSubscriptionStatus();
+  }
+  
+  // Mock data setting
+  bool _useMockDataOnFailure = false;
+  
+  set useMockDataOnFailure(bool value) {
+    _useMockDataOnFailure = value;
+  }
+  
+  bool get useMockDataOnFailure => _useMockDataOnFailure;
 
   // Token Management
   Future<void> _saveToken(String token) async {

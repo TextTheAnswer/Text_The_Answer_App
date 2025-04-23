@@ -31,7 +31,7 @@ class StartGame extends GameEvent {
 class SubmitGameAnswer extends GameEvent {
   final String gameId;
   final int questionIndex;
-  final int answer;
+  final String answer;
 
   SubmitGameAnswer({
     required this.gameId,
