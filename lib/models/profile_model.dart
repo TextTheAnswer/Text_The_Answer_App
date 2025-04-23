@@ -3,6 +3,7 @@ class Profile {
   final String? bio;
   final String? location;
   final String? imageUrl;
+  final String? imagePublicId;
   final ProfilePreferences? preferences;
 
   Profile({
@@ -10,6 +11,7 @@ class Profile {
     this.bio,
     this.location,
     this.imageUrl,
+    this.imagePublicId,
     this.preferences,
   });
 
@@ -19,6 +21,7 @@ class Profile {
       bio: json['bio'],
       location: json['location'],
       imageUrl: json['imageUrl'],
+      imagePublicId: json['imagePublicId'],
       preferences: json['preferences'] != null 
           ? ProfilePreferences.fromJson(json['preferences']) 
           : null,
@@ -30,6 +33,7 @@ class Profile {
     if (bio != null) data['bio'] = bio;
     if (location != null) data['location'] = location;
     if (imageUrl != null) data['imageUrl'] = imageUrl;
+    if (imagePublicId != null) data['imagePublicId'] = imagePublicId;
     if (preferences != null) data['preferences'] = preferences!.toJson();
     return data;
   }
@@ -68,25 +72,25 @@ class ProfilePreferences {
 }
 
 class NotificationSettings {
-  final bool? email;
-  final bool? push;
+  final bool? dailyQuizReminder;
+  final bool? multiplayerInvites;
 
   NotificationSettings({
-    this.email,
-    this.push,
+    this.dailyQuizReminder,
+    this.multiplayerInvites,
   });
 
   factory NotificationSettings.fromJson(Map<String, dynamic> json) {
     return NotificationSettings(
-      email: json['email'],
-      push: json['push'],
+      dailyQuizReminder: json['dailyQuizReminder'],
+      multiplayerInvites: json['multiplayerInvites'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      if (email != null) 'email': email,
-      if (push != null) 'push': push,
+      if (dailyQuizReminder != null) 'dailyQuizReminder': dailyQuizReminder,
+      if (multiplayerInvites != null) 'multiplayerInvites': multiplayerInvites,
     };
   }
 }

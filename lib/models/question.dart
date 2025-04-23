@@ -15,11 +15,13 @@ class Question {
 
   factory Question.fromJson(Map<String, dynamic> json) {
     return Question(
-      id: json['id'],
-      text: json['text'],
-      options: List<String>.from(json['options']),
-      category: json['category'],
-      difficulty: json['difficulty'],
+      id: json['id'] ?? 'unknown_id',
+      text: json['text'] ?? 'No question text available',
+      options: json['options'] != null 
+          ? List<String>.from(json['options']) 
+          : ['No options available'],
+      category: json['category'] ?? 'General',
+      difficulty: json['difficulty'] ?? 'medium',
     );
   }
 }
