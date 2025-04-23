@@ -122,14 +122,10 @@ class _Custom3DButtonState extends State<Custom3DButton>
                 children: [
                   // -- Shadow layer
                   Positioned.fill(
-                    top: _buttonDepth,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         color: _hslRelativeColor(s: -0.2, l: -0.25),
                         borderRadius: widget.borderRadius,
-                      ),
-                      child: SizedBox(
-                        height: (widget.buttonHeight! - _buttonDepth),
                       ),
                     ),
                   ),
