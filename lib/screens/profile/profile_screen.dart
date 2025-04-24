@@ -275,11 +275,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: CustomAppBar(
         showBackArrow: false,
         actions: [
-          IconButton(onPressed: () {}, icon: Icon(IconsaxPlusLinear.send_2)),
-          IconButton(
-            onPressed: () {},
-            icon: Icon(IconsaxPlusLinear.message_notif),
-          ),
+         
           IconButton(
             onPressed: () {
               Navigator.pushNamed(context, Routes.settings);
