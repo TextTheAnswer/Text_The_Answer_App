@@ -280,7 +280,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () {},
             icon: Icon(IconsaxPlusLinear.message_notif),
           ),
-          IconButton(onPressed: () {}, icon: Icon(IconsaxPlusLinear.setting_2)),
+          IconButton(
+            onPressed: () {
+              Navigator.pushNamed(context, Routes.settings);
+            }, 
+            icon: Icon(IconsaxPlusLinear.setting_2)
+          ),
         ],
         title: Row(
           children: [
