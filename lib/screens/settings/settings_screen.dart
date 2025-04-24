@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconly/iconly.dart';
-import 'package:iconsax_plus/iconsax_plus.dart';
 import 'package:text_the_answer/screens/settings/widget/settings_list_tile.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
 import 'package:text_the_answer/widgets/app_bar/custom_app_bar.dart';
@@ -60,7 +59,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leadingIconColor: Colors.orange,
                 leadingIcon: IconlyBold.profile,
                 title: 'Personal Info',
-                trailingIcon: IconsaxPlusLinear.arrow_right_3,
                 onTap: () {},
               ),
 
@@ -69,7 +67,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leadingIconColor: Colors.red,
                 leadingIcon: IconlyBold.notification,
                 title: 'Notification',
-                trailingIcon: IconsaxPlusLinear.arrow_right_3,
+                onTap: () {},
               ),
 
               // -- Music & Effects
@@ -77,7 +75,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leadingIconColor: Colors.purple,
                 leadingIcon: IconlyBold.volume_up,
                 title: 'Music & Effects',
-                trailingIcon: IconsaxPlusLinear.arrow_right_3,
+                onTap: () {},
               ),
 
               // -- Security
@@ -85,7 +83,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leadingIconColor: Colors.green,
                 leadingIcon: IconlyBold.shield_done,
                 title: 'Security',
-                trailingIcon: IconsaxPlusLinear.arrow_right_3,
+                onTap: () {},
               ),
 
               // -- Theme Selector
@@ -95,6 +93,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: 'Appearance',
                 extraValue: 'Default',
                 trailingIcon: IconlyLight.more_circle,
+                onTap: () {},
               ),
 
               // -- Help Center
@@ -102,7 +101,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leadingIconColor: Colors.orange,
                 leadingIcon: IconlyBold.paper,
                 title: 'Help Center',
-                trailingIcon: IconsaxPlusLinear.arrow_right_3,
+                onTap: () {},
               ),
 
               // -- About
@@ -110,7 +109,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leadingIconColor: Colors.purple,
                 leadingIcon: IconlyBold.info_square,
                 title: 'About',
-                trailingIcon: IconsaxPlusLinear.arrow_right_3,
+                onTap: () {},
               ),
 
               // -- Logout

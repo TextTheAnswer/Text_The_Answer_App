@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax_plus/iconsax_plus.dart';
 import 'package:text_the_answer/widgets/button/on_tap_scaler.dart';
 
 class SettingsListTile extends StatelessWidget {
@@ -9,7 +10,7 @@ class SettingsListTile extends StatelessWidget {
     required this.leadingIcon,
     this.onTap,
     this.extraValue,
-    this.trailingIcon,
+    this.trailingIcon = IconsaxPlusLinear.arrow_right_3,
     this.leadingSize = 50.0,
     this.leadingIconSize = 24.0,
   });
