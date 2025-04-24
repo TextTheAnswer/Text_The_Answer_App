@@ -337,7 +337,7 @@ class ApiService {
   Future<List<Map<String, dynamic>>> getPublicLobbies() async {
     final token = await _getToken();
     final response = await http.get(
-      Uri.parse('$baseUrl/lobbies/public'),
+      Uri.parse('$baseUrl/game/lobbies'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -355,7 +355,7 @@ class ApiService {
   Future<Map<String, dynamic>> createLobby(String name, bool isPrivate) async {
     final token = await _getToken();
     final response = await http.post(
-      Uri.parse('$baseUrl/lobbies'),
+      Uri.parse('$baseUrl/game/lobby'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -428,6 +428,54 @@ class ApiService {
       return Lobby.fromJson(data['lobby']);
     } else {
       throw Exception('Failed to join lobby: ${response.body}');
+    }
+  }
+
+  Future<Lobby> joinLobbyByCode(String code) async {
+    final token = await _getToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/game/lobby/join'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'code': code
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      try {
+        // Debug the response structure
+        print('API response for joinLobbyByCode: $data');
+        
+        // Handle different response structures
+        if (data['lobby'] != null) {
+          // If the response has a 'lobby' key, use that
+          var lobby = data['lobby'];
+          // Ensure ID is a string
+          if (lobby['id'] != null && lobby['id'] is! String) {
+            lobby['id'] = lobby['id'].toString();
+          }
+          return Lobby.fromJson(lobby);
+        } else if (data is Map<String, dynamic>) {
+          // Ensure ID is a string if present
+          if (data['id'] != null && data['id'] is! String) {
+            data['id'] = data['id'].toString();
+          }
+          // If the entire response is the lobby object
+          return Lobby.fromJson(data);
+        } else {
+          throw Exception('Unexpected response format');
+        }
+      } catch (e) {
+        print('Error parsing lobby data: $e');
+        print('Response data: $data');
+        rethrow;
+      }
+    } else {
+      throw Exception('Failed to join lobby with code: ${response.body}');
     }
   }
 

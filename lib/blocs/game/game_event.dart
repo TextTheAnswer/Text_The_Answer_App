@@ -1,5 +1,7 @@
 abstract class GameEvent {}
 
+class InitializeSockets extends GameEvent {}
+
 class CreateLobby extends GameEvent {
   final String name;
   final bool isPublic;
@@ -20,6 +22,12 @@ class LeaveLobby extends GameEvent {
   final String lobbyId;
 
   LeaveLobby({required this.lobbyId});
+}
+
+class SetPlayerReady extends GameEvent {
+  final bool ready;
+
+  SetPlayerReady({required this.ready});
 }
 
 class StartGame extends GameEvent {
@@ -44,4 +52,37 @@ class FetchGameResults extends GameEvent {
   final String gameId;
 
   FetchGameResults({required this.gameId});
+}
+
+// Socket-related events
+class UpdateLobbyData extends GameEvent {
+  final dynamic lobby;
+
+  UpdateLobbyData({required this.lobby});
+}
+
+class PlayerJoinedEvent extends GameEvent {
+  final Map<String, dynamic> playerData;
+
+  PlayerJoinedEvent({required this.playerData});
+}
+
+class PlayerLeftEvent extends GameEvent {
+  final Map<String, dynamic> playerData;
+
+  PlayerLeftEvent({required this.playerData});
+}
+
+class PlayerReadyChangedEvent extends GameEvent {
+  final Map<String, dynamic> playerData;
+
+  PlayerReadyChangedEvent({required this.playerData});
+}
+
+class AllPlayersReadyEvent extends GameEvent {}
+
+class SocketErrorEvent extends GameEvent {
+  final String message;
+
+  SocketErrorEvent({required this.message});
 }

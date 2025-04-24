@@ -27,6 +27,15 @@ class LobbyJoined extends GameState {
 
 class LobbyLeft extends GameState {}
 
+// Real-time update states
+class LobbyUpdated extends GameState {
+  final Lobby lobby;
+
+  LobbyUpdated({required this.lobby});
+}
+
+class AllPlayersReady extends GameState {}
+
 class GameStarted extends GameState {
   final String gameId;
   final List<Question> questions;
