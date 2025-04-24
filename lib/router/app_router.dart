@@ -12,13 +12,15 @@ import 'package:text_the_answer/screens/auth/onboarding_screen.dart';
 import 'package:text_the_answer/screens/auth/splash_screen.dart';
 import 'package:text_the_answer/screens/profile/profile_creation_screen.dart';
 import 'package:text_the_answer/screens/settings/manage_subscription_screen.dart';
-import 'package:text_the_answer/screens/settings_screen.dart';
+import 'package:text_the_answer/screens/settings/settings_screen.dart';
 
 class AppRouter {
   // This function manages theme state between screens
   static Function toggleTheme = () {}; // This will be set from the main app
-  static Function setTheme = (String theme) {}; // Added for more specific theme selection
-  static String currentTheme = 'default'; // Track current theme - make it public
+  static Function setTheme =
+      (String theme) {}; // Added for more specific theme selection
+  static String currentTheme =
+      'default'; // Track current theme - make it public
 
   // Get the current theme
   static String getCurrentTheme() {
@@ -26,39 +28,42 @@ class AppRouter {
   }
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
-    log('Navigating to route: ${settings.name} with arguments: ${settings.arguments}');
-    
+    log(
+      'Navigating to route: ${settings.name} with arguments: ${settings.arguments}',
+    );
+
     switch (settings.name) {
       case Routes.splash:
         return MaterialPageRoute(
-          builder: (_) => SplashScreen(toggleTheme: toggleTheme as VoidCallback),
+          builder:
+              (_) => SplashScreen(toggleTheme: toggleTheme as VoidCallback),
         );
-      
+
       case Routes.onboard:
         return MaterialPageRoute(
-          builder: (_) => OnboardingScreen(toggleTheme: toggleTheme as VoidCallback),
+          builder:
+              (_) => OnboardingScreen(toggleTheme: toggleTheme as VoidCallback),
         );
-      
+
       case Routes.login:
         return MaterialPageRoute(
           builder: (_) => LoginScreen(toggleTheme: toggleTheme as VoidCallback),
         );
-      
+
       case Routes.signup:
         return MaterialPageRoute(
-          builder: (_) => RegisterScreen(toggleTheme: toggleTheme as VoidCallback),
+          builder:
+              (_) => RegisterScreen(toggleTheme: toggleTheme as VoidCallback),
         );
-      
+
       case Routes.home:
         return MaterialPageRoute(
           builder: (_) => HomeScreen(toggleTheme: toggleTheme as VoidCallback),
         );
-      
+
       case Routes.forgotPassword:
-        return MaterialPageRoute(
-          builder: (_) => const ForgotPasswordScreen(),
-        );
-      
+        return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
+
       case Routes.otpVerification:
         final args = settings.arguments as Map<String, dynamic>?;
         final email = args?['email'] as String? ?? '';
@@ -66,42 +71,39 @@ class AppRouter {
         return MaterialPageRoute(
           builder: (_) => OTPVerificationScreen(email: email),
         );
-      
+
       case Routes.resetPassword:
         final args = settings.arguments as Map<String, dynamic>?;
         final email = args?['email'] as String? ?? '';
         final resetToken = args?['resetToken'] as String? ?? '';
         return MaterialPageRoute(
-          builder: (_) => ResetPasswordScreen(
-            email: email, 
-            resetToken: resetToken,
-          ),
+          builder:
+              (_) => ResetPasswordScreen(email: email, resetToken: resetToken),
         );
-        
+
       case Routes.profileCreate:
-        return MaterialPageRoute(
-          builder: (_) => const ProfileCreationScreen(),
-        );
-      
+        return MaterialPageRoute(builder: (_) => const ProfileCreationScreen());
+
       case Routes.manageSubscription:
         return MaterialPageRoute(
           builder: (_) => const ManageSubscriptionScreen(),
         );
-      
+
       case Routes.settings:
         return MaterialPageRoute(
-          builder: (_) => SettingsScreen(toggleTheme: toggleTheme as VoidCallback),
+          builder:
+              (_) => SettingsScreen(toggleTheme: toggleTheme as VoidCallback),
         );
-      
+
       default:
         return MaterialPageRoute(
-          builder: (_) => Scaffold(
-            body: Center(
-              child: Text('No route defined for ${settings.name}'),
-            ),
-          ),
+          builder:
+              (_) => Scaffold(
+                body: Center(
+                  child: Text('No route defined for ${settings.name}'),
+                ),
+              ),
         );
     }
   }
 }
-
