@@ -564,10 +564,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         SizedBox(height: 12.h),
         CustomButton(
-          text: 'Toggle Theme',
-          onPressed: widget.toggleTheme,
+          text: 'Theme Settings',
+          onPressed: () {
+            Navigator.pushNamed(context, Routes.settings);
+          },
           buttonType: CustomButtonType.outline,
-          icon: Icons.brightness_4,
+          icon: Icons.color_lens,
         ),
       ],
     );

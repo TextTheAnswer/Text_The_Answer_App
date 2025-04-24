@@ -246,4 +246,90 @@ class AppTheme {
       ),
     );
   }
+
+  // Special default theme with red and blue colors
+  static ThemeData defaultTheme() {
+    final textTheme = _getTextTheme(false);
+
+    return ThemeData(
+      brightness: Brightness.light, 
+      primaryColor: AppColors.primary, // Red
+      colorScheme: ColorScheme.light(
+        primary: AppColors.primary,        // Red
+        secondary: AppColors.secondary,    // Blue
+        tertiary: AppColors.accentOrange,  // Orange accent
+        surface: Colors.white,
+        background: Colors.white,
+        error: Colors.red,
+      ),
+      scaffoldBackgroundColor: Colors.white,
+      textTheme: textTheme,
+      cardColor: Colors.white,
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary, // Red buttons
+          foregroundColor: Colors.white,
+          textStyle: GoogleFonts.montserrat(
+            fontWeight: FontWeight.bold,
+            fontSize: 16.sp,
+            letterSpacing: 1.2,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 24.w),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.primary, // Red text
+          side: BorderSide(color: AppColors.primary), // Red border
+          textStyle: GoogleFonts.montserrat(
+            fontWeight: FontWeight.w500,
+            fontSize: 16.sp,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 24.w),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.secondary, // Blue text for text buttons
+          textStyle: GoogleFonts.inter(
+            fontWeight: FontWeight.w500,
+            fontSize: 15.sp,
+          ),
+          padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 16.w),
+        ),
+      ),
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.white,
+        foregroundColor: AppColors.primary,
+        elevation: 0,
+        iconTheme: IconThemeData(color: AppColors.primary),
+      ),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: Colors.grey,
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.grey.shade50,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.r),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.r),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12.r),
+          borderSide: BorderSide(color: AppColors.primary, width: 2),
+        ),
+      ),
+    );
+  }
 }

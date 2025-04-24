@@ -17,6 +17,13 @@ import 'package:text_the_answer/screens/settings_screen.dart';
 class AppRouter {
   // This function manages theme state between screens
   static Function toggleTheme = () {}; // This will be set from the main app
+  static Function setTheme = (String theme) {}; // Added for more specific theme selection
+  static String currentTheme = 'default'; // Track current theme - make it public
+
+  // Get the current theme
+  static String getCurrentTheme() {
+    return currentTheme;
+  }
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     log('Navigating to route: ${settings.name} with arguments: ${settings.arguments}');

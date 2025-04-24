@@ -46,19 +46,38 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  bool isDarkMode = false;
+  // Theme options: 'default', 'dark', 'light'
+  String currentTheme = 'default';
   final ApiService _apiService = ApiService();
 
-  void toggleTheme() {
+  void setTheme(String theme) {
     setState(() {
-      isDarkMode = !isDarkMode;
+      currentTheme = theme;
     });
   }
 
   @override
   void initState() {
     super.initState();
-    AppRouter.toggleTheme = toggleTheme;
+    
+    // Set up the theme functions
+    AppRouter.toggleTheme = () {
+      setState(() {
+        currentTheme = currentTheme == 'dark' ? 'default' : 'dark';
+      });
+    };
+    
+    AppRouter.setTheme = (String theme) {
+      if (theme != currentTheme) {
+        print('Changing theme from $currentTheme to $theme');
+        setState(() {
+          currentTheme = theme;
+          // Also update the static variable in AppRouter
+          AppRouter.currentTheme = theme;
+        });
+      }
+    };
+    
     // _apiService.useMockDataOnFailure = true;
     print('Mock data fallback enabled for development');
   }
@@ -87,9 +106,13 @@ class _MyAppState extends State<MyApp> {
               navigatorKey: navigatorKey, // Add the navigator key
               debugShowCheckedModeBanner: false,
               title: 'Text the Answer',
-              theme: AppTheme.lightTheme(),
+              theme: currentTheme == 'default' 
+                ? AppTheme.defaultTheme() 
+                : AppTheme.lightTheme(),
               darkTheme: AppTheme.darkTheme(),
-              themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+              themeMode: currentTheme == 'dark' 
+                ? ThemeMode.dark 
+                : ThemeMode.light,
               initialRoute: Routes.splash,
               onGenerateRoute: AppRouter.generateRoute,
               builder: (context, child) {
