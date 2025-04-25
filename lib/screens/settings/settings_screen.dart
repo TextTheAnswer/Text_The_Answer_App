@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconly/iconly.dart';
+import 'package:text_the_answer/models/profile_model.dart';
+import 'package:text_the_answer/models/user_profile_model.dart';
+import 'package:text_the_answer/router/custom_bottom_sheet_route.dart';
+import 'package:text_the_answer/screens/profile/edit_profile_screen.dart';
+import 'package:text_the_answer/screens/settings/music_effect_screen.dart';
+import 'package:text_the_answer/screens/settings/notification_screen.dart';
+import 'package:text_the_answer/screens/settings/security_screen.dart';
+import 'package:text_the_answer/screens/settings/widget/logout_bottom_sheet_content.dart';
 import 'package:text_the_answer/screens/settings/widget/settings_list_tile.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
 import 'package:text_the_answer/widgets/app_bar/custom_app_bar.dart';
-import '../../blocs/auth/auth_bloc.dart';
-import '../../blocs/auth/auth_event.dart';
 import '../../router/app_router.dart';
-import '../../router/routes.dart';
 
 class SettingsScreen extends StatefulWidget {
   final VoidCallback toggleTheme;
@@ -59,7 +63,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leadingIconColor: Colors.orange,
                 leadingIcon: IconlyBold.profile,
                 title: 'Personal Info',
-                onTap: () {},
+                onTap: () {
+                  //TODO: Pass the details through the constructor or refactor
+                  // EditProfileScreen to acess details from a state provider
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (_) => EditProfileScreen(
+                            profileDetails: UserProfileFull(
+                              id: 'Testing',
+                              email: '@superhim',
+                              name: 'Daniel Olayinka',
+                              profile: Profile(
+                                id: 'Testing',
+                                bio: 'A love gaming',
+                                location: 'London',
+                                imageUrl: '',
+                              ),
+                              subscription: Subscription(status: ''),
+                              stats: UserStats(),
+                              isPremium: true,
+                              isEducation: false,
+                            ),
+                          ),
+                    ),
+                  );
+                },
               ),
 
               // -- Notification
@@ -67,7 +97,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leadingIconColor: Colors.red,
                 leadingIcon: IconlyBold.notification,
                 title: 'Notification',
-                onTap: () {},
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => NotificationScreen()),
+                  );
+                },
               ),
 
               // -- Music & Effects
@@ -75,7 +109,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leadingIconColor: Colors.purple,
                 leadingIcon: IconlyBold.volume_up,
                 title: 'Music & Effects',
-                onTap: () {},
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => MusicEffectScreen()),
+                  );
+                },
               ),
 
               // -- Security
@@ -83,7 +121,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leadingIconColor: Colors.green,
                 leadingIcon: IconlyBold.shield_done,
                 title: 'Security',
-                onTap: () {},
+                onTap: () {
+                  Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute(builder: (_) => SecurityScreen()));
+                },
               ),
 
               // -- Theme Selector
@@ -118,17 +160,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leadingIcon: IconlyBold.logout,
                 title: 'Logout',
                 trailingIcon: null,
-                onTap: () {
-                  context.read<AuthBloc>().add(SignOutEvent());
-                  Navigator.pushReplacementNamed(context, Routes.login);
-                },
+                onTap: _showLogoutModal,
               ),
+              SizedBox(height: 20),
             ],
           ),
         ),
       ),
     );
   }
+
+  Future<void> _showLogoutModal() async {
+    await showCustomBottomSheet(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          minimum: const EdgeInsets.only(bottom: 4),
+          child: LogoutBottomSheetContent(),
+        );
+      },
+    );
+  }
+
+  //TODO: Implement theme switcher ui and logic
+  Future<void> _showThemeSwitcher() async {}
 }
 
 class _SettingsHeader extends StatelessWidget {
