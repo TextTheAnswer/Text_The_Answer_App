@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconly/iconly.dart';
 import 'package:text_the_answer/models/profile_model.dart';
 import 'package:text_the_answer/models/user_profile_model.dart';
@@ -11,7 +12,9 @@ import 'package:text_the_answer/screens/settings/notification_screen.dart';
 import 'package:text_the_answer/screens/settings/security_screen.dart';
 import 'package:text_the_answer/screens/settings/widget/logout_bottom_sheet_content.dart';
 import 'package:text_the_answer/screens/settings/widget/settings_list_tile.dart';
+import 'package:text_the_answer/screens/settings/widget/theme_switcher.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
+import 'package:text_the_answer/utils/theme/theme_cubit.dart';
 import 'package:text_the_answer/widgets/app_bar/custom_app_bar.dart';
 import '../../router/app_router.dart';
 
@@ -135,9 +138,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leadingIconColor: Colors.blue,
                 leadingIcon: IconlyBold.show,
                 title: 'Appearance',
-                extraValue: 'Default',
+                extraValue: BlocBuilder<ThemeCubit, ThemeState>(
+                  builder: (context, state) {
+                    return Text(switch (state.mode) {
+                      AppThemeMode.defaultTheme => 'Default',
+                      AppThemeMode.light => 'Light',
+                      AppThemeMode.dark => 'Dark',
+                    });
+                  },
+                ),
                 trailingIcon: IconlyLight.more_circle,
-                onTap: () {},
+                onTap: _showThemeSwitcher,
               ),
 
               // -- Help Center
@@ -192,8 +203,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  //TODO: Implement theme switcher ui and logic
-  Future<void> _showThemeSwitcher() async {}
+  Future<void> _showThemeSwitcher() async {
+    await showCustomBottomSheet(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          minimum: const EdgeInsets.only(bottom: 4),
+          child: BlocBuilder<ThemeCubit, ThemeState>(
+            builder: (context, state) {
+              return ThemeSwitcher(
+                selectedMode: state.mode,
+                onChanged: context.read<ThemeCubit>().setTheme,
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
 }
 
 class _SettingsHeader extends StatelessWidget {
