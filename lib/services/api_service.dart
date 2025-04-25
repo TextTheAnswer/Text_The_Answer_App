@@ -706,14 +706,11 @@ class ApiService {
   Future<Map<String, dynamic>> startGame(String lobbyId) async {
     final token = await _getToken();
     final response = await http.post(
-      Uri.parse('$baseUrl/games/start'),
+      Uri.parse('$baseUrl/api/game/lobby/$lobbyId/start'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       },
-      body: jsonEncode({
-        'lobbyId': lobbyId,
-      }),
     );
 
     if (response.statusCode == 200) {
