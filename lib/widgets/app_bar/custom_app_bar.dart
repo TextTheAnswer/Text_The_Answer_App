@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 /// - `leadingIcon` - IconData to be used if `showBackArrow` is `false`
 /// - `actions` - List of widget to show on the left side of the app bar
 /// - `onPressed` - Callback for when `leadingIcon` is passed and `showBackArrow` is false
+/// - `bottom` - To use for tab and all
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({
     super.key,
@@ -16,6 +17,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.leadingIcon,
     this.actions,
     this.onPressed,
+    this.bottom,
   });
 
   final Widget? title;
@@ -23,6 +25,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final IconData? leadingIcon;
   final List<Widget>? actions;
   final VoidCallback? onPressed;
+  final PreferredSizeWidget? bottom;
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +35,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         automaticallyImplyLeading: false,
         backgroundColor: Colors.transparent,
         centerTitle: false,
+        surfaceTintColor: Colors.transparent,
         leading:
             showBackArrow
                 ? BackButton()
@@ -40,10 +44,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 : null,
         title: title,
         actions: actions,
+        bottom: bottom,
       ),
     );
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize =>
+      Size.fromHeight(kToolbarHeight + (bottom?.preferredSize.height ?? 0));
 }
