@@ -376,7 +376,7 @@ class ApiService {
   Future<Lobby> createGameLobby(String name, bool isPublic, int maxPlayers) async {
     final token = await _getToken();
     final response = await http.post(
-      Uri.parse('$baseUrl/lobbies'),
+      Uri.parse('$baseUrl/game/lobby'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
