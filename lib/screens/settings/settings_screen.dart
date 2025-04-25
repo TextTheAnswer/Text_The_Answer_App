@@ -4,6 +4,8 @@ import 'package:text_the_answer/models/profile_model.dart';
 import 'package:text_the_answer/models/user_profile_model.dart';
 import 'package:text_the_answer/router/custom_bottom_sheet_route.dart';
 import 'package:text_the_answer/screens/profile/edit_profile_screen.dart';
+import 'package:text_the_answer/screens/settings/about_screen.dart';
+import 'package:text_the_answer/screens/settings/help_center_screen.dart';
 import 'package:text_the_answer/screens/settings/music_effect_screen.dart';
 import 'package:text_the_answer/screens/settings/notification_screen.dart';
 import 'package:text_the_answer/screens/settings/security_screen.dart';
@@ -143,7 +145,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leadingIconColor: Colors.orange,
                 leadingIcon: IconlyBold.paper,
                 title: 'Help Center',
-                onTap: () {},
+                onTap: () {
+                  Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute(builder: (_) => HelpCenterScreen()));
+                },
               ),
 
               // -- About
@@ -151,7 +157,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leadingIconColor: Colors.purple,
                 leadingIcon: IconlyBold.info_square,
                 title: 'About',
-                onTap: () {},
+                onTap: () {
+                  Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute(builder: (_) => AboutScreen()));
+                },
               ),
 
               // -- Logout
