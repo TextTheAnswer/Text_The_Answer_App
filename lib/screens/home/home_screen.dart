@@ -1,10 +1,14 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:iconsax_plus/iconsax_plus.dart';
 import 'package:text_the_answer/config/colors.dart';
 import 'package:text_the_answer/screens/profile/profile_screen.dart';
 import 'package:text_the_answer/utils/common_ui.dart';
+import 'package:text_the_answer/utils/theme/theme_cubit.dart';
+import 'package:text_the_answer/widgets/app_bar/custom_app_bar.dart';
 import 'package:text_the_answer/widgets/bottom_nav_bar.dart';
 import '../daily_quiz_screen.dart';
 import '../game/game_mode_screen.dart';
@@ -41,13 +45,28 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: backgroundColor,
       appBar:
           _currentIndex == 0
-              ? CommonUI.buildAppBar(
-                context: context,
-                title: title,
-                isDarkMode: isDarkMode,
-                toggleTheme: widget.toggleTheme,
+              ? CustomAppBar(
+                showBackArrow: false,
+                title: Text('Text the Answer'),
+                actions: [
+                  IconButton(
+                    onPressed: () {
+                      context.read<ThemeCubit>().setTheme(AppThemeMode.dark);
+                    },
+                    icon: Icon(IconsaxPlusBold.sun),
+                  ),
+                ],
               )
               : null,
+      // appBar:
+      // _currentIndex == 0
+      //     ? CommonUI.buildAppBar(
+      //       context: context,
+      //       title: title,
+      //       isDarkMode: isDarkMode,
+      //       toggleTheme: widget.toggleTheme,
+      //     )
+      //     : null,
       // : AppBar(backgroundColor: Colors.transparent, elevation: 0),
       drawer: CommonUI.buildDrawer(
         context: context,
