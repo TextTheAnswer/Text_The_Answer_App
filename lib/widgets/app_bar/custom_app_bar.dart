@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 /// - `leadingIcon` - IconData to be used if `showBackArrow` is `false`
 /// - `actions` - List of widget to show on the left side of the app bar
 /// - `onPressed` - Callback for when `leadingIcon` is passed and `showBackArrow` is false
+/// - `bottom` - To use for tab and all
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({
     super.key,
