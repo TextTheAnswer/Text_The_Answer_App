@@ -19,7 +19,7 @@ class SettingsListTile extends StatelessWidget {
   final Color leadingIconColor;
   final IconData leadingIcon;
   final VoidCallback? onTap;
-  final String? extraValue;
+  final Widget? extraValue;
   final IconData? trailingIcon;
 
   final double leadingSize;
@@ -69,12 +69,7 @@ class SettingsListTile extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  if (extraValue != null)
-                    Text(
-                      extraValue!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                  if (extraValue != null) extraValue!,
                 ],
               ),
             ),
