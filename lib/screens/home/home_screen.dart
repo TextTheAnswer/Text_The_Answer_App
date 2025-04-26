@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:text_the_answer/config/colors.dart';
+import 'package:text_the_answer/router/routes.dart';
 import 'package:text_the_answer/screens/profile/profile_screen.dart';
 import 'package:text_the_answer/utils/common_ui.dart';
 import 'package:text_the_answer/widgets/app_bar/custom_app_bar.dart';
@@ -80,14 +81,20 @@ class _HomeScreenState extends State<HomeScreen> {
         return GameModeScreen(toggleTheme: widget.toggleTheme);
       case 3:
         return DailyQuizScreen(toggleTheme: widget.toggleTheme);
-      case 4:
-        return ProfileScreen(toggleTheme: widget.toggleTheme);
+      // Profile is now a separate page with its own route
       default:
         return _buildHomeTabContent();
     }
   }
 
   void _onTabTapped(int index) {
+    // If profile tab is clicked, navigate to the profile screen
+    if (index == 4) {
+      Navigator.pushNamed(context, Routes.profile);
+      return;
+    }
+    
+    // Otherwise, update the current tab index
     setState(() {
       _currentIndex = index;
     });

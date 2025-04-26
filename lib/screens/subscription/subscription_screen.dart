@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../blocs/subscription/subscription_bloc.dart';
 import '../../blocs/subscription/subscription_event.dart';
 import '../../blocs/subscription/subscription_state.dart';
+import '../../config/colors.dart';
+import '../../router/routes.dart';
 import 'payment_screen.dart';
 
 class SubscriptionScreen extends StatelessWidget {
@@ -13,6 +15,10 @@ class SubscriptionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Subscription'),
+        backgroundColor: AppColors.primary,
+      ),
       body: SafeArea(
         child: BlocConsumer<SubscriptionBloc, SubscriptionState>(
           listener: (context, state) {
@@ -44,21 +50,60 @@ class SubscriptionScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Subscription Details 🌟',
+                      'Subscription Details',
                       style: Theme.of(context).textTheme.headlineLarge,
                     ),
                     const SizedBox(height: 20),
-                    Text('Status: ${subscription.status}'),
-                    Text('Plan: ${subscription.planId ?? 'N/A'}'),
-                    Text('Ends: ${subscription.currentPeriodEnd != null ? 
-                        DateTime.fromMillisecondsSinceEpoch(subscription.currentPeriodEnd! * 1000).toString() : 'N/A'}'),
-                    const SizedBox(height: 20),
-                    if (subscription.status == 'active' && subscription.planId?.contains('premium') == true)
+                    _buildInfoCard(
+                      context,
+                      title: 'Current Plan',
+                      content: subscription.planId?.toUpperCase() ?? 'FREE',
+                      icon: Icons.card_membership,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildInfoCard(
+                      context,
+                      title: 'Status',
+                      content: _formatStatus(subscription.status),
+                      icon: Icons.info_outline,
+                    ),
+                    if (subscription.currentPeriodEnd != null) ...[
+                      const SizedBox(height: 16),
+                      _buildInfoCard(
+                        context,
+                        title: 'Renewal Date',
+                        content: DateTime.fromMillisecondsSinceEpoch(
+                          subscription.currentPeriodEnd! * 1000,
+                        ).toString().split(' ')[0],
+                        icon: Icons.calendar_today,
+                      ),
+                    ],
+                    const SizedBox(height: 30),
+                    if (subscription.status == 'active')
                       ElevatedButton(
                         onPressed: () {
                           context.read<SubscriptionBloc>().add(const CancelSubscription());
                         },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          minimumSize: const Size(double.infinity, 50),
+                        ),
                         child: const Text('Cancel Subscription'),
+                      )
+                    else
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pushNamed(context, Routes.subscriptionPlans);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          minimumSize: const Size(double.infinity, 50),
+                        ),
+                        child: const Text('Subscribe Now'),
                       ),
                   ],
                 ),
@@ -71,32 +116,123 @@ class SubscriptionScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Go Premium 🌟',
+                    'Go Premium',
                     style: Theme.of(context).textTheme.headlineLarge,
                   ),
-                  const SizedBox(height: 20),
-                  const Text('Unlock all features with a premium subscription!'),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 30),
+                  
+                  // Premium benefits
+                  ...['Unlimited quizzes', 'Create private lobbies', 'Custom study materials', 'Advanced analytics']
+                      .map((benefit) => Padding(
+                            padding: const EdgeInsets.only(bottom: 16.0),
+                            child: Row(
+                              children: [
+                                Icon(Icons.check_circle, color: AppColors.primary, size: 24),
+                                const SizedBox(width: 12),
+                                Text(benefit, style: const TextStyle(fontSize: 16)),
+                              ],
+                            ),
+                          ))
+                      .toList(),
+                  
+                  const SizedBox(height: 40),
+                  
+                  // Subscription options button
                   ElevatedButton(
                     onPressed: () {
-                      context.read<SubscriptionBloc>().add(
-                        const CreateCheckoutSession(priceId: 'price_premium_monthly')
-                      );
+                      Navigator.pushNamed(context, Routes.subscriptionPlans);
                     },
-                    child: const Text('Choose Plan'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      minimumSize: const Size(double.infinity, 50),
+                    ),
+                    child: const Text('View Subscription Plans', style: TextStyle(fontSize: 16)),
                   ),
+                  
                   const SizedBox(height: 20),
-                  ElevatedButton(
+                  
+                  // Check subscription status button  
+                  OutlinedButton(
                     onPressed: () {
                       context.read<SubscriptionBloc>().add(const FetchSubscriptionDetails());
                     },
-                    child: const Text('View Subscription Details'),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: AppColors.primary),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      minimumSize: const Size(double.infinity, 50),
+                    ),
+                    child: const Text('Check Subscription Status'),
                   ),
                 ],
               ),
             );
           },
         ),
+      ),
+    );
+  }
+  
+  String _formatStatus(String status) {
+    switch (status) {
+      case 'active':
+        return 'Active';
+      case 'canceled':
+        return 'Canceled';
+      case 'past_due':
+        return 'Past Due';
+      case 'unpaid':
+        return 'Unpaid';
+      default:
+        return 'Inactive';
+    }
+  }
+  
+  Widget _buildInfoCard(BuildContext context, {
+    required String title,
+    required String content, 
+    required IconData icon,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: AppColors.primary,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.grey,
+                ),
+              ),
+              Text(
+                content,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

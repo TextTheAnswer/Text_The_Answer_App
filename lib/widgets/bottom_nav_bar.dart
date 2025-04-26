@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:text_the_answer/config/colors.dart';
+import 'package:text_the_answer/router/routes.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
 
 class BottomNavBar extends StatelessWidget {
   final int currentIndex;
-  final Function(int) onTap;
+  final Function(int)? onTap;
 
   const BottomNavBar({
     super.key,
     required this.currentIndex,
-    required this.onTap,
+     this.onTap,
   });
 
   @override
@@ -44,7 +45,7 @@ class BottomNavBar extends StatelessWidget {
           _buildNavItem(1, Icons.book_outlined, Icons.book, 'Library', context),
           _buildJoinButton(2, context),
           _buildNavItem(3, Icons.quiz_outlined, Icons.quiz, 'Quiz', context),
-          _buildNavItem(4, Icons.person_outline, Icons.person, 'Profile', context),
+          _buildProfileNavItem(context),
         ],
       ),
     );
@@ -66,7 +67,7 @@ class BottomNavBar extends StatelessWidget {
         : AppColors.lightLabelText;
 
     return InkWell(
-      onTap: () => onTap(index),
+      onTap: () => onTap!(index),
       child: Container(
         width: 70.w,
         padding: EdgeInsets.symmetric(vertical: 8.h),
@@ -91,6 +92,45 @@ class BottomNavBar extends StatelessWidget {
       ),
     );
   }
+  
+  Widget _buildProfileNavItem(BuildContext context) {
+    final bool isSelected = currentIndex == 4;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    final Color selectedColor = AppColors.primary;
+    final Color unselectedColor = isDarkMode
+        ? AppColors.darkLabelText
+        : AppColors.lightLabelText;
+
+    return InkWell(
+      onTap: () {
+        // Navigate to profile screen instead of changing tab
+        Navigator.pushNamed(context, Routes.profile);
+      },
+      child: Container(
+        width: 70.w,
+        padding: EdgeInsets.symmetric(vertical: 8.h),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isSelected ? Icons.person : Icons.person_outline,
+              color: isSelected ? selectedColor : unselectedColor,
+              size: 28.sp,
+            ),
+            SizedBox(height: 4.h),
+            Text(
+              'Profile',
+              style: FontUtility.montserratMedium(
+                fontSize: 12,
+                color: isSelected ? selectedColor : unselectedColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildJoinButton(int index, BuildContext context) {
     final bool isSelected = currentIndex == index;
@@ -105,7 +145,7 @@ class BottomNavBar extends StatelessWidget {
         : (isDarkMode ? AppColors.darkPrimaryText : AppColors.lightPrimaryBg);
 
     return GestureDetector(
-      onTap: () => onTap(index),
+      onTap: () => onTap!(index),
       child: Container(
         width: 60.w,
         height: 60.h,
