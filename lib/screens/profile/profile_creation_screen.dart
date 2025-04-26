@@ -8,7 +8,7 @@ import 'package:text_the_answer/blocs/auth/auth_bloc.dart';
 import 'package:text_the_answer/blocs/auth/auth_event.dart';
 import 'package:text_the_answer/blocs/auth/auth_state.dart';
 import 'package:text_the_answer/config/colors.dart';
-import 'package:text_the_answer/models/profile_model.dart';
+import 'package:text_the_answer/models/profile_model.dart' as profile_model;
 import 'package:text_the_answer/router/routes.dart';
 import 'package:text_the_answer/services/profile_service.dart';
 import 'package:text_the_answer/services/auth_token_service.dart';
@@ -1052,13 +1052,13 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
       }
 
       // Create notification settings
-      final notificationSettings = NotificationSettings(
+      final notificationSettings = profile_model.NotificationSettings(
         dailyQuizReminder: true,
         multiplayerInvites: true,
       );
 
       // Create profile preferences
-      final preferences = ProfilePreferences(
+      final preferences = profile_model.ProfilePreferences(
         favoriteCategories: ['General Knowledge', 'Science', 'History'],
         notificationSettings: notificationSettings,
         displayTheme: 'light',

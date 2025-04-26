@@ -100,14 +100,7 @@ class AppDrawer extends StatelessWidget {
               title: 'Profile',
               onTap: () {
                 Navigator.pop(context);
-                if (Navigator.canPop(context)) {
-                  Navigator.pop(context);
-                }
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  Routes.home,
-                  (route) => false,
-                );
+                Navigator.pushNamed(context, Routes.profile);
               },
               textColor: textColor,
               accentColor: accentColor,

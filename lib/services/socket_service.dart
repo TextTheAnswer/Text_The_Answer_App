@@ -90,11 +90,25 @@ class SocketService {
         print('Received lobby data: $data');
       }
       try {
-        final lobby = Lobby.fromJson(data);
-        lobbyStreamController.add(lobby);
+        // Ensure data is properly formatted as a Map<String, dynamic>
+        Map<String, dynamic> lobbyData;
+        if (data is Map) {
+          lobbyData = Map<String, dynamic>.from(data);
+          
+          // Ensure ID is always a string
+          if (lobbyData['id'] != null) {
+            lobbyData['id'] = lobbyData['id'].toString();
+          }
+          
+          final lobby = Lobby.fromJson(lobbyData);
+          lobbyStreamController.add(lobby);
+        } else {
+          print('Invalid lobby data format: $data');
+        }
       } catch (e) {
         if (kDebugMode) {
           print('Error parsing lobby data: $e');
+          print('Raw data: $data');
         }
       }
     });

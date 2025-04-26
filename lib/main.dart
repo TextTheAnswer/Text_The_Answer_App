@@ -84,7 +84,7 @@ class _MyAppState extends State<MyApp> {
                   debugShowCheckedModeBanner: false,
                   title: 'Text the Answer',
                   theme: state.themeData,
-                  initialRoute: Routes.home,
+                  initialRoute: Routes.splash,
                   onGenerateRoute: AppRouter.generateRoute,
                   builder: (context, child) {
                     return BlocListener<AuthBloc, AuthState>(
