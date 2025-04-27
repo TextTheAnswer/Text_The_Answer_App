@@ -68,11 +68,11 @@ abstract class AppRoutePath {
 
   // -- Settings
   static const String settings = '/settings';
-  static const String notification = '/settings/notifications';
-  static const String musicEffect = '/settings/music-effect';
-  static const String security = '/settings/security';
-  static const String helpCenter = '/settings/help-center';
-  static const String about = '/settings/about';
+  static const String notification = 'notifications';
+  static const String musicEffect = 'music-effect';
+  static const String security = 'security';
+  static const String helpCenter = 'help-center';
+  static const String about = 'about';
 
   // -- Add other route
 }
