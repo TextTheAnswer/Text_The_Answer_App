@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 import 'package:text_the_answer/screens/profile/widgets/profile_card.dart';
 import 'package:text_the_answer/screens/profile/widgets/profile_image.dart';
@@ -121,12 +122,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
           'ProfileScreen: Basic profile fetch response - ${response.success}',
         );
         print('ProfileScreen: Response message - "${response.message}"');
-        print('ProfileScreen: Profile data available - ${response.profile != null}');
-        
+        print(
+          'ProfileScreen: Profile data available - ${response.profile != null}',
+        );
+
         if (response.profile != null) {
           print('ProfileScreen: Profile ID - ${response.profile?.id}');
           print('ProfileScreen: Profile Bio - ${response.profile?.bio}');
-          print('ProfileScreen: Profile ImageUrl - ${response.profile?.imageUrl}');
+          print(
+            'ProfileScreen: Profile ImageUrl - ${response.profile?.imageUrl}',
+          );
         }
       }
 
@@ -149,7 +154,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           print('ProfileScreen: Success flag - ${response.success}');
           print('ProfileScreen: Error message - "${response.message}"');
         }
-        
+
         setState(() {
           _isLoading = false;
           _basicProfile = null;
@@ -158,12 +163,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _errorMessage = 'Profile not found. Please create your profile.';
           } else if (response.message.toLowerCase().contains('auth')) {
             _errorMessage = 'Authentication required. Please login again.';
-          } else if (response.message.toLowerCase().contains('no profile data')) {
-            _errorMessage = 'No profile data was returned from the server. Please try again or create your profile.';
+          } else if (response.message.toLowerCase().contains(
+            'no profile data',
+          )) {
+            _errorMessage =
+                'No profile data was returned from the server. Please try again or create your profile.';
           } else {
             _errorMessage = response.message;
           }
-          
+
           // Debug error state
           if (kDebugMode) {
             print('ProfileScreen: Error message set to - "${_errorMessage}"');
@@ -174,7 +182,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (kDebugMode) {
         print('ProfileScreen: Exception in _fetchBasicProfile - $e');
       }
-      
+
       setState(() {
         _isLoading = false;
         _basicProfile = null;
@@ -187,27 +195,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _fetchUserProfile() async {
     try {
       final response = await _profileService.getFullProfile();
-      
+
       // Debug full profile response
       if (kDebugMode) {
-        print('ProfileScreen: Full profile fetch response - ${response.success}');
+        print(
+          'ProfileScreen: Full profile fetch response - ${response.success}',
+        );
         print('ProfileScreen: Full profile message - "${response.message}"');
-        print('ProfileScreen: Full profile data available - ${response.profile != null}');
-        
+        print(
+          'ProfileScreen: Full profile data available - ${response.profile != null}',
+        );
+
         if (response.profile != null) {
-          print('ProfileScreen: Full profile user ID - ${response.profile?.id}');
+          print(
+            'ProfileScreen: Full profile user ID - ${response.profile?.id}',
+          );
           print('ProfileScreen: Full profile name - ${response.profile?.name}');
-          print('ProfileScreen: Full profile email - ${response.profile?.email}');
-          print('ProfileScreen: Full profile has profile data - ${response.profile?.profile != null}');
+          print(
+            'ProfileScreen: Full profile email - ${response.profile?.email}',
+          );
+          print(
+            'ProfileScreen: Full profile has profile data - ${response.profile?.profile != null}',
+          );
         }
       }
-      
+
       setState(() {
         _isLoading = false;
         if (response.success && response.profile != null) {
           _userProfile = response.profile;
           _errorMessage = null; // Clear any previous error
-          
+
           if (kDebugMode) {
             print('ProfileScreen: Full profile stored successfully');
           }
@@ -219,13 +237,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // Only set error message if we don't have basic profile
           if (_basicProfile == null) {
             _errorMessage = 'Profile not found. Please create your profile.';
-            
+
             if (kDebugMode) {
               print('ProfileScreen: No basic profile available, showing error');
             }
           } else {
             _errorMessage = null; // We'll show the basic profile instead
-            
+
             if (kDebugMode) {
               print('ProfileScreen: Using basic profile as fallback');
             }
@@ -233,10 +251,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         } else {
           // There's an error but we might still have basic profile
           _errorMessage = response.message ?? 'Failed to load complete profile';
-          
+
           if (kDebugMode) {
-            print('ProfileScreen: Error getting full profile - "$_errorMessage"');
-            print('ProfileScreen: Having basic profile as fallback - ${_basicProfile != null}');
+            print(
+              'ProfileScreen: Error getting full profile - "$_errorMessage"',
+            );
+            print(
+              'ProfileScreen: Having basic profile as fallback - ${_basicProfile != null}',
+            );
           }
         }
       });
@@ -244,13 +266,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (kDebugMode) {
         print('ProfileScreen: Exception in _fetchUserProfile - $e');
       }
-      
+
       setState(() {
         _isLoading = false;
         // Only set error message if we don't have basic profile
         if (_basicProfile == null) {
           _errorMessage = 'An error occurred: ${e.toString()}';
-          
+
           if (kDebugMode) {
             print('ProfileScreen: No basic profile to fall back on');
           }
@@ -258,7 +280,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // We have basic profile, so we'll show that instead
           _errorMessage =
               'Failed to load complete profile. Showing basic information.';
-              
+
           if (kDebugMode) {
             print('ProfileScreen: Using basic profile despite error');
           }
@@ -275,12 +297,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: CustomAppBar(
         showBackArrow: false,
         actions: [
-         
           IconButton(
             onPressed: () {
-              Navigator.pushNamed(context, Routes.settings);
-            }, 
-            icon: Icon(IconsaxPlusLinear.setting_2)
+              // Navigator.pushNamed(context, Routes.settings);
+              context.push(AppRoutePath.settings);
+            },
+            icon: Icon(IconsaxPlusLinear.setting_2),
           ),
         ],
         title: Row(
@@ -355,7 +377,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         CustomButton(
                           text: 'Create Profile',
                           onPressed: () {
-                            Navigator.pushNamed(context, Routes.profileCreate);
+                            // Navigator.pushNamed(context, Routes.profileCreate);
+                            context.push(AppRoutePath.profileCreate);
                           },
                           bgColor: Colors.green,
                           icon: Icons.person_add,
@@ -366,7 +389,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         CustomButton(
                           text: 'Login',
                           onPressed: () {
-                            Navigator.pushNamed(context, Routes.login);
+                            // Navigator.pushNamed(context, Routes.login);
+                            context.push(AppRoutePath.login);
                           },
                           buttonType: CustomButtonType.outline,
                           borderColor: AppColors.primary,
@@ -516,6 +540,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         CustomButton(
           text: 'Edit Profile',
           onPressed: () {
+            //TODO: P
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -546,6 +571,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         CustomButton(
           text: 'Streak Progress',
           onPressed: () {
+            //TODO:
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -562,7 +588,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         CustomButton(
           text: 'Theme Settings',
           onPressed: () {
-            Navigator.pushNamed(context, Routes.settings);
+            // Navigator.pushNamed(context, Routes.settings);
+            context.push(AppRoutePath.settings);
           },
           buttonType: CustomButtonType.outline,
           icon: Icons.color_lens,
@@ -596,7 +623,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           CustomButton(
             text: 'LOG IN',
             onPressed: () {
-              Navigator.pushNamed(context, Routes.login);
+              // Navigator.pushNamed(context, Routes.login);
+              context.push(AppRoutePath.login);
             },
             bgColor: AppColors.primary,
             icon: Icons.login,
@@ -605,7 +633,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           CustomButton(
             text: 'SIGN UP',
             onPressed: () {
-              Navigator.pushNamed(context, Routes.signup);
+              // Navigator.pushNamed(context, Routes.signup);
+              context.push(AppRoutePath.signup);
             },
             buttonType: CustomButtonType.outline,
             borderColor: AppColors.primary,
@@ -656,7 +685,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             CustomButton(
               text: 'CREATE PROFILE',
               onPressed: () {
-                Navigator.pushNamed(context, Routes.profileCreate);
+                // Navigator.pushNamed(context, Routes.profileCreate);
+                context.push(AppRoutePath.profileCreate);
               },
               bgColor: AppColors.primary,
               icon: Icons.create_rounded,
@@ -666,7 +696,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             TextButton(
               onPressed: () {
                 // Navigate back to home tab
-                Navigator.pop(context);
+                // Navigator.pop(context);
+                context.pop();
               },
               child: Text(
                 'Skip for now',
