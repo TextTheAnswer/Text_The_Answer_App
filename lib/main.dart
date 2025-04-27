@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:text_the_answer/router/app_router.dart';
 import 'package:text_the_answer/router/routes.dart';
 import 'package:text_the_answer/services/api_service.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
 import 'package:text_the_answer/utils/logger/debug_print.dart';
+import 'package:text_the_answer/utils/routing/route_config.dart';
 import 'package:text_the_answer/utils/theme/theme_cubit.dart';
 import 'blocs/auth/auth_bloc.dart';
 import 'blocs/auth/auth_event.dart';
@@ -23,8 +24,8 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 // Create a singleton instance of the AuthBloc to ensure it's the same throughout the app
 final AuthBloc authBloc = AuthBloc();
 
-// Flag to prevent multiple redirects during navigation
-bool _isNavigating = false;
+// // Flag to prevent multiple redirects during navigation
+// bool _isNavigating = false;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -79,37 +80,38 @@ class _MyAppState extends State<MyApp> {
             ],
             child: BlocBuilder<ThemeCubit, ThemeState>(
               builder: (context, state) {
-                return MaterialApp(
-                  navigatorKey: navigatorKey, // Add the navigator key
+                return MaterialApp.router(
                   debugShowCheckedModeBanner: false,
                   title: 'Text the Answer',
                   theme: state.themeData,
-                  initialRoute: Routes.home,
-                  onGenerateRoute: AppRouter.generateRoute,
+                  routerConfig: router,
                   builder: (context, child) {
                     return BlocListener<AuthBloc, AuthState>(
                       listener: (context, state) {
                         // Prevent navigation while another navigation is in progress
-                        if (_isNavigating) return;
+                        // if (_isNavigating) return;
 
                         printDebug('Auth state changed: ${state.runtimeType}');
 
                         if (state is AuthAuthenticated) {
-                          _isNavigating = true;
-                          navigatorKey.currentState
-                              ?.pushNamedAndRemoveUntil(
-                                Routes.home,
-                                (route) => false,
-                              )
-                              .then((_) => _isNavigating = false);
+                          // _isNavigating = true;
+                          // navigatorKey.currentState
+                          //     ?.pushNamedAndRemoveUntil(
+                          //       Routes.home,
+                          //       (route) => false,
+                          //     )
+                          //     .then((_) => _isNavigating = false);
+
+                          context.goNamed(AppRouteName.home);
                         } else if (state is AuthInitial) {
-                          _isNavigating = true;
-                          navigatorKey.currentState
-                              ?.pushNamedAndRemoveUntil(
-                                Routes.onboard,
-                                (route) => false,
-                              )
-                              .then((_) => _isNavigating = false);
+                          // _isNavigating = true;
+                          // navigatorKey.currentState
+                          //     ?.pushNamedAndRemoveUntil(
+                          //       Routes.onboard,
+                          //       (route) => false,
+                          //     )
+                          //     .then((_) => _isNavigating = false);
+                          context.goNamed(AppRouteName.onboarding);
                         } else if (state is AuthError) {
                           // Show a snackbar with the error message
                           ScaffoldMessenger.of(context).showSnackBar(
