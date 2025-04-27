@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:text_the_answer/config/colors.dart';
+import 'package:text_the_answer/screens/main_app_screen.dart';
 import 'package:text_the_answer/widgets/app_bar/custom_app_bar.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -19,6 +20,10 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: CustomAppBar(
         showBackArrow: false,
+        leadingIcon: Icons.menu,
+        onPressed: () {
+          AppScaffoldKeys.mainScaffoldKey.currentState?.openDrawer();
+        },
         title: Text('Text the Answer'),
       ),
       body: SingleChildScrollView(

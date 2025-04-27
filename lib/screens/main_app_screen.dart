@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconly/iconly.dart';
+import 'package:text_the_answer/widgets/app_drawer.dart';
+
+//TODO: Do this in a better way
+abstract class AppScaffoldKeys {
+  static final GlobalKey<ScaffoldState> mainScaffoldKey =
+      GlobalKey<ScaffoldState>();
+}
 
 class MainAppScreen extends StatelessWidget {
   const MainAppScreen({super.key, required this.navigationShell});
@@ -10,8 +17,12 @@ class MainAppScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
+      key: AppScaffoldKeys.mainScaffoldKey,
       body: navigationShell,
+      drawer: AppDrawer(toggleTheme: () {}, isDarkMode: isDarkMode),
       bottomNavigationBar: BottomNavigationBar(
         items: [
           // -- Home
