@@ -10,6 +10,7 @@ import 'package:text_the_answer/widgets/bottom_nav_bar.dart';
 import '../daily_quiz_screen.dart';
 import '../game/game_mode_screen.dart';
 
+@Deprecated('Use Home screen in /new_home_screen.dart. To be removed')
 class HomeScreen extends StatefulWidget {
   final VoidCallback toggleTheme;
 
