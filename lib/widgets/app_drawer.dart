@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:text_the_answer/blocs/auth/auth_bloc.dart';
 import 'package:text_the_answer/blocs/auth/auth_event.dart';
 import 'package:text_the_answer/config/colors.dart';
@@ -19,15 +20,12 @@ class AppDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textColor = isDarkMode 
-        ? AppColors.darkPrimaryText 
-        : AppColors.lightPrimaryText;
-    final backgroundColor = isDarkMode 
-        ? AppColors.darkBackground 
-        : AppColors.lightBackground;
-    final accentColor = isDarkMode 
-        ? AppColors.darkOutlineBg 
-        : AppColors.lightOutlineBg;
+    final textColor =
+        isDarkMode ? AppColors.darkPrimaryText : AppColors.lightPrimaryText;
+    final backgroundColor =
+        isDarkMode ? AppColors.darkBackground : AppColors.lightBackground;
+    final accentColor =
+        isDarkMode ? AppColors.darkOutlineBg : AppColors.lightOutlineBg;
 
     return Drawer(
       backgroundColor: backgroundColor,
@@ -42,11 +40,7 @@ class AppDrawer extends StatelessWidget {
                   CircleAvatar(
                     radius: 30.r,
                     backgroundColor: accentColor.withOpacity(0.2),
-                    child: Icon(
-                      Icons.person,
-                      color: accentColor,
-                      size: 30.sp,
-                    ),
+                    child: Icon(Icons.person, color: accentColor, size: 30.sp),
                   ),
                   SizedBox(width: 16.w),
                   Expanded(
@@ -74,9 +68,9 @@ class AppDrawer extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             Divider(thickness: 1, color: textColor.withOpacity(0.1)),
-            
+
             // Drawer items
             _buildDrawerItem(
               context,
@@ -84,95 +78,100 @@ class AppDrawer extends StatelessWidget {
               title: 'Home',
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  Routes.home,
-                  (route) => false,
-                );
+                // Navigator.pushNamedAndRemoveUntil(
+                //   context,
+                //   Routes.home,
+                //   (route) => false,
+                // );
+                context.goNamed(AppRouteName.home);
               },
               textColor: textColor,
               accentColor: accentColor,
             ),
-            
+
             _buildDrawerItem(
               context,
               icon: Icons.person,
               title: 'Profile',
               onTap: () {
                 Navigator.pop(context);
-                if (Navigator.canPop(context)) {
-                  Navigator.pop(context);
-                }
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  Routes.home,
-                  (route) => false,
-                );
+                // if (Navigator.canPop(context)) {
+                //   Navigator.pop(context);
+                // }
+                // Navigator.pushNamedAndRemoveUntil(
+                //   context,
+                //   Routes.home,
+                //   (route) => false,
+                // );
+                context.goNamed(AppRouteName.profile);
               },
               textColor: textColor,
               accentColor: accentColor,
             ),
-            
+
             _buildDrawerItem(
               context,
               icon: Icons.lightbulb,
               title: 'Daily Quiz',
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  Routes.home,
-                  (route) => false,
-                );
+                // Navigator.pushNamedAndRemoveUntil(
+                //   context,
+                //   Routes.home,
+                //   (route) => false,
+                // );
+                context.goNamed(AppRouteName.quiz);
               },
               textColor: textColor,
               accentColor: accentColor,
             ),
-            
+
             _buildDrawerItem(
               context,
               icon: Icons.star,
               title: 'Premium Subscription',
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, Routes.manageSubscription);
+                // Navigator.pushNamed(context, Routes.manageSubscription);
+                // context.goNamed(AppRouteName.home);
               },
               textColor: textColor,
               accentColor: Colors.amber,
             ),
-            
+
             _buildDrawerItem(
               context,
               icon: Icons.format_list_bulleted,
               title: 'Leaderboard',
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  Routes.home,
-                  (route) => false,
-                );
+                // Navigator.pushNamedAndRemoveUntil(
+                //   context,
+                //   Routes.home,
+                //   (route) => false,
+                // );
+                // context.goNamed(AppRouteName.);
               },
               textColor: textColor,
               accentColor: accentColor,
             ),
-            
+
             SizedBox(height: 16.h),
             Divider(thickness: 1, color: textColor.withOpacity(0.1)),
-            
+
             // Theme toggle
             _buildDrawerItem(
               context,
               icon: isDarkMode ? Icons.wb_sunny : Icons.nightlight_round,
               title: isDarkMode ? 'Light Mode' : 'Dark Mode',
               onTap: () {
-                toggleTheme();
+                // toggleTheme();
                 Navigator.pop(context);
               },
               textColor: textColor,
               accentColor: accentColor,
             ),
-            
+
             // Settings
             _buildDrawerItem(
               context,
@@ -180,16 +179,17 @@ class AppDrawer extends StatelessWidget {
               title: 'Settings',
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, Routes.settings);
+                // Navigator.pushNamed(context, Routes.settings);
+                context.pushNamed(AppRouteName.settings);
               },
               textColor: textColor,
               accentColor: accentColor,
             ),
-            
+
             const Spacer(),
-            
+
             Divider(thickness: 1, color: textColor.withOpacity(0.1)),
-            
+
             // Logout button at the bottom
             _buildDrawerItem(
               context,
@@ -201,7 +201,7 @@ class AppDrawer extends StatelessWidget {
               textColor: Colors.red.shade400,
               accentColor: Colors.red.shade400,
             ),
-            
+
             SizedBox(height: 20.h),
           ],
         ),
@@ -221,10 +221,7 @@ class AppDrawer extends StatelessWidget {
       leading: Icon(icon, color: accentColor, size: 24.sp),
       title: Text(
         title,
-        style: FontUtility.montserratMedium(
-          fontSize: 16,
-          color: textColor,
-        ),
+        style: FontUtility.montserratMedium(fontSize: 16, color: textColor),
       ),
       onTap: onTap,
       contentPadding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -257,4 +254,4 @@ class AppDrawer extends StatelessWidget {
       },
     );
   }
-} 
+}
