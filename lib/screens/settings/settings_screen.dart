@@ -1,22 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:iconly/iconly.dart';
 import 'package:text_the_answer/models/profile_model.dart';
 import 'package:text_the_answer/models/user_profile_model.dart';
 import 'package:text_the_answer/router/custom_bottom_sheet_route.dart';
+import 'package:text_the_answer/router/routes.dart';
 import 'package:text_the_answer/screens/profile/edit_profile_screen.dart';
-import 'package:text_the_answer/screens/settings/about_screen.dart';
-import 'package:text_the_answer/screens/settings/help_center_screen.dart';
-import 'package:text_the_answer/screens/settings/music_effect_screen.dart';
-import 'package:text_the_answer/screens/settings/notification_screen.dart';
-import 'package:text_the_answer/screens/settings/security_screen.dart';
 import 'package:text_the_answer/screens/settings/widget/logout_bottom_sheet_content.dart';
 import 'package:text_the_answer/screens/settings/widget/settings_list_tile.dart';
 import 'package:text_the_answer/screens/settings/widget/theme_switcher.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
 import 'package:text_the_answer/utils/theme/theme_cubit.dart';
 import 'package:text_the_answer/widgets/app_bar/custom_app_bar.dart';
-import '../../router/app_router.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -84,9 +80,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leadingIcon: IconlyBold.notification,
                 title: 'Notification',
                 onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => NotificationScreen()),
-                  );
+                  context.pushNamed(AppRouteName.notification);
                 },
               ),
 
@@ -96,9 +90,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leadingIcon: IconlyBold.volume_up,
                 title: 'Music & Effects',
                 onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => MusicEffectScreen()),
-                  );
+                  context.pushNamed(AppRouteName.musicEffect);
                 },
               ),
 
@@ -108,9 +100,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leadingIcon: IconlyBold.shield_done,
                 title: 'Security',
                 onTap: () {
-                  Navigator.of(
-                    context,
-                  ).push(MaterialPageRoute(builder: (_) => SecurityScreen()));
+                  context.pushNamed(AppRouteName.security);
                 },
               ),
 
@@ -138,9 +128,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leadingIcon: IconlyBold.paper,
                 title: 'Help Center',
                 onTap: () {
-                  Navigator.of(
-                    context,
-                  ).push(MaterialPageRoute(builder: (_) => HelpCenterScreen()));
+                  context.pushNamed(AppRouteName.helpCenter);
                 },
               ),
 
@@ -150,9 +138,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leadingIcon: IconlyBold.info_square,
                 title: 'About',
                 onTap: () {
-                  Navigator.of(
-                    context,
-                  ).push(MaterialPageRoute(builder: (_) => AboutScreen()));
+                  context.pushNamed(AppRouteName.about);
                 },
               ),
 
@@ -172,6 +158,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// Show a bottom sheet for the logout modal
   Future<void> _showLogoutModal() async {
     await showCustomBottomSheet(
       context: context,
@@ -184,6 +171,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// Show a bottom sheet for changing the app wide theme
   Future<void> _showThemeSwitcher() async {
     await showCustomBottomSheet(
       context: context,
