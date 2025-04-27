@@ -8,6 +8,10 @@ import 'package:text_the_answer/screens/auth/otp_verification_screen.dart';
 import 'package:text_the_answer/screens/auth/register_screen.dart';
 import 'package:text_the_answer/screens/auth/reset_password_screen.dart';
 import 'package:text_the_answer/screens/auth/splash_screen.dart';
+import 'package:text_the_answer/screens/daily_quiz_screen.dart';
+import 'package:text_the_answer/screens/game/game_mode_screen.dart';
+import 'package:text_the_answer/screens/home/new_home_screen.dart';
+import 'package:text_the_answer/screens/main_app_screen.dart';
 import 'package:text_the_answer/screens/profile/profile_creation_screen.dart';
 import 'package:text_the_answer/screens/profile/profile_screen.dart';
 import 'package:text_the_answer/screens/settings/about_screen.dart';
@@ -26,12 +30,12 @@ final GlobalKey<NavigatorState> _sectionNavigatorKey =
 final GoRouter router = GoRouter(
   debugLogDiagnostics: true,
   navigatorKey: _rootNavigatorKey,
-  initialLocation: AppRoutePath.splash,
+  initialLocation: AppRoutePath.home,
   routes: <RouteBase>[
     // -- Main App Screen
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
-        return Placeholder();
+        return MainAppScreen(navigationShell: navigationShell);
       },
       branches: <StatefulShellBranch>[
         // -- Home
@@ -40,9 +44,9 @@ final GoRouter router = GoRouter(
           routes: <RouteBase>[
             GoRoute(
               name: AppRouteName.home,
-              path: AppRouteName.home,
+              path: AppRoutePath.home,
               builder: (context, state) {
-                return Placeholder();
+                return HomeScreen();
               },
             ),
           ],
@@ -53,9 +57,9 @@ final GoRouter router = GoRouter(
           routes: <RouteBase>[
             GoRoute(
               name: AppRouteName.library,
-              path: AppRoutePath.home,
+              path: AppRoutePath.library,
               builder: (context, state) {
-                return Placeholder();
+                return Scaffold(appBar: AppBar(title: Text('Library')));
               },
             ),
           ],
@@ -68,7 +72,7 @@ final GoRouter router = GoRouter(
               name: AppRouteName.gameMode,
               path: AppRoutePath.gameMode,
               builder: (context, state) {
-                return Placeholder();
+                return GameModeScreen(toggleTheme: () {});
               },
             ),
           ],
@@ -81,7 +85,7 @@ final GoRouter router = GoRouter(
               name: AppRouteName.quiz,
               path: AppRoutePath.quiz,
               builder: (context, state) {
-                return Placeholder();
+                return DailyQuizScreen(toggleTheme: () {});
               },
             ),
           ],
