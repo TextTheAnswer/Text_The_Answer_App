@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:text_the_answer/config/colors.dart' show AppColors;
 import 'package:text_the_answer/router/routes.dart';
 import 'package:text_the_answer/services/api_service.dart';
@@ -91,11 +92,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       );
 
       // Navigate back to login screen
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        Routes.login,
-        (route) => false, // Clear all routes in the stack
-      );
+      // Navigator.pushNamedAndRemoveUntil(
+      //   context,
+      //   Routes.login,
+      //   (route) => false, // Clear all routes in the stack
+      // );
+      context.go(AppRoutePath.login);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -119,7 +121,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => context.pop(),
         ),
       ),
       body: Padding(
