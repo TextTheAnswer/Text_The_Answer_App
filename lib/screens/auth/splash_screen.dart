@@ -10,9 +10,7 @@ import '../../router/routes.dart';
 import '../../utils/auth_helper.dart';
 
 class SplashScreen extends StatefulWidget {
-  final VoidCallback? toggleTheme;
-
-  const SplashScreen({required this.toggleTheme, super.key});
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();

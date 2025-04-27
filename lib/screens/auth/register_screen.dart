@@ -12,8 +12,7 @@ import '../../blocs/auth/auth_event.dart';
 import '../../blocs/auth/auth_state.dart';
 
 class RegisterScreen extends StatefulWidget {
-  final VoidCallback toggleTheme;
-  const RegisterScreen({required this.toggleTheme, super.key});
+  const RegisterScreen({super.key});
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();

@@ -19,18 +19,13 @@ import 'package:text_the_answer/widgets/app_bar/custom_app_bar.dart';
 import '../../router/app_router.dart';
 
 class SettingsScreen extends StatefulWidget {
-  final VoidCallback toggleTheme;
-
-  const SettingsScreen({required this.toggleTheme, super.key});
+  const SettingsScreen({super.key});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  String _selectedTheme = 'default';
-  bool _initialized = false;
-
   @override
   void initState() {
     super.initState();
@@ -38,20 +33,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Initialize theme selection based on current theme state
-    if (!_initialized) {
-      // Get initial theme from AppRouter
-      _selectedTheme = AppRouter.getCurrentTheme();
-      _initialized = true;
-    }
-
-    // Always keep UI in sync with actual app theme
-    if (_selectedTheme != AppRouter.getCurrentTheme()) {
-      setState(() {
-        _selectedTheme = AppRouter.getCurrentTheme();
-      });
-    }
-
     return Scaffold(
       appBar: CustomAppBar(showBackArrow: true, title: Text('Settings')),
       body: Padding(

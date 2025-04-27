@@ -5,8 +5,7 @@ import '../../config/colors.dart';
 import '../../router/routes.dart';
 
 class OnboardingScreen extends StatefulWidget {
-  final VoidCallback toggleTheme;
-  const OnboardingScreen({required this.toggleTheme, super.key});
+  const OnboardingScreen({super.key});
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();

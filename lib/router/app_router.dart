@@ -14,6 +14,9 @@ import 'package:text_the_answer/screens/profile/profile_creation_screen.dart';
 import 'package:text_the_answer/screens/settings/manage_subscription_screen.dart';
 import 'package:text_the_answer/screens/settings/settings_screen.dart';
 
+@Deprecated(
+  'Routing is now been handled by Go Router. Reference /Users/danielolayinka/Documents/Prod Work/Text_The_Answer_App/lib/utils/routing/route_config.dart',
+)
 class AppRouter {
   // This function manages theme state between screens
   static Function toggleTheme = () {}; // This will be set from the main app
@@ -34,27 +37,16 @@ class AppRouter {
 
     switch (settings.name) {
       case Routes.splash:
-        return MaterialPageRoute(
-          builder:
-              (_) => SplashScreen(toggleTheme: toggleTheme as VoidCallback),
-        );
+        return MaterialPageRoute(builder: (_) => SplashScreen());
 
       case Routes.onboard:
-        return MaterialPageRoute(
-          builder:
-              (_) => OnboardingScreen(toggleTheme: toggleTheme as VoidCallback),
-        );
+        return MaterialPageRoute(builder: (_) => OnboardingScreen());
 
       case Routes.login:
-        return MaterialPageRoute(
-          builder: (_) => LoginScreen(toggleTheme: toggleTheme as VoidCallback),
-        );
+        return MaterialPageRoute(builder: (_) => LoginScreen());
 
       case Routes.signup:
-        return MaterialPageRoute(
-          builder:
-              (_) => RegisterScreen(toggleTheme: toggleTheme as VoidCallback),
-        );
+        return MaterialPageRoute(builder: (_) => RegisterScreen());
 
       case Routes.home:
         return MaterialPageRoute(
@@ -90,10 +82,7 @@ class AppRouter {
         );
 
       case Routes.settings:
-        return MaterialPageRoute(
-          builder:
-              (_) => SettingsScreen(toggleTheme: toggleTheme as VoidCallback),
-        );
+        return MaterialPageRoute(builder: (_) => SettingsScreen());
 
       default:
         return MaterialPageRoute(

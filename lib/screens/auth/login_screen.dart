@@ -12,8 +12,7 @@ import '../../blocs/auth/auth_event.dart';
 import '../../blocs/auth/auth_state.dart';
 
 class LoginScreen extends StatefulWidget {
-  final VoidCallback toggleTheme;
-  const LoginScreen({required this.toggleTheme, super.key});
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
