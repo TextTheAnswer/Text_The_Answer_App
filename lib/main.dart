@@ -24,9 +24,6 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 // Create a singleton instance of the AuthBloc to ensure it's the same throughout the app
 final AuthBloc authBloc = AuthBloc();
 
-// // Flag to prevent multiple redirects during navigation
-// bool _isNavigating = false;
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
@@ -63,10 +60,11 @@ class _MyAppState extends State<MyApp> {
       splitScreenMode: true,
       builder: (_, child) {
         return MultiProvider(
-          providers: [Provider<ApiService>.value(value: _apiService)],
+          providers: [
+            Provider<ApiService>.value(value: _apiService),
+          ],
           child: MultiBlocProvider(
             providers: [
-              // Use the global authBloc instance instead of creating a new one
               BlocProvider<AuthBloc>.value(value: authBloc),
               BlocProvider(
                 create: (context) => QuizBloc(apiService: _apiService),
@@ -88,32 +86,13 @@ class _MyAppState extends State<MyApp> {
                   builder: (context, child) {
                     return BlocListener<AuthBloc, AuthState>(
                       listener: (context, state) {
-                        // Prevent navigation while another navigation is in progress
-                        // if (_isNavigating) return;
-
                         printDebug('Auth state changed: ${state.runtimeType}');
 
                         if (state is AuthAuthenticated) {
-                          // _isNavigating = true;
-                          // navigatorKey.currentState
-                          //     ?.pushNamedAndRemoveUntil(
-                          //       Routes.home,
-                          //       (route) => false,
-                          //     )
-                          //     .then((_) => _isNavigating = false);
-
                           context.goNamed(AppRouteName.home);
                         } else if (state is AuthInitial) {
-                          // _isNavigating = true;
-                          // navigatorKey.currentState
-                          //     ?.pushNamedAndRemoveUntil(
-                          //       Routes.onboard,
-                          //       (route) => false,
-                          //     )
-                          //     .then((_) => _isNavigating = false);
                           context.goNamed(AppRouteName.onboarding);
                         } else if (state is AuthError) {
-                          // Show a snackbar with the error message
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text('Auth error: ${state.message}'),

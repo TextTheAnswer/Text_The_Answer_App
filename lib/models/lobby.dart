@@ -20,23 +20,39 @@ class Lobby {
   });
 
   factory Lobby.fromJson(Map<String, dynamic> json) {
+    // Handle potential null maps by defaulting to empty map
+    json = json ?? {};
+    
     // Ensure ID is a string
-    var id = json['id'];
-    if (id != null && id is! String) {
-      id = id.toString();
-    } else if (id == null) {
-      id = ''; // Default empty string if missing
+    String id = '';
+    if (json['id'] != null) {
+      id = json['id'].toString();
+    }
+    
+    // Ensure players is properly parsed
+    List<Map<String, dynamic>> players = [];
+    if (json['players'] != null) {
+      try {
+        players = List<Map<String, dynamic>>.from(
+          (json['players'] as List).map((player) => 
+            player is Map ? Map<String, dynamic>.from(player) : {}
+          )
+        );
+      } catch (e) {
+        print('Error parsing players: $e');
+        // Fallback to empty list if parsing fails
+      }
     }
     
     return Lobby(
       id: id,
-      name: json['name'] ?? '',
-      code: json['code'] ?? '',
-      isPublic: json['isPublic'] ?? false,
-      host: json['host'] ?? '',
-      players: List<Map<String, dynamic>>.from(json['players'] ?? []),
-      maxPlayers: json['maxPlayers'] ?? 4,
-      status: json['status'] ?? '',
+      name: json['name']?.toString() ?? '',
+      code: json['code']?.toString() ?? '',
+      isPublic: json['isPublic'] == true,
+      host: json['host']?.toString() ?? '',
+      players: players,
+      maxPlayers: json['maxPlayers'] is int ? json['maxPlayers'] : 4,
+      status: json['status']?.toString() ?? '',
     );
   }
 }

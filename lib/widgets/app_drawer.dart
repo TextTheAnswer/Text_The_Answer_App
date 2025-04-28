@@ -95,6 +95,7 @@ class AppDrawer extends StatelessWidget {
               title: 'Profile',
               onTap: () {
                 Navigator.pop(context);
+
                 // if (Navigator.canPop(context)) {
                 //   Navigator.pop(context);
                 // }
@@ -104,6 +105,9 @@ class AppDrawer extends StatelessWidget {
                 //   (route) => false,
                 // );
                 context.goNamed(AppRouteName.profile);
+
+        
+
               },
               textColor: textColor,
               accentColor: accentColor,

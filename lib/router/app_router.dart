@@ -11,8 +11,16 @@ import 'package:text_the_answer/screens/home/home_screen.dart';
 import 'package:text_the_answer/screens/auth/onboarding_screen.dart';
 import 'package:text_the_answer/screens/auth/splash_screen.dart';
 import 'package:text_the_answer/screens/profile/profile_creation_screen.dart';
+import 'package:text_the_answer/screens/profile/profile_screen.dart';
 import 'package:text_the_answer/screens/settings/manage_subscription_screen.dart';
 import 'package:text_the_answer/screens/settings/settings_screen.dart';
+import 'package:text_the_answer/screens/subscription/subscription_plans_screen.dart';
+import 'package:text_the_answer/screens/subscription/checkout_screen.dart';
+import 'package:text_the_answer/screens/subscription/education_verification_screen.dart';
+import 'package:text_the_answer/screens/subscription/subscription_success_screen.dart';
+import 'package:text_the_answer/screens/subscription/cancellation_confirmation_screen.dart';
+import 'package:text_the_answer/models/subscription_plan.dart';
+import 'package:text_the_answer/models/subscription.dart';
 
 @Deprecated(
   'Routing is now been handled by Go Router. Reference /Users/danielolayinka/Documents/Prod Work/Text_The_Answer_App/lib/utils/routing/route_config.dart',
@@ -82,7 +90,77 @@ class AppRouter {
         );
 
       case Routes.settings:
-        return MaterialPageRoute(builder: (_) => SettingsScreen());
+        return MaterialPageRoute(
+          builder:
+              (_) => SettingsScreen(toggleTheme: toggleTheme as VoidCallback),
+        );
+
+      case Routes.profile:
+        return MaterialPageRoute(
+          builder: (_) => ProfileScreen(),
+        );
+
+      case Routes.subscriptionPlans:
+        return MaterialPageRoute(
+          builder: (_) => SubscriptionPlansScreen(
+            toggleTheme: toggleTheme as VoidCallback,
+          ),
+        );
+
+      case Routes.checkout:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final plan = args?['plan'] as SubscriptionPlan?;
+        if (plan == null) {
+          return MaterialPageRoute(
+            builder: (_) => SubscriptionPlansScreen(
+              toggleTheme: toggleTheme as VoidCallback,
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => CheckoutScreen(
+            plan: plan,
+            toggleTheme: toggleTheme as VoidCallback,
+          ),
+        );
+
+      case Routes.educationVerification:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final plan = args?['plan'] as SubscriptionPlan?;
+        if (plan == null) {
+          return MaterialPageRoute(
+            builder: (_) => SubscriptionPlansScreen(
+              toggleTheme: toggleTheme as VoidCallback,
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => EducationVerificationScreen(
+            plan: plan,
+            toggleTheme: toggleTheme as VoidCallback,
+          ),
+        );
+
+      case Routes.subscriptionSuccess:
+        return MaterialPageRoute(
+          builder: (_) => SubscriptionSuccessScreen(
+            toggleTheme: toggleTheme as VoidCallback,
+          ),
+        );
+
+      case Routes.cancellationConfirmation:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final subscription = args?['subscription'] as Subscription?;
+        if (subscription == null) {
+          return MaterialPageRoute(
+            builder: (_) => const ManageSubscriptionScreen(),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => CancellationConfirmationScreen(
+            subscription: subscription,
+          ),
+        );
 
       default:
         return MaterialPageRoute(

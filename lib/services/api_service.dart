@@ -117,7 +117,7 @@ class ApiService {
   Future<User> getProfile() async {
     final token = await _getToken();
     final response = await http.get(
-      Uri.parse('$baseUrl/auth/profile'),
+      Uri.parse('$baseUrl/profile/full'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -126,7 +126,24 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return User.fromJson(data['user']);
+      print('API response for getProfile: $data');
+      
+      // Check different possible response structures
+      if (data['user'] != null) {
+        return User.fromJson(data['user']);
+      } else if (data['data'] != null && data['data']['user'] != null) {
+        return User.fromJson(data['data']['user']);
+      } else if (data['data'] != null) {
+        return User.fromJson(data['data']);
+      } else {
+        // Try to parse the root object itself
+        try {
+          return User.fromJson(data);
+        } catch (e) {
+          print('Error parsing profile data: $e');
+          throw Exception('Failed to parse profile data: ${response.body}');
+        }
+      }
     } else {
       throw Exception('Failed to get profile: ${response.body}');
     }
@@ -450,25 +467,32 @@ class ApiService {
         // Debug the response structure
         print('API response for joinLobbyByCode: $data');
         
-        // Handle different response structures
+        Map<String, dynamic> lobbyData;
+        
+        // Determine the structure of the response
         if (data['lobby'] != null) {
           // If the response has a 'lobby' key, use that
-          var lobby = data['lobby'];
-          // Ensure ID is a string
-          if (lobby['id'] != null && lobby['id'] is! String) {
-            lobby['id'] = lobby['id'].toString();
-          }
-          return Lobby.fromJson(lobby);
-        } else if (data is Map<String, dynamic>) {
-          // Ensure ID is a string if present
-          if (data['id'] != null && data['id'] is! String) {
-            data['id'] = data['id'].toString();
-          }
-          // If the entire response is the lobby object
-          return Lobby.fromJson(data);
+          lobbyData = Map<String, dynamic>.from(data['lobby']);
         } else {
-          throw Exception('Unexpected response format');
+          // If the entire response is the lobby object
+          lobbyData = Map<String, dynamic>.from(data);
         }
+        
+        // Ensure ID is always a string
+        if (lobbyData['id'] != null) {
+          lobbyData['id'] = lobbyData['id'].toString();
+        }
+        
+        // Convert players to the expected type if present
+        if (lobbyData['players'] != null) {
+          lobbyData['players'] = List<Map<String, dynamic>>.from(
+            (lobbyData['players'] as List).map((player) => 
+              player is Map ? Map<String, dynamic>.from(player) : {}
+            )
+          );
+        }
+        
+        return Lobby.fromJson(lobbyData);
       } catch (e) {
         print('Error parsing lobby data: $e');
         print('Response data: $data');
@@ -481,8 +505,8 @@ class ApiService {
 
   Future<Map<String, dynamic>> leaveLobby(String lobbyId) async {
     final token = await _getToken();
-    final response = await http.post(
-      Uri.parse('$baseUrl/lobbies/$lobbyId/leave'),
+    final response = await http.delete(
+      Uri.parse('$baseUrl/api/game/lobby/$lobbyId'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -706,7 +730,7 @@ class ApiService {
   Future<Map<String, dynamic>> startGame(String lobbyId) async {
     final token = await _getToken();
     final response = await http.post(
-      Uri.parse('$baseUrl/api/game/lobby/$lobbyId/start'),
+      Uri.parse('$baseUrl/game/lobby/$lobbyId/start'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',

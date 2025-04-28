@@ -1,8 +1,4 @@
-// ignore_for_file: deprecated_member_use
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
@@ -15,11 +11,13 @@ import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_state.dart';
 import '../../config/colors.dart';
 import '../../models/user_profile_model.dart';
+import '../../models/user_profile_full_model.dart';
 import '../../models/profile_model.dart';
 import '../../router/routes.dart';
 import '../../services/profile_service.dart';
 import '../../utils/common_ui.dart';
 import '../../utils/font_utility.dart';
+import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/custom_button.dart';
 import 'edit_profile_screen.dart';
 import 'game_history_screen.dart';
@@ -34,74 +32,49 @@ extension StringExtension on String {
 }
 
 class ProfileScreen extends StatefulWidget {
-  final VoidCallback toggleTheme;
-
-  const ProfileScreen({required this.toggleTheme, super.key});
+  const ProfileScreen({super.key});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  // Set current index to 4 (Profile) for the bottom nav bar
+  int _currentIndex = 4;
+  
+  // Service instance
   final ProfileService _profileService = ProfileService();
-  UserProfileFull? _userProfile;
-  Profile? _basicProfile;
-  bool _isLoading = false;
+  
+  // Profile data and loading state
+  ProfileData? _profileData;
+  UserProfile? _basicProfile;
+  bool _isLoading = true;
   String? _errorMessage;
-
+  
   @override
   void initState() {
     super.initState();
-    _checkAuthAndFetchProfile();
+    _fetchProfileData();
   }
-
-  // // Note: This is for testing @danielkiing3
-  // Future<void> _checkAuthAndFetchProfile() async {
-  //   setState(() {
-  //     _isLoading = true;
-  //     _errorMessage = null;
-  //   });
-
-  //   final testingProfile = Profile(
-  //     id: 'Testing',
-  //     bio: 'A love gaming',
-  //     location: 'London',
-  //     imageUrl: '',
-  //   );
-
-  //   final testingFullProfile = UserProfileFull(
-  //     id: 'Testing',
-  //     email: '@superhim',
-  //     name: 'Daniel Olayinka',
-  //     profile: testingProfile,
-  //     subscription: Subscription(),
-  //     stats: UserStats(),
-  //     isPremium: true,
-  //     isEducation: false,
-  //   );
-  //   setState(() {
-  //     _userProfile = testingFullProfile;
-  //     _basicProfile = testingProfile;
-  //     _isLoading = false;
-  //   });
-  // }
-
-  Future<void> _checkAuthAndFetchProfile() async {
+  
+  // Fetch profile data from the API
+  Future<void> _fetchProfileData() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
-
+    
     try {
       final isAuth = await _profileService.isAuthenticated();
 
       if (isAuth) {
-        // User is authenticated, fetch profile using the updated endpoint
+        // User is authenticated, fetch basic profile first
         await _fetchBasicProfile();
       } else {
-        // User is not authenticated, don't try to fetch profile
+        // User is not authenticated, don't fetch profile
         setState(() {
           _isLoading = false;
+          _errorMessage = 'Authentication required. Please login again.';
         });
       }
     } catch (e) {
@@ -112,26 +85,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // New method to fetch basic profile from /api/auth/profile
+  // Fetch basic profile from /api/auth/profile
   Future<void> _fetchBasicProfile() async {
     try {
       final response = await _profileService.getProfile();
 
       if (kDebugMode) {
-        print(
-          'ProfileScreen: Basic profile fetch response - ${response.success}',
-        );
+        print('ProfileScreen: Basic profile fetch response - ${response.success}');
         print('ProfileScreen: Response message - "${response.message}"');
-        print(
-          'ProfileScreen: Profile data available - ${response.profile != null}',
-        );
-
+        print('ProfileScreen: Profile data available - ${response.profile != null}');
         if (response.profile != null) {
           print('ProfileScreen: Profile ID - ${response.profile?.id}');
           print('ProfileScreen: Profile Bio - ${response.profile?.bio}');
-          print(
-            'ProfileScreen: Profile ImageUrl - ${response.profile?.imageUrl}',
-          );
+          print('ProfileScreen: Profile ImageUrl - ${response.profile?.imageUrl}');
         }
       }
 
@@ -139,16 +105,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         // Store the basic profile
         _basicProfile = response.profile;
 
-        // Debug the basic profile data after storing it
         if (kDebugMode) {
           print('ProfileScreen: Basic profile stored successfully');
           print('ProfileScreen: Stored profile ID - ${_basicProfile?.id}');
         }
 
-        // Once we have the basic profile, fetch the full profile
+        // Fetch the full profile after getting basic profile
         await _fetchUserProfile();
       } else {
-        // Debug failure case
         if (kDebugMode) {
           print('ProfileScreen: Failed to get profile data');
           print('ProfileScreen: Success flag - ${response.success}');
@@ -163,16 +127,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _errorMessage = 'Profile not found. Please create your profile.';
           } else if (response.message.toLowerCase().contains('auth')) {
             _errorMessage = 'Authentication required. Please login again.';
-          } else if (response.message.toLowerCase().contains(
-            'no profile data',
-          )) {
-            _errorMessage =
-                'No profile data was returned from the server. Please try again or create your profile.';
+          } else if (response.message.toLowerCase().contains('no profile data')) {
+            _errorMessage = 'No profile data was returned from the server. Please try again or create your profile.';
           } else {
             _errorMessage = response.message;
           }
 
-          // Debug error state
           if (kDebugMode) {
             print('ProfileScreen: Error message set to - "${_errorMessage}"');
           }
@@ -186,79 +146,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         _isLoading = false;
         _basicProfile = null;
-        _errorMessage =
-            'An error occurred while fetching profile: ${e.toString()}';
+        _errorMessage = 'An error occurred while fetching profile: ${e.toString()}';
       });
     }
   }
 
+  // Fetch full profile
   Future<void> _fetchUserProfile() async {
     try {
       final response = await _profileService.getFullProfile();
 
-      // Debug full profile response
       if (kDebugMode) {
-        print(
-          'ProfileScreen: Full profile fetch response - ${response.success}',
-        );
+        print('ProfileScreen: Full profile fetch response - ${response.success}');
         print('ProfileScreen: Full profile message - "${response.message}"');
-        print(
-          'ProfileScreen: Full profile data available - ${response.profile != null}',
-        );
-
+        print('ProfileScreen: Full profile data available - ${response.profile != null}');
         if (response.profile != null) {
-          print(
-            'ProfileScreen: Full profile user ID - ${response.profile?.id}',
-          );
+          print('ProfileScreen: Full profile user ID - ${response.profile?.id}');
           print('ProfileScreen: Full profile name - ${response.profile?.name}');
-          print(
-            'ProfileScreen: Full profile email - ${response.profile?.email}',
-          );
-          print(
-            'ProfileScreen: Full profile has profile data - ${response.profile?.profile != null}',
-          );
+          print('ProfileScreen: Full profile email - ${response.profile?.email}');
+          print('ProfileScreen: Full profile has profile data - ${response.profile?.profile != null}');
         }
       }
 
       setState(() {
         _isLoading = false;
         if (response.success && response.profile != null) {
-          _userProfile = response.profile;
-          _errorMessage = null; // Clear any previous error
+          _profileData = response.profile;
+          _errorMessage = null;
 
           if (kDebugMode) {
             print('ProfileScreen: Full profile stored successfully');
           }
-        } else if (response.message?.toLowerCase().contains('no profile') ??
-            false) {
-          // User is authenticated but doesn't have a full profile yet
-          // We might still have the basic profile from _fetchBasicProfile
-          _userProfile = null;
-          // Only set error message if we don't have basic profile
+        } else if (response.message?.toLowerCase().contains('no profile') ?? false) {
+          // User is authenticated but doesn't have a full profile
+          _profileData = null;
           if (_basicProfile == null) {
             _errorMessage = 'Profile not found. Please create your profile.';
-
             if (kDebugMode) {
               print('ProfileScreen: No basic profile available, showing error');
             }
           } else {
-            _errorMessage = null; // We'll show the basic profile instead
-
+            _errorMessage = null; // Use basic profile as fallback
             if (kDebugMode) {
               print('ProfileScreen: Using basic profile as fallback');
             }
           }
         } else {
-          // There's an error but we might still have basic profile
           _errorMessage = response.message ?? 'Failed to load complete profile';
-
           if (kDebugMode) {
-            print(
-              'ProfileScreen: Error getting full profile - "$_errorMessage"',
-            );
-            print(
-              'ProfileScreen: Having basic profile as fallback - ${_basicProfile != null}',
-            );
+            print('ProfileScreen: Error getting full profile - "$_errorMessage"');
+            print('ProfileScreen: Having basic profile as fallback - ${_basicProfile != null}');
           }
         }
       });
@@ -269,18 +206,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       setState(() {
         _isLoading = false;
-        // Only set error message if we don't have basic profile
         if (_basicProfile == null) {
           _errorMessage = 'An error occurred: ${e.toString()}';
-
           if (kDebugMode) {
             print('ProfileScreen: No basic profile to fall back on');
           }
         } else {
-          // We have basic profile, so we'll show that instead
-          _errorMessage =
-              'Failed to load complete profile. Showing basic information.';
-
+          _errorMessage = 'Failed to load complete profile. Showing basic information.';
           if (kDebugMode) {
             print('ProfileScreen: Using basic profile despite error');
           }
@@ -288,211 +220,367 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
     }
   }
-
+  
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
+    final backgroundColor = isDarkMode ? 
+      AppColors.darkBackground : AppColors.lightBackground;
+    
     return Scaffold(
-      appBar: CustomAppBar(
-        showBackArrow: false,
+      backgroundColor: backgroundColor,
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: _currentIndex,
+        onTap: _onTabTapped,
+      ),
+      appBar: AppBar(
+        backgroundColor: isDarkMode ? 
+          AppColors.darkPrimaryBg : AppColors.lightPrimaryBg,
+        elevation: 0,
+        title: Text(
+          'Profile', 
+          style: FontUtility.interSemiBold(
+            fontSize: 20.sp,
+            color: isDarkMode ? Colors.white : Colors.black87,
+          ),
+        ),
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            color: isDarkMode ? Colors.white : Colors.black87,
+          ),
+          onPressed: _navigateToHome,
+        ),
         actions: [
           IconButton(
+            icon: Icon(
+              Icons.settings,
+              color: isDarkMode ? Colors.white : Colors.black87,
+            ),
+            onPressed: _navigateToSettings,
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.edit,
+              color: isDarkMode ? Colors.white : Colors.black87,
+            ),
             onPressed: () {
-              // Navigator.pushNamed(context, Routes.settings);
               context.push(AppRoutePath.settings);
             },
-            icon: Icon(IconsaxPlusLinear.setting_2),
           ),
         ],
-        title: Row(
+      ),
+      body: RefreshIndicator(
+        onRefresh: _fetchProfileData,
+        child: _buildProfileBody(),
+      ),
+    );
+  }
+  
+  Widget _buildProfileBody() {
+    if (_isLoading) {
+      return Center(child: CircularProgressIndicator());
+    }
+    
+    if (_errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // -- Logo
-            Image.asset(AppImages.appLogo, height: kToolbarHeight - 10),
-            SizedBox(width: 24),
-
-            // -- Text
+            Icon(Icons.error_outline, size: 60.sp, color: Colors.red),
+            SizedBox(height: 16.h),
             Text(
-              'Profile',
-
-              style: FontUtility.interRegular(
-                fontSize: 24,
-                //TODO: Checking for dark mode should be in a central location
-                color: isDarkMode ? Colors.white : Colors.black,
+              'Error',
+              style: FontUtility.interSemiBold(fontSize: 20.sp),
+            ),
+            SizedBox(height: 8.h),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 40.w),
+              child: Text(
+                _errorMessage!,
+                textAlign: TextAlign.center,
+                style: FontUtility.interRegular(fontSize: 16.sp),
               ),
+            ),
+            SizedBox(height: 24.h),
+            CustomButton(
+              text: 'Retry',
+              onPressed: _fetchProfileData,
+              bgColor: AppColors.primary,
+              icon: Icons.refresh,
             ),
           ],
         ),
-      ),
-      drawer: CommonUI.buildDrawer(
-        context: context,
-        toggleTheme: widget.toggleTheme,
-        isDarkMode: isDarkMode,
-      ),
-      body: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          // Loading state
-          if (state is AuthLoading || _isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          // Authenticated
-          else if (state is AuthAuthenticated) {
-            // Check if we have any profile data
-            if (_userProfile != null) {
-              // Show full profile
-              return _buildProfileContent();
-            } else if (_basicProfile != null) {
-              // Show basic profile if available
-              return _buildBasicProfileContent();
-            } else if (_errorMessage != null) {
-              // Show error message when no profile data is available
-              return Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline, size: 60.sp, color: Colors.red),
-                      SizedBox(height: 16.h),
-                      Text(
-                        'Error loading profile',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      SizedBox(height: 8.h),
-                      Text(
-                        _errorMessage!,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 24.h),
-                      CustomButton(
-                        text: 'Retry',
-                        onPressed: _checkAuthAndFetchProfile,
-                        bgColor: AppColors.primary,
-                        icon: Icons.refresh,
-                      ),
-                      SizedBox(height: 12.h),
-                      if (_errorMessage!.toLowerCase().contains('not found') ||
-                          _errorMessage!.toLowerCase().contains('create'))
-                        CustomButton(
-                          text: 'Create Profile',
-                          onPressed: () {
-                            // Navigator.pushNamed(context, Routes.profileCreate);
-                            context.push(AppRoutePath.profileCreate);
-                          },
-                          bgColor: Colors.green,
-                          icon: Icons.person_add,
-                        ),
-                      if (_errorMessage!.toLowerCase().contains('auth') ||
-                          _errorMessage!.toLowerCase().contains('login') ||
-                          _errorMessage!.toLowerCase().contains('token'))
-                        CustomButton(
-                          text: 'Login',
-                          onPressed: () {
-                            // Navigator.pushNamed(context, Routes.login);
-                            context.push(AppRoutePath.login);
-                          },
-                          buttonType: CustomButtonType.outline,
-                          borderColor: AppColors.primary,
-                          textColor: AppColors.primary,
-                          icon: Icons.login,
-                        ),
-                    ],
-                  ),
-                ),
-              );
-            } else {
-              // No profile data and no errors - show create profile view
-              return _buildNoProfileView();
-            }
-          }
-          // Not authenticated
-          else {
-            return _buildNotLoggedInView();
-          }
-        },
-      ),
-    );
-  }
-
-  Widget _buildProfileContent() {
-    final profile = _userProfile!;
-    final theme = Theme.of(context);
-
-    return RefreshIndicator(
-      onRefresh: _checkAuthAndFetchProfile,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.symmetric(horizontal: 20.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // -- Profile Card
-            ProfileCard(profile: profile),
-            SizedBox(height: 24.h),
-
-            // -- Stats Card
-            ProfileStats(),
-            SizedBox(height: 24.h),
-
-            // Buttons
-            _buildActionButtons(),
-            SizedBox(height: 24.h),
-          ],
+      );
+    }
+    
+    if (_profileData == null && _basicProfile == null) {
+      return Center(
+        child: Text(
+          'No profile data available',
+          style: FontUtility.interMedium(fontSize: 16.sp),
         ),
+      );
+    }
+    
+    // Profile data loaded successfully
+    return SingleChildScrollView(
+      physics: AlwaysScrollableScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildProfileHeader(),
+          SizedBox(height: 16.h),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildStatsSection(),
+                SizedBox(height: 24.h),
+                _buildDailyQuizSection(),
+                SizedBox(height: 24.h),
+                _buildSubscriptionSection(),
+                SizedBox(height: 24.h),
+                if (_profileData?.education != null && _profileData!.education!.isStudent)
+                  _buildEducationSection(),
+                SizedBox(height: 24.h),
+                _buildActionButtons(),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
-
-  Widget _buildStatsCard(UserStats stats) {
+  
+  Widget _buildProfileHeader() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    return Container(
+      color: isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg,
+      padding: EdgeInsets.all(16.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Profile Image
+              Container(
+                width: 80.w,
+                height: 80.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white,
+                    width: 2.w,
+                  ),
+                  image: _profileData?.profile?.imageUrl != null
+                      ? DecorationImage(
+                          image: NetworkImage(_profileData!.profile!.imageUrl!),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                child: _profileData?.profile?.imageUrl == null
+                    ? Icon(
+                        Icons.person,
+                        size: 40.sp,
+                        color: Colors.grey[400],
+                      )
+                    : null,
+              ),
+              SizedBox(width: 16.w),
+              
+              // Name, Email & Subscription Badge
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _profileData?.name ?? _basicProfile?.name ?? 'User Name',
+                            style: FontUtility.interBold(
+                              fontSize: 20.sp,
+                              color: isDarkMode ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                        ),
+                        if (_profileData?.isPremium == true)
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                            decoration: BoxDecoration(
+                              color: _profileData?.isEducation == true 
+                                  ? Colors.blue 
+                                  : Colors.amber,
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            child: Text(
+                              _profileData?.isEducation == true ? 'EDU' : 'PRO',
+                              style: FontUtility.interBold(
+                                fontSize: 12.sp,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      _profileData?.email ?? _basicProfile?.email ?? 'email@example.com',
+                      style: FontUtility.interRegular(
+                        fontSize: 14.sp,
+                        color: isDarkMode ? Colors.white70 : Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          
+          // Bio
+          if (_profileData?.profile?.bio != null && _profileData!.profile!.bio!.isNotEmpty)
+            Padding(
+              padding: EdgeInsets.only(top: 16.h),
+              child: Text(
+                _profileData!.profile!.bio!,
+                style: FontUtility.interRegular(
+                  fontSize: 14.sp,
+                  color: isDarkMode ? Colors.white70 : Colors.black54,
+                ),
+              ),
+            ),
+            
+          // Location
+          if (_profileData?.profile?.location != null && _profileData!.profile!.location!.isNotEmpty)
+            Padding(
+              padding: EdgeInsets.only(top: 8.h),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.location_on,
+                    size: 16.sp,
+                    color: isDarkMode ? Colors.white70 : Colors.black54,
+                  ),
+                  SizedBox(width: 4.w),
+                  Text(
+                    _profileData!.profile!.location!,
+                    style: FontUtility.interRegular(
+                      fontSize: 14.sp,
+                      color: isDarkMode ? Colors.white70 : Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+          // Favorite Categories
+          if (_profileData?.profile?.preferences?.favoriteCategories != null && 
+              _profileData!.profile!.preferences!.favoriteCategories!.isNotEmpty)
+            Padding(
+              padding: EdgeInsets.only(top: 16.h),
+              child: Wrap(
+                spacing: 8.w,
+                runSpacing: 8.h,
+                children: _profileData!.profile!.preferences!.favoriteCategories!
+                    .map((category) => Chip(
+                          label: Text(category),
+                          backgroundColor: AppColors.primary.withOpacity(0.1),
+                          labelStyle: TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 12.sp,
+                          ),
+                        ))
+                    .toList(),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildStatsSection() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
+    
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+      color: cardColor,
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+      ),
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Your Stats', style: FontUtility.montserratBold(fontSize: 18)),
-            SizedBox(height: 16.h),
-
-            // Stats Grid
             Row(
               children: [
-                _buildStatItem(
-                  icon: Icons.local_fire_department,
-                  iconColor: Colors.orange,
-                  label: 'Streak',
-                  value: '${stats.streak} days',
+                Icon(
+                  Icons.bar_chart,
+                  size: 20.sp,
+                  color: AppColors.primary,
                 ),
-                _buildStatItem(
-                  icon: Icons.check_circle_outline,
-                  iconColor: Colors.green,
-                  label: 'Correct',
-                  value: '${stats.totalCorrect}',
-                ),
-                _buildStatItem(
-                  icon: Icons.auto_graph,
-                  iconColor: Colors.blue,
-                  label: 'Accuracy',
-                  value: stats.accuracy,
+                SizedBox(width: 8.w),
+                Text(
+                  'Your Stats',
+                  style: FontUtility.interSemiBold(
+                    fontSize: 18.sp,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
                 ),
               ],
             ),
-
-            // Last Played
-            if (stats.lastPlayed != null)
+            SizedBox(height: 16.h),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildStatItem(
+                  icon: Icons.local_fire_department,
+                  value: _profileData?.stats.streak.toString() ?? '0',
+                  label: 'Streak',
+                  color: Colors.orange,
+                ),
+                _buildStatItem(
+                  icon: Icons.check_circle_outline,
+                  value: _profileData?.stats.totalCorrect.toString() ?? '0',
+                  label: 'Correct',
+                  color: Colors.green,
+                ),
+                _buildStatItem(
+                  icon: Icons.trending_up,
+                  value: _profileData?.stats.accuracy ?? '0%',
+                  label: 'Accuracy',
+                  color: Colors.blue,
+                ),
+                _buildStatItem(
+                  icon: Icons.quiz,
+                  value: _profileData?.stats.totalAnswered.toString() ?? '0',
+                  label: 'Total',
+                  color: AppColors.primary,
+                ),
+              ],
+            ),
+            if (_profileData?.stats.lastPlayed != null)
               Padding(
                 padding: EdgeInsets.only(top: 16.h),
                 child: Row(
                   children: [
-                    Icon(Icons.calendar_today, size: 16.sp, color: Colors.grey),
+                    Icon(
+                      Icons.access_time,
+                      size: 16.sp,
+                      color: isDarkMode ? Colors.white70 : Colors.black54,
+                    ),
                     SizedBox(width: 8.w),
                     Text(
-                      'Last played: ${_formatDate(stats.lastPlayed!)}',
+                      'Last played: ${_formatDate(_profileData!.stats.lastPlayed!)}',
                       style: FontUtility.interRegular(
-                        fontSize: 14,
-                        color: Colors.grey,
+                        fontSize: 14.sp,
+                        color: isDarkMode ? Colors.white70 : Colors.black54,
                       ),
                     ),
                   ],
@@ -503,30 +591,292 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-
+  
+  Widget _buildDailyQuizSection() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
+    
+    return Card(
+      color: cardColor,
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.event_note,
+                  size: 20.sp,
+                  color: AppColors.primary,
+                ),
+                SizedBox(width: 8.w),
+                Text(
+                  'Daily Quiz',
+                  style: FontUtility.interSemiBold(
+                    fontSize: 18.sp,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildStatItem(
+                  icon: Icons.question_answer,
+                  value: _profileData?.dailyQuiz.questionsAnswered.toString() ?? '0',
+                  label: 'Questions',
+                  color: Colors.purple,
+                ),
+                _buildStatItem(
+                  icon: Icons.check_circle,
+                  value: _profileData?.dailyQuiz.correctAnswers.toString() ?? '0',
+                  label: 'Correct',
+                  color: Colors.green,
+                ),
+                _buildStatItem(
+                  icon: Icons.star,
+                  value: _profileData?.dailyQuiz.score.toString() ?? '0',
+                  label: 'Score',
+                  color: Colors.amber,
+                ),
+              ],
+            ),
+            if (_profileData?.dailyQuiz.lastCompleted != null)
+              Padding(
+                padding: EdgeInsets.only(top: 16.h),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.access_time,
+                      size: 16.sp,
+                      color: isDarkMode ? Colors.white70 : Colors.black54,
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(
+                      'Last completed: ${_formatDate(_profileData!.dailyQuiz.lastCompleted!)}',
+                      style: FontUtility.interRegular(
+                        fontSize: 14.sp,
+                        color: isDarkMode ? Colors.white70 : Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildSubscriptionSection() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
+    
+    // Define status colors
+    final statusColor = _profileData?.subscription.status == 'premium'
+        ? Colors.amber
+        : _profileData?.subscription.status == 'education'
+            ? Colors.blue
+            : Colors.grey;
+    
+    final String statusText = _profileData?.subscription.status?.toUpperCase() ?? 'FREE';
+    
+    return Card(
+      color: cardColor,
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.card_membership,
+                  size: 20.sp,
+                  color: statusColor,
+                ),
+                SizedBox(width: 8.w),
+                Text(
+                  'Subscription',
+                  style: FontUtility.interSemiBold(
+                    fontSize: 18.sp,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                ),
+                Spacer(),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8.r),
+                    border: Border.all(color: statusColor),
+                  ),
+                  child: Text(
+                    statusText,
+                    style: FontUtility.interSemiBold(
+                      fontSize: 12.sp,
+                      color: statusColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            if (_profileData?.subscription.currentPeriodEnd != null)
+              _buildInfoRow(
+                icon: Icons.calendar_today,
+                label: 'Renewal Date',
+                value: _formatDate(_profileData!.subscription.currentPeriodEnd!),
+              ),
+            _buildInfoRow(
+              icon: Icons.autorenew,
+              label: 'Auto-Renewal',
+              value: _profileData?.subscription.cancelAtPeriodEnd == true ? 'Off' : 'On',
+              valueColor: _profileData?.subscription.cancelAtPeriodEnd == true 
+                  ? Colors.red 
+                  : Colors.green,
+            ),
+            SizedBox(height: 16.h),
+            CustomButton(
+              text: 'Manage Subscription',
+              onPressed: () {
+                // Navigate to subscription management screen
+              },
+              bgColor: AppColors.primary,
+              icon: Icons.settings,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildEducationSection() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
+    
+    // Define verification status color
+    Color verificationColor = Colors.grey;
+    String verificationText = 'Unknown';
+    
+    if (_profileData?.education?.verificationStatus != null) {
+      final status = _profileData!.education!.verificationStatus!.toLowerCase();
+      if (status == 'verified') {
+        verificationColor = Colors.green;
+        verificationText = 'Verified';
+      } else if (status == 'pending') {
+        verificationColor = Colors.orange;
+        verificationText = 'Pending Verification';
+      } else if (status == 'rejected') {
+        verificationColor = Colors.red;
+        verificationText = 'Verification Rejected';
+      }
+    }
+    
+    return Card(
+      color: cardColor,
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.school,
+                  size: 20.sp,
+                  color: Colors.blue,
+                ),
+                SizedBox(width: 8.w),
+                Text(
+                  'Education',
+                  style: FontUtility.interSemiBold(
+                    fontSize: 18.sp,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            if (_profileData?.education?.studentEmail != null)
+              _buildInfoRow(
+                icon: Icons.email,
+                label: 'Student Email',
+                value: _profileData!.education!.studentEmail!,
+              ),
+            if (_profileData?.education?.yearOfStudy != null)
+              _buildInfoRow(
+                icon: Icons.school,
+                label: 'Year of Study',
+                value: _profileData!.education!.yearOfStudy.toString(),
+              ),
+            if (_profileData?.education?.verificationStatus != null)
+              _buildInfoRow(
+                icon: Icons.verified_user,
+                label: 'Verification Status',
+                value: verificationText,
+                valueColor: verificationColor,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+  
   Widget _buildStatItem({
     required IconData icon,
-    required Color iconColor,
-    required String label,
     required String value,
+    required String label,
+    required Color color,
   }) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Expanded(
       child: Column(
         children: [
           Container(
-            padding: EdgeInsets.all(10.r),
+            width: 40.w,
+            height: 40.w,
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: color.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: iconColor, size: 24.sp),
+            child: Icon(
+              icon,
+              color: color,
+              size: 20.sp,
+            ),
           ),
           SizedBox(height: 8.h),
-          Text(value, style: FontUtility.montserratBold(fontSize: 16)),
+          Text(
+            value,
+            style: FontUtility.interBold(
+              fontSize: 16.sp,
+              color: isDarkMode ? Colors.white : Colors.black87,
+            ),
+          ),
           SizedBox(height: 4.h),
           Text(
             label,
-            style: FontUtility.interRegular(fontSize: 12, color: Colors.grey),
+            style: FontUtility.interRegular(
+              fontSize: 12.sp,
+              color: isDarkMode ? Colors.white70 : Colors.black54,
+            ),
           ),
         ],
       ),
@@ -540,12 +890,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         CustomButton(
           text: 'Edit Profile',
           onPressed: () {
-            //TODO: P
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder:
-                    (_) => EditProfileScreen(profileDetails: _userProfile!),
+                builder: (_) => EditProfileScreen(profileDetails: _profileData!),
               ),
             );
           },
@@ -559,8 +907,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder:
-                    (_) => GameHistoryScreen(toggleTheme: widget.toggleTheme),
+                builder: (_) => GameHistoryScreen(),
               ),
             );
           },
@@ -571,13 +918,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         CustomButton(
           text: 'Streak Progress',
           onPressed: () {
-            //TODO:
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder:
-                    (_) =>
-                        StreakProgressScreen(toggleTheme: widget.toggleTheme),
+                builder: (_) => StreakProgressScreen(),
               ),
             );
           },
@@ -588,7 +932,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         CustomButton(
           text: 'Theme Settings',
           onPressed: () {
-            // Navigator.pushNamed(context, Routes.settings);
             context.push(AppRoutePath.settings);
           },
           buttonType: CustomButtonType.outline,
@@ -598,275 +941,90 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
-  }
-
-  Widget _buildNotLoggedInView() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+  Widget _buildInfoRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    Color? valueColor,
+  }) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    return Padding(
+      padding: EdgeInsets.only(bottom: 12.h),
+      child: Row(
         children: [
-          Icon(Icons.account_circle, size: 80.sp, color: AppColors.primary),
-          SizedBox(height: 16.h),
-          Text(
-            'You are not logged in',
-            style: Theme.of(context).textTheme.titleLarge,
+          Icon(
+            icon,
+            size: 16.sp,
+            color: isDarkMode ? Colors.white70 : Colors.black54,
           ),
-          SizedBox(height: 8.h),
-          Text(
-            'Sign in to access your profile, track your progress, and unlock premium features',
-            style: FontUtility.interRegular(fontSize: 14, color: Colors.grey),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 24.h),
-          CustomButton(
-            text: 'LOG IN',
-            onPressed: () {
-              // Navigator.pushNamed(context, Routes.login);
-              context.push(AppRoutePath.login);
-            },
-            bgColor: AppColors.primary,
-            icon: Icons.login,
-          ),
-          SizedBox(height: 12.h),
-          CustomButton(
-            text: 'SIGN UP',
-            onPressed: () {
-              // Navigator.pushNamed(context, Routes.signup);
-              context.push(AppRoutePath.signup);
-            },
-            buttonType: CustomButtonType.outline,
-            borderColor: AppColors.primary,
-            textColor: AppColors.primary,
-            icon: Icons.person_add,
+          SizedBox(width: 12.w),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: FontUtility.interRegular(
+                  fontSize: 12.sp,
+                  color: isDarkMode ? Colors.white70 : Colors.black54,
+                ),
+              ),
+              Text(
+                value,
+                style: FontUtility.interMedium(
+                  fontSize: 14.sp,
+                  color: valueColor ?? (isDarkMode ? Colors.white : Colors.black87),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
-
-  Widget _buildNoProfileView() {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 30.w),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TweenAnimationBuilder(
-              tween: Tween<double>(begin: 0.8, end: 1.0),
-              duration: const Duration(seconds: 2),
-              curve: Curves.elasticOut,
-              builder: (context, value, child) {
-                return Transform.scale(scale: value, child: child);
-              },
-              child: Icon(
-                Icons.person_add_alt_rounded,
-                size: 80.sp,
-                color: AppColors.primary,
-              ),
-            ),
-            SizedBox(height: 24.h),
-            Text(
-              'Complete Your Profile',
-              style: FontUtility.montserratBold(fontSize: 22),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 16.h),
-            Text(
-              'Your account is ready, but your profile is not set up yet. Create your profile to personalize your experience!',
-              style: FontUtility.interRegular(
-                fontSize: 16,
-                color: Colors.grey.shade700,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 32.h),
-            CustomButton(
-              text: 'CREATE PROFILE',
-              onPressed: () {
-                // Navigator.pushNamed(context, Routes.profileCreate);
-                context.push(AppRoutePath.profileCreate);
-              },
-              bgColor: AppColors.primary,
-              icon: Icons.create_rounded,
-              buttonSize: CustomButtonSize.large,
-            ),
-            SizedBox(height: 16.h),
-            TextButton(
-              onPressed: () {
-                // Navigate back to home tab
-                // Navigator.pop(context);
-                context.pop();
-              },
-              child: Text(
-                'Skip for now',
-                style: FontUtility.interRegular(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  
+  // Format date string for display
+  String _formatDate(dynamic date) {
+    try {
+      final parsedDate = date is String ? DateTime.parse(date) : date as DateTime;
+      return '${parsedDate.day}/${parsedDate.month}/${parsedDate.year}';
+    } catch (e) {
+      return date.toString();
+    }
   }
-
-  // New method to display basic profile if full profile fails
-  Widget _buildBasicProfileContent() {
-    final profile = _basicProfile!;
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
-    final cardColor =
-        isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
-    final textColor =
-        isDarkMode ? AppColors.darkPrimaryText : AppColors.lightPrimaryText;
-    final accentColor =
-        isDarkMode ? AppColors.darkOutlineBg : AppColors.lightOutlineBg;
-
-    return RefreshIndicator(
-      onRefresh: _checkAuthAndFetchProfile,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.symmetric(horizontal: 20.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 20.h),
-            // Profile Header
-            Text('Profile 👤', style: theme.textTheme.headlineLarge),
-            SizedBox(height: 24.h),
-
-            // Basic Profile Card
-            Card(
-              elevation: 4,
-              color: cardColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.r),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(16.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Profile Image
-                    Center(
-                      child: Column(
-                        children: [
-                          ProfileImage(imageUrl: profile.imageUrl),
-                          SizedBox(height: 16.h),
-                          if (profile.bio != null && profile.bio!.isNotEmpty)
-                            Text(
-                              profile.bio!,
-                              style: theme.textTheme.bodyMedium,
-                              textAlign: TextAlign.center,
-                            ),
-                        ],
-                      ),
-                    ),
-
-                    SizedBox(height: 16.h),
-
-                    // Location if available
-                    if (profile.location != null &&
-                        profile.location!.isNotEmpty)
-                      Padding(
-                        padding: EdgeInsets.only(top: 8.h),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.location_on_outlined,
-                              size: 18.sp,
-                              color: textColor.withOpacity(0.7),
-                            ),
-                            SizedBox(width: 8.w),
-                            Expanded(
-                              child: Text(
-                                profile.location!,
-                                style: theme.textTheme.bodyMedium,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                    // Preferences if available
-                    if (profile.preferences != null)
-                      Padding(
-                        padding: EdgeInsets.only(top: 16.h),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Preferences',
-                              style: theme.textTheme.titleMedium,
-                            ),
-                            SizedBox(height: 8.h),
-
-                            // Favorite categories
-                            if (profile.preferences!.favoriteCategories !=
-                                    null &&
-                                profile
-                                    .preferences!
-                                    .favoriteCategories!
-                                    .isNotEmpty)
-                              Wrap(
-                                spacing: 8.w,
-                                runSpacing: 8.h,
-                                children:
-                                    profile.preferences!.favoriteCategories!
-                                        .map(
-                                          (category) => Chip(
-                                            label: Text(category),
-                                            backgroundColor: accentColor
-                                                .withOpacity(0.1),
-                                            labelStyle: TextStyle(
-                                              color: accentColor,
-                                            ),
-                                          ),
-                                        )
-                                        .toList(),
-                              ),
-
-                            // Display theme preference
-                            if (profile.preferences!.displayTheme != null)
-                              Padding(
-                                padding: EdgeInsets.only(top: 8.h),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      profile.preferences!.displayTheme ==
-                                              'dark'
-                                          ? Icons.dark_mode
-                                          : Icons.light_mode,
-                                      size: 18.sp,
-                                      color: textColor.withOpacity(0.7),
-                                    ),
-                                    SizedBox(width: 8.w),
-                                    Text(
-                                      'Theme: ${profile.preferences!.displayTheme!.capitalize()}',
-                                      style: theme.textTheme.bodyMedium,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-
-            SizedBox(height: 24.h),
-
-            // Action Buttons
-            _buildActionButtons(),
-            SizedBox(height: 24.h),
-          ],
-        ),
-      ),
-    );
+  
+  // Navigate back to home
+  void _navigateToHome() {
+    Navigator.pushReplacementNamed(context, Routes.home);
+  }
+  
+  // Navigate to settings
+  void _navigateToSettings() {
+    Navigator.pushNamed(context, Routes.settings);
+  }
+  
+  // Handle tab navigation
+  void _onTabTapped(int index) {
+    if (index == _currentIndex) return;
+    
+    switch (index) {
+      case 0:
+        // Home
+        Navigator.pushReplacementNamed(context, Routes.home);
+        break;
+      case 1:
+      case 2:
+      case 3:
+        // Library, Games, Daily Quiz - Currently in Home as tabs
+        Navigator.pushNamedAndRemoveUntil(
+          context, 
+          Routes.home, 
+          (route) => false,
+        );
+        break;
+      case 4:
+        // Profile - Already here
+        break;
+    }
   }
 }

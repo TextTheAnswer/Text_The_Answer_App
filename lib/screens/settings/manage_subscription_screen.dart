@@ -6,6 +6,7 @@ import '../../blocs/subscription/subscription_bloc.dart';
 import '../../blocs/subscription/subscription_event.dart';
 import '../../blocs/subscription/subscription_state.dart';
 import '../../config/colors.dart';
+import '../../router/routes.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/subscription_modal.dart';
 import 'package:text_the_answer/models/subscription.dart';
@@ -26,11 +27,17 @@ class ManageSubscriptionScreen extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Manage Subscription'),
+          backgroundColor: AppColors.primary,
         ),
         body: BlocConsumer<SubscriptionBloc, SubscriptionState>(
           listener: (context, state) {
-            if (state is CheckoutSessionCreated) {
-              _launchCheckoutUrl(state.checkoutUrl);
+            if (state is SubscriptionCancelled) {
+              // Navigate to cancellation confirmation screen
+              Navigator.pushNamed(
+                context, 
+                Routes.cancellationConfirmation,
+                arguments: {'subscription': state.subscription},
+              );
             } else if (state is SubscriptionError) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(state.message)),
@@ -66,6 +73,9 @@ class ManageSubscriptionScreen extends StatelessWidget {
         children: [
           _buildCurrentPlanCard(context, subscription, isActive, endDate),
           const SizedBox(height: 24),
+          if (subscription.planId?.isNotEmpty == true)
+            _buildSubscriptionHistory(context, subscription, isActive, endDate),
+          const SizedBox(height: 24),
           _buildPremiumBenefits(),
           const SizedBox(height: 24),
           _buildActionButtons(context, subscription, isActive),
@@ -78,6 +88,103 @@ class ManageSubscriptionScreen extends StatelessWidget {
 
   Widget _buildCurrentPlanCard(BuildContext context, Subscription subscription, bool isActive, DateTime? endDate) {
     final dateFormat = DateFormat('MMMM d, yyyy');
+    final String planName = _getPlanName(subscription.planId);
+    
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    _getPlanIcon(subscription.planId),
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Current Plan',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      Text(
+                        planName,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isActive)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.green),
+                    ),
+                    child: const Text(
+                      'ACTIVE',
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Divider(),
+            const SizedBox(height: 8),
+            if (endDate != null)
+              Row(
+                children: [
+                  Icon(
+                    isActive ? Icons.calendar_today : Icons.calendar_today_outlined,
+                    size: 18,
+                    color: isActive ? Colors.black87 : Colors.red,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    isActive
+                        ? 'Next billing date: ${dateFormat.format(endDate)}'
+                        : 'Access until: ${dateFormat.format(endDate)}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isActive ? Colors.black87 : Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildSubscriptionHistory(BuildContext context, Subscription subscription, bool isActive, DateTime? endDate) {
+    final dateFormat = DateFormat('MMM d, yyyy');
     
     return Card(
       elevation: 2,
@@ -88,37 +195,68 @@ class ManageSubscriptionScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Current Plan',
+              'Subscription History',
               style: Theme.of(context).textTheme.titleLarge,
             ),
-            const SizedBox(height: 12),
-            Text(
-              subscription.planId?.contains('premium') ?? false 
-                  ? 'Premium Plan' 
-                  : 'Free Plan',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+            const SizedBox(height: 16),
+            _buildHistoryItem(
+              date: DateTime.now(),
+              action: 'Viewing subscription details',
+              isActive: true,
             ),
-            const SizedBox(height: 8),
-            if (isActive && subscription.planId?.contains('premium') == true)
-              Text(
-                endDate != null 
-                    ? 'Valid until: ${dateFormat.format(endDate)}' 
-                    : 'Active subscription',
-                style: Theme.of(context).textTheme.bodyMedium,
+            if (subscription.currentPeriodStart != null)
+              _buildHistoryItem(
+                date: DateTime.fromMillisecondsSinceEpoch(subscription.currentPeriodStart! * 1000),
+                action: 'Current billing period started',
+                isActive: false,
               ),
             if (!isActive && subscription.status == 'canceled')
-              Text(
-                endDate != null 
-                    ? 'Access until: ${dateFormat.format(endDate)}' 
-                    : 'Subscription canceled',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.red,
-                ),
+              _buildHistoryItem(
+                date: DateTime.now().subtract(const Duration(days: 1)),
+                action: 'Subscription cancelled',
+                isActive: false,
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildHistoryItem({required DateTime date, required String action, required bool isActive}) {
+    final dateFormat = DateFormat('MMM d, yyyy');
+    
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        children: [
+          Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(
+              color: isActive ? AppColors.primary : Colors.grey[400],
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            dateFormat.format(date),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: isActive ? AppColors.primary : Colors.grey[600],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              action,
+              style: TextStyle(
+                fontSize: 14,
+                color: isActive ? Colors.black87 : Colors.grey[600],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -137,8 +275,9 @@ class ManageSubscriptionScreen extends StatelessWidget {
         const SizedBox(height: 16),
         _buildBenefitItem(Icons.check_circle_outline, 'Unlimited quiz attempts'),
         _buildBenefitItem(Icons.check_circle_outline, 'Ad-free experience'),
-        _buildBenefitItem(Icons.check_circle_outline, 'Access to premium question banks'),
-        _buildBenefitItem(Icons.check_circle_outline, 'Early access to new features'),
+        _buildBenefitItem(Icons.check_circle_outline, 'Create private lobbies'),
+        _buildBenefitItem(Icons.check_circle_outline, 'Advanced analytics'),
+        _buildBenefitItem(Icons.check_circle_outline, 'Custom study materials'),
       ],
     );
   }
@@ -162,7 +301,7 @@ class ManageSubscriptionScreen extends StatelessWidget {
   }
 
   Widget _buildActionButtons(BuildContext context, Subscription subscription, bool isActive) {
-    final isPremium = subscription.planId?.contains('premium') ?? false;
+    final isPremium = subscription.planId?.isNotEmpty ?? false;
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -180,16 +319,21 @@ class ManageSubscriptionScreen extends StatelessWidget {
         if (!isPremium || !isActive)
           ElevatedButton(
             onPressed: () {
-              context.read<SubscriptionBloc>().add(
-                const CreateCheckoutSession(priceId: 'price_premium_monthly')
-              );
+              Navigator.pushNamed(context, Routes.subscriptionPlans);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 12),
             ),
             child: const Text('Upgrade to Premium'),
+          ),
+        if (isPremium && isActive)
+          TextButton(
+            onPressed: () {
+              Navigator.pushNamed(context, Routes.subscriptionPlans);
+            },
+            child: const Text('View Other Plans'),
           ),
       ],
     );
@@ -269,13 +413,33 @@ class ManageSubscriptionScreen extends StatelessWidget {
       ),
     );
   }
-
-  Future<void> _launchCheckoutUrl(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      throw 'Could not launch $url';
+  
+  IconData _getPlanIcon(String? planId) {
+    if (planId == null || planId.isEmpty) return Icons.card_membership;
+    
+    if (planId.contains('premium')) {
+      return Icons.workspace_premium;
+    } else if (planId.contains('student')) {
+      return Icons.school;
+    }
+    
+    return Icons.card_membership;
+  }
+  
+  String _getPlanName(String? planId) {
+    if (planId == null || planId.isEmpty) return 'Free Plan';
+    
+    switch (planId) {
+      case 'premium_monthly':
+        return 'Premium Monthly';
+      case 'premium_yearly':
+        return 'Premium Yearly';
+      case 'student_monthly':
+        return 'Student Monthly';
+      case 'student_yearly':
+        return 'Student Yearly';
+      default:
+        return planId.replaceAll('_', ' ').toUpperCase();
     }
   }
 }
