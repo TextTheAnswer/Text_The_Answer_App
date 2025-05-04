@@ -22,6 +22,9 @@ import 'package:text_the_answer/screens/subscription/cancellation_confirmation_s
 import 'package:text_the_answer/models/subscription_plan.dart';
 import 'package:text_the_answer/models/subscription.dart';
 
+@Deprecated(
+  'Routing is now been handled by Go Router. Reference /Users/danielolayinka/Documents/Prod Work/Text_The_Answer_App/lib/utils/routing/route_config.dart',
+)
 class AppRouter {
   // This function manages theme state between screens
   static Function toggleTheme = () {}; // This will be set from the main app
@@ -42,27 +45,16 @@ class AppRouter {
 
     switch (settings.name) {
       case Routes.splash:
-        return MaterialPageRoute(
-          builder:
-              (_) => SplashScreen(toggleTheme: toggleTheme as VoidCallback),
-        );
+        return MaterialPageRoute(builder: (_) => SplashScreen());
 
       case Routes.onboard:
-        return MaterialPageRoute(
-          builder:
-              (_) => OnboardingScreen(toggleTheme: toggleTheme as VoidCallback),
-        );
+        return MaterialPageRoute(builder: (_) => OnboardingScreen());
 
       case Routes.login:
-        return MaterialPageRoute(
-          builder: (_) => LoginScreen(toggleTheme: toggleTheme as VoidCallback),
-        );
+        return MaterialPageRoute(builder: (_) => LoginScreen());
 
       case Routes.signup:
-        return MaterialPageRoute(
-          builder:
-              (_) => RegisterScreen(toggleTheme: toggleTheme as VoidCallback),
-        );
+        return MaterialPageRoute(builder: (_) => RegisterScreen());
 
       case Routes.home:
         return MaterialPageRoute(
@@ -102,19 +94,19 @@ class AppRouter {
           builder:
               (_) => SettingsScreen(toggleTheme: toggleTheme as VoidCallback),
         );
-        
+
       case Routes.profile:
         return MaterialPageRoute(
           builder: (_) => ProfileScreen(),
         );
-        
+
       case Routes.subscriptionPlans:
         return MaterialPageRoute(
           builder: (_) => SubscriptionPlansScreen(
             toggleTheme: toggleTheme as VoidCallback,
           ),
         );
-        
+
       case Routes.checkout:
         final args = settings.arguments as Map<String, dynamic>?;
         final plan = args?['plan'] as SubscriptionPlan?;
@@ -131,7 +123,7 @@ class AppRouter {
             toggleTheme: toggleTheme as VoidCallback,
           ),
         );
-        
+
       case Routes.educationVerification:
         final args = settings.arguments as Map<String, dynamic>?;
         final plan = args?['plan'] as SubscriptionPlan?;
@@ -148,14 +140,14 @@ class AppRouter {
             toggleTheme: toggleTheme as VoidCallback,
           ),
         );
-        
+
       case Routes.subscriptionSuccess:
         return MaterialPageRoute(
           builder: (_) => SubscriptionSuccessScreen(
             toggleTheme: toggleTheme as VoidCallback,
           ),
         );
-        
+
       case Routes.cancellationConfirmation:
         final args = settings.arguments as Map<String, dynamic>?;
         final subscription = args?['subscription'] as Subscription?;

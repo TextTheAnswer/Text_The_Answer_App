@@ -1,12 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:text_the_answer/config/colors.dart';
-import 'package:text_the_answer/models/user_profile_full_model.dart';
-import 'package:text_the_answer/router/routes.dart';
-import 'package:text_the_answer/services/profile_service.dart';
-import 'package:text_the_answer/utils/font_utility.dart';
-import 'package:text_the_answer/widgets/bottom_nav_bar.dart';
-import 'package:text_the_answer/widgets/custom_button.dart';
+import 'package:go_router/go_router.dart';
+import 'package:iconsax_plus/iconsax_plus.dart';
+import 'package:text_the_answer/screens/profile/widgets/profile_card.dart';
+import 'package:text_the_answer/screens/profile/widgets/profile_image.dart';
+import 'package:text_the_answer/screens/profile/widgets/profile_stats.dart';
+import 'package:text_the_answer/utils/constants/app_images.dart';
+import 'package:text_the_answer/widgets/app_bar/custom_app_bar.dart';
+import '../../blocs/auth/auth_bloc.dart';
+import '../../blocs/auth/auth_state.dart';
+import '../../config/colors.dart';
+import '../../models/user_profile_model.dart';
+import '../../models/user_profile_full_model.dart';
+import '../../models/profile_model.dart';
+import '../../router/routes.dart';
+import '../../services/profile_service.dart';
+import '../../utils/common_ui.dart';
+import '../../utils/font_utility.dart';
+import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/custom_button.dart';
+import 'edit_profile_screen.dart';
+import 'game_history_screen.dart';
+import 'streak_progress_screen.dart';
+
+// Extension method to capitalize strings
+extension StringExtension on String {
+  String capitalize() {
+    if (isEmpty) return this;
+    return "${this[0].toUpperCase()}${substring(1)}";
+  }
+}
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -19,8 +42,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // Set current index to 4 (Profile) for the bottom nav bar
   int _currentIndex = 4;
   
+  // Service instance
+  final ProfileService _profileService = ProfileService();
+  
   // Profile data and loading state
   ProfileData? _profileData;
+  UserProfile? _basicProfile;
   bool _isLoading = true;
   String? _errorMessage;
   
@@ -38,21 +65,158 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
     
     try {
-      final ProfileService profileService = ProfileService();
-      final response = await profileService.getFullProfile();
-      
+      final isAuth = await _profileService.isAuthenticated();
+
+      if (isAuth) {
+        // User is authenticated, fetch basic profile first
+        await _fetchBasicProfile();
+      } else {
+        // User is not authenticated, don't fetch profile
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Authentication required. Please login again.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'An error occurred: ${e.toString()}';
+      });
+    }
+  }
+
+  // Fetch basic profile from /api/auth/profile
+  Future<void> _fetchBasicProfile() async {
+    try {
+      final response = await _profileService.getProfile();
+
+      if (kDebugMode) {
+        print('ProfileScreen: Basic profile fetch response - ${response.success}');
+        print('ProfileScreen: Response message - "${response.message}"');
+        print('ProfileScreen: Profile data available - ${response.profile != null}');
+        if (response.profile != null) {
+          print('ProfileScreen: Profile ID - ${response.profile?.id}');
+          print('ProfileScreen: Profile Bio - ${response.profile?.bio}');
+          print('ProfileScreen: Profile ImageUrl - ${response.profile?.imageUrl}');
+        }
+      }
+
+      if (response.success && response.profile != null) {
+        // Store the basic profile
+        _basicProfile = response.profile;
+
+        if (kDebugMode) {
+          print('ProfileScreen: Basic profile stored successfully');
+          print('ProfileScreen: Stored profile ID - ${_basicProfile?.id}');
+        }
+
+        // Fetch the full profile after getting basic profile
+        await _fetchUserProfile();
+      } else {
+        if (kDebugMode) {
+          print('ProfileScreen: Failed to get profile data');
+          print('ProfileScreen: Success flag - ${response.success}');
+          print('ProfileScreen: Error message - "${response.message}"');
+        }
+
+        setState(() {
+          _isLoading = false;
+          _basicProfile = null;
+
+          if (response.message.toLowerCase().contains('not found')) {
+            _errorMessage = 'Profile not found. Please create your profile.';
+          } else if (response.message.toLowerCase().contains('auth')) {
+            _errorMessage = 'Authentication required. Please login again.';
+          } else if (response.message.toLowerCase().contains('no profile data')) {
+            _errorMessage = 'No profile data was returned from the server. Please try again or create your profile.';
+          } else {
+            _errorMessage = response.message;
+          }
+
+          if (kDebugMode) {
+            print('ProfileScreen: Error message set to - "${_errorMessage}"');
+          }
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('ProfileScreen: Exception in _fetchBasicProfile - $e');
+      }
+
+      setState(() {
+        _isLoading = false;
+        _basicProfile = null;
+        _errorMessage = 'An error occurred while fetching profile: ${e.toString()}';
+      });
+    }
+  }
+
+  // Fetch full profile
+  Future<void> _fetchUserProfile() async {
+    try {
+      final response = await _profileService.getFullProfile();
+
+      if (kDebugMode) {
+        print('ProfileScreen: Full profile fetch response - ${response.success}');
+        print('ProfileScreen: Full profile message - "${response.message}"');
+        print('ProfileScreen: Full profile data available - ${response.profile != null}');
+        if (response.profile != null) {
+          print('ProfileScreen: Full profile user ID - ${response.profile?.id}');
+          print('ProfileScreen: Full profile name - ${response.profile?.name}');
+          print('ProfileScreen: Full profile email - ${response.profile?.email}');
+          print('ProfileScreen: Full profile has profile data - ${response.profile?.profile != null}');
+        }
+      }
+
       setState(() {
         _isLoading = false;
         if (response.success && response.profile != null) {
           _profileData = response.profile;
+          _errorMessage = null;
+
+          if (kDebugMode) {
+            print('ProfileScreen: Full profile stored successfully');
+          }
+        } else if (response.message?.toLowerCase().contains('no profile') ?? false) {
+          // User is authenticated but doesn't have a full profile
+          _profileData = null;
+          if (_basicProfile == null) {
+            _errorMessage = 'Profile not found. Please create your profile.';
+            if (kDebugMode) {
+              print('ProfileScreen: No basic profile available, showing error');
+            }
+          } else {
+            _errorMessage = null; // Use basic profile as fallback
+            if (kDebugMode) {
+              print('ProfileScreen: Using basic profile as fallback');
+            }
+          }
         } else {
-          _errorMessage = response.message ?? 'Failed to load profile data';
+          _errorMessage = response.message ?? 'Failed to load complete profile';
+          if (kDebugMode) {
+            print('ProfileScreen: Error getting full profile - "$_errorMessage"');
+            print('ProfileScreen: Having basic profile as fallback - ${_basicProfile != null}');
+          }
         }
       });
     } catch (e) {
+      if (kDebugMode) {
+        print('ProfileScreen: Exception in _fetchUserProfile - $e');
+      }
+
       setState(() {
         _isLoading = false;
-        _errorMessage = 'An error occurred: $e';
+        if (_basicProfile == null) {
+          _errorMessage = 'An error occurred: ${e.toString()}';
+          if (kDebugMode) {
+            print('ProfileScreen: No basic profile to fall back on');
+          }
+        } else {
+          _errorMessage = 'Failed to load complete profile. Showing basic information.';
+          if (kDebugMode) {
+            print('ProfileScreen: Using basic profile despite error');
+          }
+        }
       });
     }
   }
@@ -101,8 +265,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: isDarkMode ? Colors.white : Colors.black87,
             ),
             onPressed: () {
-              // Navigate to edit profile screen
-              // You can implement this later
+              context.push(AppRoutePath.settings);
             },
           ),
         ],
@@ -151,7 +314,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     }
     
-    if (_profileData == null) {
+    if (_profileData == null && _basicProfile == null) {
       return Center(
         child: Text(
           'No profile data available',
@@ -179,9 +342,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 SizedBox(height: 24.h),
                 _buildSubscriptionSection(),
                 SizedBox(height: 24.h),
-                if (_profileData!.education != null && _profileData!.education!.isStudent)
+                if (_profileData?.education != null && _profileData!.education!.isStudent)
                   _buildEducationSection(),
                 SizedBox(height: 24.h),
+                _buildActionButtons(),
               ],
             ),
           ),
@@ -238,7 +402,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            _profileData?.name ?? 'User Name',
+                            _profileData?.name ?? _basicProfile?.name ?? 'User Name',
                             style: FontUtility.interBold(
                               fontSize: 20.sp,
                               color: isDarkMode ? Colors.white : Colors.black87,
@@ -266,7 +430,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      _profileData?.email ?? 'email@example.com',
+                      _profileData?.email ?? _basicProfile?.email ?? 'email@example.com',
                       style: FontUtility.interRegular(
                         fontSize: 14.sp,
                         color: isDarkMode ? Colors.white70 : Colors.black54,
@@ -588,7 +752,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               text: 'Manage Subscription',
               onPressed: () {
                 // Navigate to subscription management screen
-                // You can implement this later
               },
               bgColor: AppColors.primary,
               icon: Icons.settings,
@@ -719,7 +882,65 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-  
+
+  Widget _buildActionButtons() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        CustomButton(
+          text: 'Edit Profile',
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => EditProfileScreen(profileDetails: _profileData!),
+              ),
+            );
+          },
+          bgColor: AppColors.primary,
+          icon: Icons.edit,
+        ),
+        SizedBox(height: 12.h),
+        CustomButton(
+          text: 'Game History',
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => GameHistoryScreen(),
+              ),
+            );
+          },
+          bgColor: Colors.blue,
+          icon: Icons.history,
+        ),
+        SizedBox(height: 12.h),
+        CustomButton(
+          text: 'Streak Progress',
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => StreakProgressScreen(),
+              ),
+            );
+          },
+          bgColor: Colors.orange,
+          icon: Icons.local_fire_department,
+        ),
+        SizedBox(height: 12.h),
+        CustomButton(
+          text: 'Theme Settings',
+          onPressed: () {
+            context.push(AppRoutePath.settings);
+          },
+          buttonType: CustomButtonType.outline,
+          icon: Icons.color_lens,
+        ),
+      ],
+    );
+  }
+
   Widget _buildInfoRow({
     required IconData icon,
     required String label,
@@ -763,12 +984,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
   
   // Format date string for display
-  String _formatDate(String dateString) {
+  String _formatDate(dynamic date) {
     try {
-      final date = DateTime.parse(dateString);
-      return '${date.day}/${date.month}/${date.year}';
+      final parsedDate = date is String ? DateTime.parse(date) : date as DateTime;
+      return '${parsedDate.day}/${parsedDate.month}/${parsedDate.year}';
     } catch (e) {
-      return dateString;
+      return date.toString();
     }
   }
   
@@ -792,23 +1013,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Navigator.pushReplacementNamed(context, Routes.home);
         break;
       case 1:
-        // Library - Currently in Home as a tab
-        Navigator.pushNamedAndRemoveUntil(
-          context, 
-          Routes.home, 
-          (route) => false,
-        );
-        break;
       case 2:
-        // Games - Currently in Home as a tab
-        Navigator.pushNamedAndRemoveUntil(
-          context, 
-          Routes.home, 
-          (route) => false,
-        );
-        break;
       case 3:
-        // Daily Quiz - Currently in Home as a tab
+        // Library, Games, Daily Quiz - Currently in Home as tabs
         Navigator.pushNamedAndRemoveUntil(
           context, 
           Routes.home, 

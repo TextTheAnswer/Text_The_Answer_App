@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:text_the_answer/config/colors.dart' show AppColors;
 import 'package:text_the_answer/router/routes.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
@@ -12,8 +13,7 @@ import '../../blocs/auth/auth_event.dart';
 import '../../blocs/auth/auth_state.dart';
 
 class RegisterScreen extends StatefulWidget {
-  final VoidCallback toggleTheme;
-  const RegisterScreen({required this.toggleTheme, super.key});
+  const RegisterScreen({super.key});
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -48,7 +48,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: BlocConsumer<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is AuthAuthenticated) {
-              Navigator.pushReplacementNamed(context, Routes.profileCreate);
+              // Navigator.pushReplacementNamed(context, Routes.profileCreate);
+              context.go(AppRoutePath.profileCreate);
             } else if (state is AuthError) {
               ScaffoldMessenger.of(
                 context,
@@ -178,7 +179,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Center(
                       child: TextButton(
                         onPressed: () {
-                          Navigator.pushNamed(context, Routes.login);
+                          // Navigator.pushNamed(context, Routes.login);
+                          context.go(AppRoutePath.login);
                         },
                         style: TextButton.styleFrom(
                           foregroundColor: Colors.white,
@@ -241,7 +243,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Spacer(),
         TextButton(
           onPressed: () {
-            Navigator.of(context).pushNamed(Routes.forgotPassword);
+            // Navigator.of(context).pushNamed(Routes.forgotPassword);
+            context.push(AppRoutePath.forgotPassword);
           },
           style: TextButton.styleFrom(
             padding: EdgeInsets.zero,

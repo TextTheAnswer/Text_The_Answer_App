@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:text_the_answer/config/colors.dart' show AppColors;
 import 'package:text_the_answer/router/routes.dart';
 import 'package:text_the_answer/services/api_service.dart';
@@ -68,14 +69,25 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       // Navigate to reset password screen
       if (!mounted) return;
 
-      Navigator.pushNamed(
-        context,
-        Routes.resetPassword,
-        arguments: {
-          'email': widget.email,
-          // 'resetToken': response['resetToken'],
-          'resetToken': 'dsghirwerpewofjmweorwe',
-        },
+      // Navigator.pushNamed(
+      //   context,
+      //   Routes.resetPassword,
+      //   arguments: {
+      //     'email': widget.email,
+      //     // 'resetToken': response['resetToken'],
+      //     'resetToken': 'dsghirwerpewofjmweorwe',
+      //   },
+      // );
+
+      context.push(
+        Uri(
+          path: AppRoutePath.resetPassword,
+          queryParameters: {
+            'email': widget.email,
+            // 'resetToken': response['resetToken'],
+            'resetToken': 'dsghirwerpewofjmweorwe',
+          },
+        ).toString(),
       );
     } catch (e) {
       if (!mounted) return;
@@ -182,10 +194,12 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                   child: TextButton(
                     onPressed: () {
                       // Implement resend logic
-                      Navigator.pushReplacementNamed(
-                        context,
-                        Routes.forgotPassword,
-                      );
+                      // Navigator.pushReplacementNamed(
+                      //   context,
+                      //   Routes.forgotPassword,
+                      // );
+
+                      context.go(AppRoutePath.forgotPassword);
                     },
                     child: Text(
                       'Didn\'t receive the code? Resend',

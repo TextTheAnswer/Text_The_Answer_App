@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:text_the_answer/config/colors.dart' show AppColors;
 import 'package:text_the_answer/router/routes.dart';
 import 'package:text_the_answer/services/api_service.dart';
@@ -59,10 +60,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       // Navigate to OTP verification screen
       if (!mounted) return;
 
-      Navigator.pushNamed(
-        context,
-        Routes.otpVerification,
-        arguments: {'email': _emailController.text.trim()},
+      // Navigator.pushNamed(
+      //   context,
+      //   Routes.otpVerification,
+      //   arguments: {'email': _emailController.text.trim()},
+      // );
+
+      context.push(
+        AppRoutePath.otpVerification(email: _emailController.text.trim()),
       );
 
       ScaffoldMessenger.of(
@@ -92,7 +97,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => context.pop(),
         ),
       ),
       bottomNavigationBar: CustomBottomButtonWithDivider(

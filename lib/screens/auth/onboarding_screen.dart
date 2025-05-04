@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:go_router/go_router.dart';
 import 'package:text_the_answer/widgets/custom_3D_button.dart';
 import '../../config/colors.dart';
 import '../../router/routes.dart';
 
 class OnboardingScreen extends StatefulWidget {
-  final VoidCallback toggleTheme;
-  const OnboardingScreen({required this.toggleTheme, super.key});
+  const OnboardingScreen({super.key});
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -187,11 +187,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           backgroundColor: AppColors.buttonPrimary,
                           onPressed: () {
                             if (_currentPage == onboardingData.length - 1) {
-                              Navigator.pushNamedAndRemoveUntil(
-                                context,
-                                Routes.signup,
-                                (route) => false,
-                              );
+                              // Navigator.pushNamedAndRemoveUntil(
+                              //   context,
+                              //   Routes.signup,
+                              //   (route) => false,
+                              // );
+                              context.go(AppRoutePath.signup);
                             } else {
                               _pageController.nextPage(
                                 duration: const Duration(milliseconds: 300),
@@ -273,11 +274,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   semanticsLabel: 'I already have an account',
                   backgroundColor: AppColors.buttonTertiary,
                   onPressed: () {
-                    Navigator.pushNamedAndRemoveUntil(
-                      context,
-                      Routes.login,
-                      (route) => false,
-                    );
+                    // Navigator.pushNamedAndRemoveUntil(
+                    //   context,
+                    //   Routes.login,
+                    //   (route) => false,
+                    // );
+                    context.go(AppRoutePath.login);
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,

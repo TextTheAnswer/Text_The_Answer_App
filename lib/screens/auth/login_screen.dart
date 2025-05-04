@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:text_the_answer/config/colors.dart' show AppColors;
 import 'package:text_the_answer/router/routes.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
@@ -12,8 +13,7 @@ import '../../blocs/auth/auth_event.dart';
 import '../../blocs/auth/auth_state.dart';
 
 class LoginScreen extends StatefulWidget {
-  final VoidCallback toggleTheme;
-  const LoginScreen({required this.toggleTheme, super.key});
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -43,7 +43,8 @@ class _LoginScreenState extends State<LoginScreen> {
         child: BlocConsumer<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is AuthAuthenticated) {
-              Navigator.pushReplacementNamed(context, Routes.home);
+              // Navigator.pushReplacementNamed(context, Routes.home);
+              context.go(AppRoutePath.home);
             } else if (state is AuthError) {
               ScaffoldMessenger.of(
                 context,
@@ -152,7 +153,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     Center(
                       child: TextButton(
                         onPressed: () {
-                          Navigator.pushNamed(context, Routes.signup);
+                          // Navigator.pushNamed(context, Routes.signup);
+                          context.go(AppRoutePath.signup);
                         },
                         style: TextButton.styleFrom(
                           foregroundColor: Colors.white,
@@ -222,7 +224,8 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         TextButton(
           onPressed: () {
-            Navigator.pushNamed(context, Routes.forgotPassword);
+            // Navigator.pushNamed(context, Routes.forgotPassword);
+            context.push(AppRoutePath.forgotPassword);
           },
           child: Text(
             'Forgot Password?',
