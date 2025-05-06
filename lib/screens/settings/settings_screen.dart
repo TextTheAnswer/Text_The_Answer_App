@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconly/iconly.dart';
-import 'package:text_the_answer/models/profile_model.dart';
-import 'package:text_the_answer/models/user_profile_model.dart';
+// import 'package:text_the_answer/models/profile_model.dart';
+import 'package:text_the_answer/models/user_profile_full_model.dart';
+// import 'package:text_the_answer/models/user_profile_model.dart';
 import 'package:text_the_answer/router/custom_bottom_sheet_route.dart';
 import 'package:text_the_answer/router/routes.dart';
 import 'package:text_the_answer/screens/profile/edit_profile_screen.dart';
@@ -53,18 +54,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     MaterialPageRoute(
                       builder:
                           (_) => EditProfileScreen(
-                            profileDetails: UserProfileFull(
+                            profileDetails: ProfileData(
                               id: 'Testing',
                               email: '@superhim',
                               name: 'Daniel Olayinka',
-                              profile: Profile(
-                                id: 'Testing',
+                              profile: ProfileDetails(
                                 bio: 'A love gaming',
                                 location: 'London',
                                 imageUrl: '',
                               ),
-                              subscription: Subscription(status: ''),
-                              stats: UserStats(),
+                              dailyQuiz: DailyQuizData(
+                                questionsAnswered: 5,
+                                correctAnswers: 2,
+                                score: 2,
+                              ),
+                              subscription: SubscriptionData(
+                                status: '',
+                                cancelAtPeriodEnd: false,
+                              ),
+                              stats: StatsData(
+                                streak: 2,
+                                totalCorrect: 10,
+                                totalAnswered: 15,
+                                accuracy: '10',
+                              ),
                               isPremium: true,
                               isEducation: false,
                             ),
