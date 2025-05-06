@@ -157,14 +157,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ],
                       )
                       : SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            profileHeader,
-                            const SizedBox(height: 20),
-                            const Divider(),
-                            const SizedBox(height: 20),
-                            formFields,
-                          ],
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Column(
+                            children: [
+                              profileHeader,
+                              const SizedBox(height: 20),
+                              const Divider(),
+                              const SizedBox(height: 20),
+                              formFields,
+                            ],
+                          ),
                         ),
                       ),
             );
