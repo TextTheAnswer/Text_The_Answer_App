@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:text_the_answer/screens/settings/widget/sub_settings_list_tile.dart';
+import 'package:text_the_answer/utils/constants/breakpoint.dart';
 import 'package:text_the_answer/widgets/app_bar/custom_app_bar.dart';
 
 class NotificationScreen extends StatelessWidget {
@@ -9,42 +10,51 @@ class NotificationScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(showBackArrow: true, title: Text('Notifications')),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // -- Enable Push Notification
-              SubSettingsListTile(title: 'Enable Push Notifications'),
+      body: SafeArea(
+        bottom: false,
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: kMaxContentWidth),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // -- Enable Push Notification
+                    SubSettingsListTile(title: 'Enable Push Notifications'),
 
-              // -- New Followers
-              SubSettingsListTile(title: 'New Followers'),
+                    // -- New Followers
+                    SubSettingsListTile(title: 'New Followers'),
 
-              // -- New Likes
-              SubSettingsListTile(title: 'New Likes'),
+                    // -- New Likes
+                    SubSettingsListTile(title: 'New Likes'),
 
-              // -- Payment & Subscriptions
-              SubSettingsListTile(title: 'Payment & Subscriptions'),
+                    // -- Payment & Subscriptions
+                    SubSettingsListTile(title: 'Payment & Subscriptions'),
 
-              // -- Friend Activity
-              SubSettingsListTile(title: 'Friend Activity'),
+                    // -- Friend Activity
+                    SubSettingsListTile(title: 'Friend Activity'),
 
-              // -- Leaderboard
-              SubSettingsListTile(title: 'Leaderboard'),
+                    // -- Leaderboard
+                    SubSettingsListTile(title: 'Leaderboard'),
 
-              // -- App Updates
-              SubSettingsListTile(title: 'App Updates'),
+                    // -- App Updates
+                    SubSettingsListTile(title: 'App Updates'),
 
-              // -- News & Promotion
-              SubSettingsListTile(title: 'News & Promotion'),
+                    // -- News & Promotion
+                    SubSettingsListTile(title: 'News & Promotion'),
 
-              // -- New Tips Available
-              SubSettingsListTile(title: 'New Tips Available'),
+                    // -- New Tips Available
+                    SubSettingsListTile(title: 'New Tips Available'),
 
-              // -- Survey Invitation
-              SubSettingsListTile(title: 'Survey Invitation'),
-            ],
+                    // -- Survey Invitation
+                    SubSettingsListTile(title: 'Survey Invitation'),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),

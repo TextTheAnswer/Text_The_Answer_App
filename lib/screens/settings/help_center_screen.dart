@@ -23,7 +23,10 @@ class HelpCenterScreen extends StatelessWidget {
             tabs: [Tab(child: Text('FAQ')), Tab(child: Text('Contact Us'))],
           ),
         ),
-        body: TabBarView(children: [FAQContent(), ContactUsContent()]),
+        body: SafeArea(
+          bottom: false,
+          child: TabBarView(children: [FAQContent(), ContactUsContent()]),
+        ),
       ),
     );
   }
