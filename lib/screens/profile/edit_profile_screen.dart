@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:text_the_answer/config/colors.dart';
+import 'package:text_the_answer/models/user_profile_full_model.dart';
 import 'package:text_the_answer/models/user_profile_model.dart';
 import 'package:text_the_answer/utils/validators/validation.dart';
 import 'package:text_the_answer/widgets/app_bar/custom_app_bar.dart';
@@ -14,7 +15,7 @@ import 'package:text_the_answer/widgets/custom_bottom_button_with_divider.dart';
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key, required this.profileDetails});
 
-  final UserProfileFull profileDetails;
+  final ProfileData profileDetails;
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -91,7 +92,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   valueListenable: _pickedImageNotifier,
                   builder: (context, pickedFile, _) {
                     return _EditProfilePicture(
-                      networkImageUrl: widget.profileDetails.profile.imageUrl,
+                      networkImageUrl: widget.profileDetails.profile?.imageUrl,
                       localFile: pickedFile,
                       onEditPressed: _pickNewImage,
                     );
