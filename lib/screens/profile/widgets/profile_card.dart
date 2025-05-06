@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:text_the_answer/config/colors.dart';
+import 'package:text_the_answer/models/user_profile_full_model.dart';
 import 'package:text_the_answer/models/user_profile_model.dart';
 import 'package:text_the_answer/screens/profile/edit_profile_screen.dart';
 import 'package:text_the_answer/screens/profile/widgets/profile_image.dart';
@@ -10,7 +11,7 @@ import 'package:text_the_answer/utils/font_utility.dart';
 class ProfileCard extends StatelessWidget {
   const ProfileCard({super.key, required this.profile});
 
-  final UserProfileFull profile;
+  final ProfileData profile;
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +23,7 @@ class ProfileCard extends StatelessWidget {
         Row(
           children: [
             // -- Profile Image
-            ProfileImage(imageUrl: profile.profile.imageUrl),
+            ProfileImage(imageUrl: profile.profile?.imageUrl),
             SizedBox(width: 10.w),
 
             // -- User Info
@@ -129,7 +130,7 @@ class ProfileCard extends StatelessWidget {
           ),
 
         // -- Bio
-        if (profile.profile.bio != null && profile.profile.bio!.isNotEmpty)
+        if (profile.profile?.bio != null)
           Padding(
             padding: EdgeInsets.only(top: 16.h),
             child: Column(
@@ -141,7 +142,7 @@ class ProfileCard extends StatelessWidget {
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  profile.profile.bio!,
+                  profile.profile?.bio ?? '',
                   style: FontUtility.interRegular(fontSize: 14),
                 ),
               ],
