@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -41,29 +42,32 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   // Set current index to 4 (Profile) for the bottom nav bar
   int _currentIndex = 4;
-  
+
   // Service instance
   final ProfileService _profileService = ProfileService();
-  
+
   // Profile data and loading state
   ProfileData? _profileData;
-  UserProfile? _basicProfile;
+
+  // @shizzleclover You replaced the old [UserProfile] data model with [Profile]
+  // and their data structure is not the same
+  Profile? _basicProfile;
   bool _isLoading = true;
   String? _errorMessage;
-  
+
   @override
   void initState() {
     super.initState();
     _fetchProfileData();
   }
-  
+
   // Fetch profile data from the API
   Future<void> _fetchProfileData() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
-    
+
     try {
       final isAuth = await _profileService.isAuthenticated();
 
@@ -91,13 +95,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final response = await _profileService.getProfile();
 
       if (kDebugMode) {
-        print('ProfileScreen: Basic profile fetch response - ${response.success}');
+        print(
+          'ProfileScreen: Basic profile fetch response - ${response.success}',
+        );
         print('ProfileScreen: Response message - "${response.message}"');
-        print('ProfileScreen: Profile data available - ${response.profile != null}');
+        print(
+          'ProfileScreen: Profile data available - ${response.profile != null}',
+        );
         if (response.profile != null) {
           print('ProfileScreen: Profile ID - ${response.profile?.id}');
           print('ProfileScreen: Profile Bio - ${response.profile?.bio}');
-          print('ProfileScreen: Profile ImageUrl - ${response.profile?.imageUrl}');
+          print(
+            'ProfileScreen: Profile ImageUrl - ${response.profile?.imageUrl}',
+          );
         }
       }
 
@@ -127,8 +137,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _errorMessage = 'Profile not found. Please create your profile.';
           } else if (response.message.toLowerCase().contains('auth')) {
             _errorMessage = 'Authentication required. Please login again.';
-          } else if (response.message.toLowerCase().contains('no profile data')) {
-            _errorMessage = 'No profile data was returned from the server. Please try again or create your profile.';
+          } else if (response.message.toLowerCase().contains(
+            'no profile data',
+          )) {
+            _errorMessage =
+                'No profile data was returned from the server. Please try again or create your profile.';
           } else {
             _errorMessage = response.message;
           }
@@ -146,7 +159,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         _isLoading = false;
         _basicProfile = null;
-        _errorMessage = 'An error occurred while fetching profile: ${e.toString()}';
+        _errorMessage =
+            'An error occurred while fetching profile: ${e.toString()}';
       });
     }
   }
@@ -157,14 +171,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final response = await _profileService.getFullProfile();
 
       if (kDebugMode) {
-        print('ProfileScreen: Full profile fetch response - ${response.success}');
+        print(
+          'ProfileScreen: Full profile fetch response - ${response.success}',
+        );
         print('ProfileScreen: Full profile message - "${response.message}"');
-        print('ProfileScreen: Full profile data available - ${response.profile != null}');
+        print(
+          'ProfileScreen: Full profile data available - ${response.profile != null}',
+        );
         if (response.profile != null) {
-          print('ProfileScreen: Full profile user ID - ${response.profile?.id}');
+          print(
+            'ProfileScreen: Full profile user ID - ${response.profile?.id}',
+          );
           print('ProfileScreen: Full profile name - ${response.profile?.name}');
-          print('ProfileScreen: Full profile email - ${response.profile?.email}');
-          print('ProfileScreen: Full profile has profile data - ${response.profile?.profile != null}');
+          print(
+            'ProfileScreen: Full profile email - ${response.profile?.email}',
+          );
+          print(
+            'ProfileScreen: Full profile has profile data - ${response.profile?.profile != null}',
+          );
         }
       }
 
@@ -177,7 +201,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (kDebugMode) {
             print('ProfileScreen: Full profile stored successfully');
           }
-        } else if (response.message?.toLowerCase().contains('no profile') ?? false) {
+        } else if (response.message?.toLowerCase().contains('no profile') ??
+            false) {
           // User is authenticated but doesn't have a full profile
           _profileData = null;
           if (_basicProfile == null) {
@@ -194,8 +219,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         } else {
           _errorMessage = response.message ?? 'Failed to load complete profile';
           if (kDebugMode) {
-            print('ProfileScreen: Error getting full profile - "$_errorMessage"');
-            print('ProfileScreen: Having basic profile as fallback - ${_basicProfile != null}');
+            print(
+              'ProfileScreen: Error getting full profile - "$_errorMessage"',
+            );
+            print(
+              'ProfileScreen: Having basic profile as fallback - ${_basicProfile != null}',
+            );
           }
         }
       });
@@ -212,7 +241,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             print('ProfileScreen: No basic profile to fall back on');
           }
         } else {
-          _errorMessage = 'Failed to load complete profile. Showing basic information.';
+          _errorMessage =
+              'Failed to load complete profile. Showing basic information.';
           if (kDebugMode) {
             print('ProfileScreen: Using basic profile despite error');
           }
@@ -220,13 +250,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDarkMode ? 
-      AppColors.darkBackground : AppColors.lightBackground;
-    
+    final backgroundColor =
+        isDarkMode ? AppColors.darkBackground : AppColors.lightBackground;
+
     return Scaffold(
       backgroundColor: backgroundColor,
       bottomNavigationBar: BottomNavBar(
@@ -234,11 +264,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         onTap: _onTabTapped,
       ),
       appBar: AppBar(
-        backgroundColor: isDarkMode ? 
-          AppColors.darkPrimaryBg : AppColors.lightPrimaryBg,
+        backgroundColor:
+            isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg,
         elevation: 0,
         title: Text(
-          'Profile', 
+          'Profile',
           style: FontUtility.interSemiBold(
             fontSize: 20.sp,
             color: isDarkMode ? Colors.white : Colors.black87,
@@ -276,12 +306,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-  
+
   Widget _buildProfileBody() {
     if (_isLoading) {
       return Center(child: CircularProgressIndicator());
     }
-    
+
     if (_errorMessage != null) {
       return Center(
         child: Column(
@@ -289,10 +319,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             Icon(Icons.error_outline, size: 60.sp, color: Colors.red),
             SizedBox(height: 16.h),
-            Text(
-              'Error',
-              style: FontUtility.interSemiBold(fontSize: 20.sp),
-            ),
+            Text('Error', style: FontUtility.interSemiBold(fontSize: 20.sp)),
             SizedBox(height: 8.h),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 40.w),
@@ -313,7 +340,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       );
     }
-    
+
     if (_profileData == null && _basicProfile == null) {
       return Center(
         child: Text(
@@ -322,7 +349,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       );
     }
-    
+
     // Profile data loaded successfully
     return SingleChildScrollView(
       physics: AlwaysScrollableScrollPhysics(),
@@ -342,7 +369,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 SizedBox(height: 24.h),
                 _buildSubscriptionSection(),
                 SizedBox(height: 24.h),
-                if (_profileData?.education != null && _profileData!.education!.isStudent)
+                if (_profileData?.education != null &&
+                    _profileData!.education!.isStudent)
                   _buildEducationSection(),
                 SizedBox(height: 24.h),
                 _buildActionButtons(),
@@ -353,10 +381,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-  
+
   Widget _buildProfileHeader() {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Container(
       color: isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg,
       padding: EdgeInsets.all(16.w),
@@ -372,27 +400,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 height: 80.w,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.white,
-                    width: 2.w,
-                  ),
-                  image: _profileData?.profile?.imageUrl != null
-                      ? DecorationImage(
-                          image: NetworkImage(_profileData!.profile!.imageUrl!),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
+                  border: Border.all(color: Colors.white, width: 2.w),
+                  image:
+                      _profileData?.profile?.imageUrl != null
+                          ? DecorationImage(
+                            image: NetworkImage(
+                              _profileData!.profile!.imageUrl!,
+                            ),
+                            fit: BoxFit.cover,
+                          )
+                          : null,
                 ),
-                child: _profileData?.profile?.imageUrl == null
-                    ? Icon(
-                        Icons.person,
-                        size: 40.sp,
-                        color: Colors.grey[400],
-                      )
-                    : null,
+                child:
+                    _profileData?.profile?.imageUrl == null
+                        ? Icon(
+                          Icons.person,
+                          size: 40.sp,
+                          color: Colors.grey[400],
+                        )
+                        : null,
               ),
               SizedBox(width: 16.w),
-              
+
               // Name, Email & Subscription Badge
               Expanded(
                 child: Column(
@@ -402,7 +431,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            _profileData?.name ?? _basicProfile?.name ?? 'User Name',
+                            _profileData?.name ??
+                                // _basicProfile?.name ??
+                                'User Name',
                             style: FontUtility.interBold(
                               fontSize: 20.sp,
                               color: isDarkMode ? Colors.white : Colors.black87,
@@ -411,11 +442,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         if (_profileData?.isPremium == true)
                           Container(
-                            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8.w,
+                              vertical: 4.h,
+                            ),
                             decoration: BoxDecoration(
-                              color: _profileData?.isEducation == true 
-                                  ? Colors.blue 
-                                  : Colors.amber,
+                              color:
+                                  _profileData?.isEducation == true
+                                      ? Colors.blue
+                                      : Colors.amber,
                               borderRadius: BorderRadius.circular(12.r),
                             ),
                             child: Text(
@@ -430,7 +465,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      _profileData?.email ?? _basicProfile?.email ?? 'email@example.com',
+                      _profileData?.email ??
+                          // _basicProfile?.email ??
+                          'email@example.com',
                       style: FontUtility.interRegular(
                         fontSize: 14.sp,
                         color: isDarkMode ? Colors.white70 : Colors.black54,
@@ -441,9 +478,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ],
           ),
-          
+
           // Bio
-          if (_profileData?.profile?.bio != null && _profileData!.profile!.bio!.isNotEmpty)
+          if (_profileData?.profile?.bio != null &&
+              _profileData!.profile!.bio!.isNotEmpty)
             Padding(
               padding: EdgeInsets.only(top: 16.h),
               child: Text(
@@ -454,9 +492,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             ),
-            
+
           // Location
-          if (_profileData?.profile?.location != null && _profileData!.profile!.location!.isNotEmpty)
+          if (_profileData?.profile?.location != null &&
+              _profileData!.profile!.location!.isNotEmpty)
             Padding(
               padding: EdgeInsets.only(top: 8.h),
               child: Row(
@@ -477,42 +516,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             ),
-            
+
           // Favorite Categories
-          if (_profileData?.profile?.preferences?.favoriteCategories != null && 
-              _profileData!.profile!.preferences!.favoriteCategories!.isNotEmpty)
+          if (_profileData?.profile?.preferences?.favoriteCategories != null &&
+              _profileData!
+                  .profile!
+                  .preferences!
+                  .favoriteCategories!
+                  .isNotEmpty)
             Padding(
               padding: EdgeInsets.only(top: 16.h),
               child: Wrap(
                 spacing: 8.w,
                 runSpacing: 8.h,
-                children: _profileData!.profile!.preferences!.favoriteCategories!
-                    .map((category) => Chip(
-                          label: Text(category),
-                          backgroundColor: AppColors.primary.withOpacity(0.1),
-                          labelStyle: TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 12.sp,
+                children:
+                    _profileData!.profile!.preferences!.favoriteCategories!
+                        .map(
+                          (category) => Chip(
+                            label: Text(category),
+                            backgroundColor: AppColors.primary.withOpacity(0.1),
+                            labelStyle: TextStyle(
+                              color: AppColors.primary,
+                              fontSize: 12.sp,
+                            ),
                           ),
-                        ))
-                    .toList(),
+                        )
+                        .toList(),
               ),
             ),
         ],
       ),
     );
   }
-  
+
   Widget _buildStatsSection() {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
-    
+    final cardColor =
+        isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
+
     return Card(
       color: cardColor,
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.r),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(
@@ -520,11 +565,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.bar_chart,
-                  size: 20.sp,
-                  color: AppColors.primary,
-                ),
+                Icon(Icons.bar_chart, size: 20.sp, color: AppColors.primary),
                 SizedBox(width: 8.w),
                 Text(
                   'Your Stats',
@@ -591,17 +632,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-  
+
   Widget _buildDailyQuizSection() {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
-    
+    final cardColor =
+        isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
+
     return Card(
       color: cardColor,
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.r),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(
@@ -609,11 +649,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.event_note,
-                  size: 20.sp,
-                  color: AppColors.primary,
-                ),
+                Icon(Icons.event_note, size: 20.sp, color: AppColors.primary),
                 SizedBox(width: 8.w),
                 Text(
                   'Daily Quiz',
@@ -630,13 +666,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 _buildStatItem(
                   icon: Icons.question_answer,
-                  value: _profileData?.dailyQuiz.questionsAnswered.toString() ?? '0',
+                  value:
+                      _profileData?.dailyQuiz.questionsAnswered.toString() ??
+                      '0',
                   label: 'Questions',
                   color: Colors.purple,
                 ),
                 _buildStatItem(
                   icon: Icons.check_circle,
-                  value: _profileData?.dailyQuiz.correctAnswers.toString() ?? '0',
+                  value:
+                      _profileData?.dailyQuiz.correctAnswers.toString() ?? '0',
                   label: 'Correct',
                   color: Colors.green,
                 ),
@@ -674,26 +713,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-  
+
   Widget _buildSubscriptionSection() {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
-    
+    final cardColor =
+        isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
+
     // Define status colors
-    final statusColor = _profileData?.subscription.status == 'premium'
-        ? Colors.amber
-        : _profileData?.subscription.status == 'education'
+    final statusColor =
+        _profileData?.subscription.status == 'premium'
+            ? Colors.amber
+            : _profileData?.subscription.status == 'education'
             ? Colors.blue
             : Colors.grey;
-    
-    final String statusText = _profileData?.subscription.status?.toUpperCase() ?? 'FREE';
-    
+
+    final String statusText =
+        _profileData?.subscription.status?.toUpperCase() ?? 'FREE';
+
     return Card(
       color: cardColor,
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.r),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(
@@ -701,11 +741,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.card_membership,
-                  size: 20.sp,
-                  color: statusColor,
-                ),
+                Icon(Icons.card_membership, size: 20.sp, color: statusColor),
                 SizedBox(width: 8.w),
                 Text(
                   'Subscription',
@@ -737,15 +773,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _buildInfoRow(
                 icon: Icons.calendar_today,
                 label: 'Renewal Date',
-                value: _formatDate(_profileData!.subscription.currentPeriodEnd!),
+                value: _formatDate(
+                  _profileData!.subscription.currentPeriodEnd!,
+                ),
               ),
             _buildInfoRow(
               icon: Icons.autorenew,
               label: 'Auto-Renewal',
-              value: _profileData?.subscription.cancelAtPeriodEnd == true ? 'Off' : 'On',
-              valueColor: _profileData?.subscription.cancelAtPeriodEnd == true 
-                  ? Colors.red 
-                  : Colors.green,
+              value:
+                  _profileData?.subscription.cancelAtPeriodEnd == true
+                      ? 'Off'
+                      : 'On',
+              valueColor:
+                  _profileData?.subscription.cancelAtPeriodEnd == true
+                      ? Colors.red
+                      : Colors.green,
             ),
             SizedBox(height: 16.h),
             CustomButton(
@@ -761,15 +803,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-  
+
   Widget _buildEducationSection() {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
-    
+    final cardColor =
+        isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
+
     // Define verification status color
     Color verificationColor = Colors.grey;
     String verificationText = 'Unknown';
-    
+
     if (_profileData?.education?.verificationStatus != null) {
       final status = _profileData!.education!.verificationStatus!.toLowerCase();
       if (status == 'verified') {
@@ -783,13 +826,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         verificationText = 'Verification Rejected';
       }
     }
-    
+
     return Card(
       color: cardColor,
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.r),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(
@@ -797,11 +838,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.school,
-                  size: 20.sp,
-                  color: Colors.blue,
-                ),
+                Icon(Icons.school, size: 20.sp, color: Colors.blue),
                 SizedBox(width: 8.w),
                 Text(
                   'Education',
@@ -837,7 +874,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-  
+
   Widget _buildStatItem({
     required IconData icon,
     required String value,
@@ -845,7 +882,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required Color color,
   }) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Expanded(
       child: Column(
         children: [
@@ -856,11 +893,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: color.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              icon,
-              color: color,
-              size: 20.sp,
-            ),
+            child: Icon(icon, color: color, size: 20.sp),
           ),
           SizedBox(height: 8.h),
           Text(
@@ -893,7 +926,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => EditProfileScreen(profileDetails: _profileData!),
+                builder:
+                    //@shizzleclover [EditProfileScreen] takes in a class [UserProfileFull] previous
+                    // The new [ProfileData] doesn't not contain
+                    (_) => EditProfileScreen(profileDetails: _profileData!),
               ),
             );
           },
@@ -906,9 +942,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => GameHistoryScreen(),
-              ),
+              MaterialPageRoute(builder: (_) => GameHistoryScreen()),
             );
           },
           bgColor: Colors.blue,
@@ -920,9 +954,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => StreakProgressScreen(),
-              ),
+              MaterialPageRoute(builder: (_) => StreakProgressScreen()),
             );
           },
           bgColor: Colors.orange,
@@ -948,7 +980,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Color? valueColor,
   }) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Padding(
       padding: EdgeInsets.only(bottom: 12.h),
       child: Row(
@@ -973,7 +1005,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 value,
                 style: FontUtility.interMedium(
                   fontSize: 14.sp,
-                  color: valueColor ?? (isDarkMode ? Colors.white : Colors.black87),
+                  color:
+                      valueColor ??
+                      (isDarkMode ? Colors.white : Colors.black87),
                 ),
               ),
             ],
@@ -982,31 +1016,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-  
+
   // Format date string for display
   String _formatDate(dynamic date) {
     try {
-      final parsedDate = date is String ? DateTime.parse(date) : date as DateTime;
+      final parsedDate =
+          date is String ? DateTime.parse(date) : date as DateTime;
       return '${parsedDate.day}/${parsedDate.month}/${parsedDate.year}';
     } catch (e) {
       return date.toString();
     }
   }
-  
+
   // Navigate back to home
   void _navigateToHome() {
     Navigator.pushReplacementNamed(context, Routes.home);
   }
-  
+
   // Navigate to settings
   void _navigateToSettings() {
-    Navigator.pushNamed(context, Routes.settings);
+    context.pushNamed(AppRouteName.settings);
   }
-  
+
   // Handle tab navigation
   void _onTabTapped(int index) {
     if (index == _currentIndex) return;
-    
+
     switch (index) {
       case 0:
         // Home
@@ -1017,8 +1052,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       case 3:
         // Library, Games, Daily Quiz - Currently in Home as tabs
         Navigator.pushNamedAndRemoveUntil(
-          context, 
-          Routes.home, 
+          context,
+          Routes.home,
           (route) => false,
         );
         break;

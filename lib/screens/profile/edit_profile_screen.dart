@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:text_the_answer/config/colors.dart';
+import 'package:text_the_answer/models/user_profile_full_model.dart';
 import 'package:text_the_answer/models/user_profile_model.dart';
+import 'package:text_the_answer/utils/constants/breakpoint.dart';
 import 'package:text_the_answer/utils/validators/validation.dart';
 import 'package:text_the_answer/widgets/app_bar/custom_app_bar.dart';
 import 'package:text_the_answer/widgets/custom_3d_button.dart';
@@ -14,7 +16,7 @@ import 'package:text_the_answer/widgets/custom_bottom_button_with_divider.dart';
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key, required this.profileDetails});
 
-  final UserProfileFull profileDetails;
+  final ProfileData profileDetails;
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -79,39 +81,30 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           child: Text('Save'),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                // -- Profile Header
-                ValueListenableBuilder<XFile?>(
-                  valueListenable: _pickedImageNotifier,
-                  builder: (context, pickedFile, _) {
-                    return _EditProfilePicture(
-                      networkImageUrl: widget.profileDetails.profile.imageUrl,
-                      localFile: pickedFile,
-                      onEditPressed: _pickNewImage,
-                    );
-                  },
-                ),
-                const SizedBox(height: 20),
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth > kTabletBreakingPoint;
 
-                // -- Divider
-                Divider(),
-                SizedBox(height: 20),
+            final profileHeader = ValueListenableBuilder<XFile?>(
+              valueListenable: _pickedImageNotifier,
+              builder: (context, pickedFile, _) {
+                return _EditProfilePicture(
+                  networkImageUrl: widget.profileDetails.profile?.imageUrl,
+                  localFile: pickedFile,
+                  onEditPressed: _pickNewImage,
+                );
+              },
+            );
 
-                // -- Full Name
+            final formFields = Column(
+              children: <Widget>[
+                // -- Full name
                 TextFormField(
                   controller: _fullNameController,
-                  validator: (value) {
-                    return CustomValidator.validateEmptyText(
-                      'Full name',
-                      value,
-                    );
-                  },
+                  validator:
+                      (value) =>
+                          CustomValidator.validateEmptyText('Full name', value),
                   decoration: InputDecoration(
                     labelText: 'Full Name',
                     border: OutlineInputBorder(),
@@ -133,26 +126,52 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 // -- Username
                 TextFormField(
                   controller: _usernameController,
-                  validator: (value) {
-                    return CustomValidator.validateEmptyText('Username', value);
-                  },
+                  validator:
+                      (value) =>
+                          CustomValidator.validateEmptyText('Username', value),
                   decoration: InputDecoration(
                     labelText: 'Username',
                     border: OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 20),
-
-                // -------------
-
-                // -- Is Student
-
-                // -- Student Email
-
-                // -- Years of Study
               ],
-            ),
-          ),
+            );
+
+            return Form(
+              key: _formKey,
+              child:
+                  isWide
+                      ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            flex: 1,
+                            child: Center(child: profileHeader),
+                          ),
+                          const SizedBox(width: 40),
+                          Expanded(
+                            flex: 2,
+                            child: SingleChildScrollView(child: formFields),
+                          ),
+                        ],
+                      )
+                      : SingleChildScrollView(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Column(
+                            children: [
+                              profileHeader,
+                              const SizedBox(height: 20),
+                              const Divider(),
+                              const SizedBox(height: 20),
+                              formFields,
+                            ],
+                          ),
+                        ),
+                      ),
+            );
+          },
         ),
       ),
     );

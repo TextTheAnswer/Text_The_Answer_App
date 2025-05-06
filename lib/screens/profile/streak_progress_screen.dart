@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 
 class StreakProgressScreen extends StatelessWidget {
-  final VoidCallback toggleTheme;
-
-  const StreakProgressScreen({required this.toggleTheme, super.key});
+  const StreakProgressScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

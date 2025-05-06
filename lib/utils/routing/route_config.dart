@@ -98,7 +98,7 @@ final GoRouter router = GoRouter(
               name: AppRouteName.profile,
               path: AppRoutePath.profile,
               builder: (context, state) {
-                return ProfileScreen(toggleTheme: () {});
+                return ProfileScreen();
               },
             ),
           ],
