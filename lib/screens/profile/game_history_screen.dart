@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 
 class GameHistoryScreen extends StatelessWidget {
-  final VoidCallback toggleTheme;
-
-  const GameHistoryScreen({required this.toggleTheme, super.key});
+  const GameHistoryScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
