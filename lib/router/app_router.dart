@@ -90,21 +90,17 @@ class AppRouter {
         );
 
       case Routes.settings:
-        return MaterialPageRoute(
-          builder:
-              (_) => SettingsScreen(toggleTheme: toggleTheme as VoidCallback),
-        );
+        return MaterialPageRoute(builder: (_) => SettingsScreen());
 
       case Routes.profile:
-        return MaterialPageRoute(
-          builder: (_) => ProfileScreen(),
-        );
+        return MaterialPageRoute(builder: (_) => ProfileScreen());
 
       case Routes.subscriptionPlans:
         return MaterialPageRoute(
-          builder: (_) => SubscriptionPlansScreen(
-            toggleTheme: toggleTheme as VoidCallback,
-          ),
+          builder:
+              (_) => SubscriptionPlansScreen(
+                toggleTheme: toggleTheme as VoidCallback,
+              ),
         );
 
       case Routes.checkout:
@@ -112,16 +108,18 @@ class AppRouter {
         final plan = args?['plan'] as SubscriptionPlan?;
         if (plan == null) {
           return MaterialPageRoute(
-            builder: (_) => SubscriptionPlansScreen(
-              toggleTheme: toggleTheme as VoidCallback,
-            ),
+            builder:
+                (_) => SubscriptionPlansScreen(
+                  toggleTheme: toggleTheme as VoidCallback,
+                ),
           );
         }
         return MaterialPageRoute(
-          builder: (_) => CheckoutScreen(
-            plan: plan,
-            toggleTheme: toggleTheme as VoidCallback,
-          ),
+          builder:
+              (_) => CheckoutScreen(
+                plan: plan,
+                toggleTheme: toggleTheme as VoidCallback,
+              ),
         );
 
       case Routes.educationVerification:
@@ -129,23 +127,26 @@ class AppRouter {
         final plan = args?['plan'] as SubscriptionPlan?;
         if (plan == null) {
           return MaterialPageRoute(
-            builder: (_) => SubscriptionPlansScreen(
-              toggleTheme: toggleTheme as VoidCallback,
-            ),
+            builder:
+                (_) => SubscriptionPlansScreen(
+                  toggleTheme: toggleTheme as VoidCallback,
+                ),
           );
         }
         return MaterialPageRoute(
-          builder: (_) => EducationVerificationScreen(
-            plan: plan,
-            toggleTheme: toggleTheme as VoidCallback,
-          ),
+          builder:
+              (_) => EducationVerificationScreen(
+                plan: plan,
+                toggleTheme: toggleTheme as VoidCallback,
+              ),
         );
 
       case Routes.subscriptionSuccess:
         return MaterialPageRoute(
-          builder: (_) => SubscriptionSuccessScreen(
-            toggleTheme: toggleTheme as VoidCallback,
-          ),
+          builder:
+              (_) => SubscriptionSuccessScreen(
+                toggleTheme: toggleTheme as VoidCallback,
+              ),
         );
 
       case Routes.cancellationConfirmation:
@@ -157,9 +158,8 @@ class AppRouter {
           );
         }
         return MaterialPageRoute(
-          builder: (_) => CancellationConfirmationScreen(
-            subscription: subscription,
-          ),
+          builder:
+              (_) => CancellationConfirmationScreen(subscription: subscription),
         );
 
       default:
