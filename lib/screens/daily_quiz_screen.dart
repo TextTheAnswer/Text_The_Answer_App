@@ -6,6 +6,7 @@ import '../blocs/quiz/quiz_event.dart';
 import '../blocs/quiz/quiz_state.dart';
 import '../models/question.dart';
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DailyQuizScreen extends StatefulWidget {
   final VoidCallback toggleTheme;
@@ -31,6 +32,7 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
   void initState() {
     super.initState();
     _answerController = TextEditingController();
+    checkDailyResetStatus();
   }
 
   @override
@@ -159,6 +161,22 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
         answers: _collectedAnswers,
       ),
     );
+  }
+
+  void checkDailyResetStatus() {
+    // Get today's date in the format YYYY-MM-DD
+    final today = DateTime.now().toIso8601String().split('T')[0];
+    
+    // Get the last date the user accessed the daily quiz
+    final lastAccessDate = prefs.getString('lastDailyQuizDate');
+    
+    if (lastAccessDate != today) {
+      // It's a new day, reset any local daily quiz data
+      prefs.setString('lastDailyQuizDate', today);
+      // Clear any cached questions and answers
+      prefs.remove('dailyQuizQuestions');
+      prefs.remove('dailyQuizAnswers');
+    }
   }
 
   @override
