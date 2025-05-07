@@ -264,6 +264,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         onTap: _onTabTapped,
       ),
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor:
             isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg,
         elevation: 0,

@@ -320,7 +320,7 @@ class ApiService {
   }
 
   // Leaderboard Endpoints
-  Future<Map<String, dynamic>> getDailyLeaderboard() async {
+  Future<List<Map<String, dynamic>>> getLeaderboard() async {
     final token = await _getToken();
     final response = await http.get(
       Uri.parse('$baseUrl/leaderboard/daily'),
@@ -332,17 +332,43 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      final List<dynamic> leaderboardData = data['leaderboard'];
-      final List<LeaderboardEntry> leaderboardEntries = leaderboardData
-          .map((entry) => LeaderboardEntry.fromJson(entry))
-          .toList();
-      
-      return {
-        'leaderboard': leaderboardEntries,
-        'userRank': data['userRank'] ?? 0,
-      };
+      return List<Map<String, dynamic>>.from(data['leaderboard']);
     } else {
       throw Exception('Failed to get daily leaderboard: ${response.body}');
+    }
+  }
+
+  Future<Map<String, dynamic>> getDailyQuizLeaderboard() async {
+    final token = await _getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/quiz/daily/leaderboard'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      
+      return {
+        'success': data['success'] ?? true,
+        'leaderboard': List<Map<String, dynamic>>.from(data['leaderboard'] ?? []),
+        'userRank': data['userRank'] ?? 0,
+        'userScore': data['userScore'] ?? 0,
+        'theme': data['theme'] ?? {'name': 'General Knowledge', 'description': 'Test your general knowledge'},
+        'winner': data['winner'],
+      };
+    } else {
+      // If the server fails, return an empty leaderboard structure
+      return {
+        'success': false,
+        'leaderboard': <Map<String, dynamic>>[],
+        'userRank': 0,
+        'userScore': 0,
+        'theme': {'name': 'General Knowledge', 'description': 'Test your general knowledge'},
+        'winner': null,
+      };
     }
   }
 
@@ -727,25 +753,6 @@ class ApiService {
   
   Future<Map<String, dynamic>> submitAnswer(String questionId, String answer) async {
     return await submitDailyQuizAnswer(questionId, answer);
-  }
-  
-  // Leaderboard methods
-  Future<List<Map<String, dynamic>>> getLeaderboard() async {
-    final token = await _getToken();
-    final response = await http.get(
-      Uri.parse('$baseUrl/leaderboard/daily'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return List<Map<String, dynamic>>.from(data['leaderboard']);
-    } else {
-      throw Exception('Failed to get daily leaderboard: ${response.body}');
-    }
   }
   
   // Game methods

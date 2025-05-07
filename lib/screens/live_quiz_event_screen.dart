@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:text_the_answer/models/question.dart'; // Adjust the import based on your model location
+import 'package:text_the_answer/models/question.dart';
 import 'package:text_the_answer/services/daily_quiz_socket.dart';
-import 'package:text_the_answer/services/api_service.dart'; // Adjust for user data
+import 'package:text_the_answer/config/api_config.dart';
+import 'package:text_the_answer/services/auth_token_service.dart';
 
 class LiveQuizEventScreen extends StatefulWidget {
   final String quizId;
@@ -23,18 +24,35 @@ class _LiveQuizEventScreenState extends State<LiveQuizEventScreen> {
   bool showResults = false;
   bool eventEnded = false;
   List<Map<String, dynamic>> leaderboard = [];
+  final AuthTokenService _authService = AuthTokenService();
+  String userId = '';
 
   @override
   void initState() {
     super.initState();
-    setupSocket();
+    _initializeUserId();
+  }
+
+  Future<void> _initializeUserId() async {
+    // Get the user ID from your auth service or shared preferences
+    // This is a placeholder - replace with your actual method to get the user ID
+    try {
+      final claims = await _authService.getTokenClaims();
+      userId = claims?['sub'] ?? 'unknown';
+      setupSocket();
+    } catch (e) {
+      print('Error getting user ID: $e');
+      // Handle error or set a default user ID
+      userId = 'guest_${DateTime.now().millisecondsSinceEpoch}';
+      setupSocket();
+    }
   }
 
   void setupSocket() {
     // Initialize socket
     quizSocket = DailyQuizSocket(
-      userId: currentUser.id, // Replace with actual user ID retrieval
-      serverUrl: apiBaseUrl, // Replace with your API base URL
+      userId: userId,
+      serverUrl: ApiConfig.baseUrl,
     );
 
     // Add specific listeners for this screen

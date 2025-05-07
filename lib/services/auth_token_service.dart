@@ -1,5 +1,6 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:text_the_answer/utils/logger/debug_print.dart';
+import 'dart:convert';
 
 class AuthTokenService {
   static const _storage = FlutterSecureStorage();
@@ -44,6 +45,25 @@ class AuthTokenService {
     } catch (e) {
       printDebug('AuthTokenService: Error deleting token: $e');
       rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getTokenClaims() async {
+    try {
+      final token = await getToken();
+      if (token == null) return null;
+      
+      // JWT token has three parts: header.payload.signature
+      final parts = token.split('.');
+      if (parts.length != 3) return null;
+      
+      // Decode the payload (middle part)
+      String normalized = base64Url.normalize(parts[1]);
+      final payloadJson = utf8.decode(base64Url.decode(normalized));
+      return jsonDecode(payloadJson);
+    } catch (e) {
+      printDebug('AuthTokenService: Error decoding token claims: $e');
+      return null;
     }
   }
 
