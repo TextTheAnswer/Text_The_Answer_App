@@ -5,7 +5,11 @@ import '../blocs/quiz/quiz_bloc.dart';
 import '../blocs/quiz/quiz_event.dart';
 import '../blocs/quiz/quiz_state.dart';
 import '../models/question.dart';
+import '../widgets/quiz/typing_indicator.dart';
+import '../widgets/quiz/waiting_room.dart';
+import '../utils/quiz/time_utility.dart';
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DailyQuizScreen extends StatefulWidget {
   final VoidCallback toggleTheme;
@@ -27,10 +31,14 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
   bool _bulkSubmissionMode = true; // Set to true to use bulk submission
   int _startTime = 0;
   
+  late SharedPreferences prefs; // Declare the prefs variable
+
   @override
   void initState() {
     super.initState();
     _answerController = TextEditingController();
+    initPrefs(); // Initialize prefs before using it
+    checkDailyResetStatus();
   }
 
   @override
@@ -38,6 +46,11 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
     _stopTimer();
     _answerController.dispose();
     super.dispose();
+  }
+
+  // Add a method to initialize shared preferences
+  Future<void> initPrefs() async {
+    prefs = await SharedPreferences.getInstance();
   }
 
   void _startTimer() {
@@ -159,6 +172,23 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
         answers: _collectedAnswers,
       ),
     );
+  }
+
+  void checkDailyResetStatus() async {
+    await initPrefs(); // Ensure prefs is initialized
+    // Get today's date in the format YYYY-MM-DD
+    final today = DateTime.now().toIso8601String().split('T')[0];
+    
+    // Get the last date the user accessed the daily quiz
+    final lastAccessDate = prefs.getString('lastDailyQuizDate');
+    
+    if (lastAccessDate != today) {
+      // It's a new day, reset any local daily quiz data
+      await prefs.setString('lastDailyQuizDate', today);
+      // Clear any cached questions and answers
+      await prefs.remove('dailyQuizQuestions');
+      await prefs.remove('dailyQuizAnswers');
+    }
   }
 
   @override
@@ -392,23 +422,33 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     const SizedBox(height: 24),
-                    // Answer input field
-                    TextField(
-                      controller: _answerController,
-                      decoration: InputDecoration(
-                        hintText: 'Type your answer here...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    // Answer input field with typing indicator
+                    Column(
+                      children: [
+                        TextField(
+                          controller: _answerController,
+                          decoration: InputDecoration(
+                            hintText: 'Type your answer here...',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            filled: true,
+                            suffixIcon: IconButton(
+                              icon: Icon(Icons.send),
+                              onPressed: () => _handleAnswerSubmission(_answerController.text),
+                            ),
+                          ),
+                          style: Theme.of(context).textTheme.titleMedium,
+                          onSubmitted: _handleAnswerSubmission,
+                          autofocus: true,
                         ),
-                        filled: true,
-                        suffixIcon: IconButton(
-                          icon: Icon(Icons.send),
-                          onPressed: () => _handleAnswerSubmission(_answerController.text),
+                        const SizedBox(height: 8),
+                        // Add the typing progress indicator
+                        TypingProgressIndicator(
+                          controller: _answerController,
+                          maxWidth: MediaQuery.of(context).size.width - 64,
                         ),
-                      ),
-                      style: Theme.of(context).textTheme.titleMedium,
-                      onSubmitted: _handleAnswerSubmission,
-                      autofocus: true,
+                      ],
                     ),
                     const SizedBox(height: 20),
                     Center(

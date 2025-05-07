@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/leaderboard/leaderboard_bloc.dart';
 import '../blocs/leaderboard/leaderboard_event.dart';
 import '../blocs/leaderboard/leaderboard_state.dart';
+import '../widgets/quiz/daily_leaderboard.dart';
 
 class LeaderboardScreen extends StatelessWidget {
   final VoidCallback toggleTheme;
@@ -16,9 +17,11 @@ class LeaderboardScreen extends StatelessWidget {
         child: BlocConsumer<LeaderboardBloc, LeaderboardState>(
           listener: (context, state) {
             if (state is LeaderboardError) {
-              print('LeaderboardScreen Error: ${state.message}'); // Debug statement
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: Colors.red,
+                ),
               );
             }
           },
@@ -26,49 +29,45 @@ class LeaderboardScreen extends StatelessWidget {
             if (state is LeaderboardLoading) {
               return const Center(child: CircularProgressIndicator());
             } else if (state is LeaderboardLoaded) {
-              return Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Leaderboard 🏆',
-                      style: Theme.of(context).textTheme.headlineLarge,
-                    ),
-                    const SizedBox(height: 20),
-                    Text('Your Rank: ${state.userRank}'),
-                    const SizedBox(height: 20),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: state.leaderboard.length,
-                        itemBuilder: (context, index) {
-                          final entry = state.leaderboard[index];
-                          return ListTile(
-                            leading: Text('${entry.rank}'),
-                            title: Text(entry.name),
-                            trailing: Text('${entry.score} points'),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
+              return DailyLeaderboardWidget(
+                leaderboardEntries: state.leaderboard,
+                userRank: state.userRank,
+                userScore: state.userScore,
+                theme: state.theme,
+                winner: state.winner,
+                lastUpdated: state.lastUpdated,
+                refreshLeaderboard: () async {
+                  context.read<LeaderboardBloc>().add(RefreshLeaderboard());
+                  // Return a resolved future to complete the refresh indicator
+                  return Future.value();
+                },
               );
             }
-            return Padding(
-              padding: const EdgeInsets.all(20),
+            
+            // Initial state
+            return Center(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    'Leaderboard 🏆',
-                    style: Theme.of(context).textTheme.headlineLarge,
+                  const Icon(
+                    Icons.leaderboard_outlined,
+                    size: 64,
+                    color: Colors.grey,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Daily Leaderboard',
+                    style: Theme.of(context).textTheme.headlineMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: () {
                       context.read<LeaderboardBloc>().add(FetchDailyLeaderboard());
                     },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
                     child: const Text('Load Leaderboard'),
                   ),
                 ],
