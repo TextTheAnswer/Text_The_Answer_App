@@ -90,8 +90,6 @@ class _MyAppState extends State<MyApp> {
 
                         if (state is AuthAuthenticated) {
                           context.goNamed(AppRouteName.home);
-                        } else if (state is AuthInitial) {
-                          context.goNamed(AppRouteName.onboarding);
                         } else if (state is AuthError) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(

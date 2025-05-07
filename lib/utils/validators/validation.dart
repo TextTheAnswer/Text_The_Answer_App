@@ -69,4 +69,21 @@ class CustomValidator {
     }
     return null;
   }
+  
+  /// Validates if a string is a valid MongoDB ObjectId
+  /// MongoDB ObjectIds are 24-character hexadecimal strings
+  static bool isValidObjectId(String? value) {
+    if (value == null || value.isEmpty) {
+      return false;
+    }
+    
+    // Check if it's exactly 24 characters long
+    if (value.length != 24) {
+      return false;
+    }
+    
+    // Check if it contains only hexadecimal characters
+    final hexRegex = RegExp(r'^[0-9a-fA-F]{24}$');
+    return hexRegex.hasMatch(value);
+  }
 }

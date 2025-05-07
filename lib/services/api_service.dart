@@ -276,7 +276,7 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> submitDailyQuizAnswer(String questionId, String answer) async {
+  Future<Map<String, dynamic>> submitDailyQuizAnswer(String questionId, String answer, {int timeRemaining = 0}) async {
     final token = await _getToken();
     final response = await http.post(
       Uri.parse('$baseUrl/quiz/submit'),
@@ -287,6 +287,7 @@ class ApiService {
       body: jsonEncode({
         'questionId': questionId,
         'answer': answer,
+        'timeRemaining': timeRemaining,
       }),
     );
 
@@ -294,6 +295,27 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to submit answer: ${response.body}');
+    }
+  }
+
+  // Bulk submission of quiz answers
+  Future<Map<String, dynamic>> submitDailyQuizAnswersBulk(List<Map<String, dynamic>> answers) async {
+    final token = await _getToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/quiz/daily/answers/bulk'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'answers': answers,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to submit bulk answers: ${response.body}');
     }
   }
 

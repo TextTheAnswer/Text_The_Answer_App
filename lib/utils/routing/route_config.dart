@@ -30,7 +30,7 @@ final GlobalKey<NavigatorState> _sectionNavigatorKey =
 final GoRouter router = GoRouter(
   debugLogDiagnostics: true,
   navigatorKey: _rootNavigatorKey,
-  initialLocation: AppRoutePath.home,
+  initialLocation: AppRoutePath.login,
   routes: <RouteBase>[
     // -- Main App Screen
     StatefulShellRoute.indexedStack(

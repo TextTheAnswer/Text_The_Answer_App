@@ -4,7 +4,20 @@ class FetchDailyQuiz extends QuizEvent {}
 
 class SubmitQuizAnswer extends QuizEvent {
   final String questionId;
-  final int answer;
+  final String answer;
+  final int timeRemaining;
 
-  SubmitQuizAnswer({required this.questionId, required this.answer});
+  SubmitQuizAnswer({
+    required this.questionId, 
+    required this.answer,
+    required this.timeRemaining,
+  });
+}
+
+class SubmitQuizAnswersBulk extends QuizEvent {
+  final List<Map<String, dynamic>> answers;
+
+  SubmitQuizAnswersBulk({
+    required this.answers,
+  });
 }
