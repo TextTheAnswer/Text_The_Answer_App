@@ -8,13 +8,8 @@ import 'game_screen.dart';
 
 class LobbyWaitingScreen extends StatefulWidget {
   final Lobby lobby;
-  final VoidCallback toggleTheme;
 
-  const LobbyWaitingScreen({
-    Key? key, 
-    required this.lobby, 
-    required this.toggleTheme
-  }) : super(key: key);
+  const LobbyWaitingScreen({super.key, required this.lobby});
 
   @override
   State<LobbyWaitingScreen> createState() => _LobbyWaitingScreenState();
@@ -49,9 +44,9 @@ class _LobbyWaitingScreenState extends State<LobbyWaitingScreen> {
       body: BlocConsumer<GameBloc, GameState>(
         listener: (context, state) {
           if (state is GameError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message)));
           } else if (state is LobbyUpdated) {
             setState(() {
               _currentLobby = state.lobby;
@@ -62,17 +57,19 @@ class _LobbyWaitingScreenState extends State<LobbyWaitingScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => GameScreen(
-                  gameId: state.gameId,
-                  questions: state.questions,
-                  players: state.players,
-                  toggleTheme: widget.toggleTheme,
-                ),
+                builder:
+                    (_) => GameScreen(
+                      gameId: state.gameId,
+                      questions: state.questions,
+                      players: state.players,
+                    ),
               ),
             );
           } else if (state is AllPlayersReady) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('All players are ready! Game will start soon.')),
+              const SnackBar(
+                content: Text('All players are ready! Game will start soon.'),
+              ),
             );
           }
         },
@@ -89,10 +86,12 @@ class _LobbyWaitingScreenState extends State<LobbyWaitingScreen> {
 
   Widget _buildWaitingRoom() {
     final lobby = _currentLobby ?? widget.lobby;
-    final bool isHost = lobby.host == lobby.players.firstWhere(
-      (player) => player['user'] == lobby.host, 
-      orElse: () => {'user': ''}
-    )['user'];
+    final bool isHost =
+        lobby.host ==
+        lobby.players.firstWhere(
+          (player) => player['user'] == lobby.host,
+          orElse: () => {'user': ''},
+        )['user'];
 
     return Padding(
       padding: const EdgeInsets.all(20),
@@ -104,7 +103,7 @@ class _LobbyWaitingScreenState extends State<LobbyWaitingScreen> {
             style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: 10),
-          
+
           // Lobby info card
           Card(
             child: Padding(
@@ -116,7 +115,10 @@ class _LobbyWaitingScreenState extends State<LobbyWaitingScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('Lobby Name:'),
-                      Text(lobby.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text(
+                        lobby.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -124,7 +126,10 @@ class _LobbyWaitingScreenState extends State<LobbyWaitingScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('Lobby Code:'),
-                      SelectableText(lobby.code, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      SelectableText(
+                        lobby.code,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -139,14 +144,11 @@ class _LobbyWaitingScreenState extends State<LobbyWaitingScreen> {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 20),
-          Text(
-            'Players',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text('Players', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 10),
-          
+
           // Player list
           Expanded(
             child: Card(
@@ -156,7 +158,7 @@ class _LobbyWaitingScreenState extends State<LobbyWaitingScreen> {
                   final player = lobby.players[index];
                   final bool playerIsHost = player['user'] == lobby.host;
                   final bool isReady = player['ready'] ?? false;
-                  
+
                   return ListTile(
                     leading: CircleAvatar(
                       child: Text(player['name']?[0] ?? '?'),
@@ -164,7 +166,8 @@ class _LobbyWaitingScreenState extends State<LobbyWaitingScreen> {
                     title: Text(
                       player['name'] ?? 'Unknown Player',
                       style: TextStyle(
-                        fontWeight: playerIsHost ? FontWeight.bold : FontWeight.normal,
+                        fontWeight:
+                            playerIsHost ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
                     subtitle: playerIsHost ? const Text('Host') : null,
@@ -184,9 +187,9 @@ class _LobbyWaitingScreenState extends State<LobbyWaitingScreen> {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Ready button
           ElevatedButton(
             onPressed: () {
@@ -201,9 +204,9 @@ class _LobbyWaitingScreenState extends State<LobbyWaitingScreen> {
             ),
             child: Text(_isReady ? 'Ready' : 'Not Ready'),
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           // Start game button (host only)
           if (isHost)
             ElevatedButton(
@@ -216,9 +219,9 @@ class _LobbyWaitingScreenState extends State<LobbyWaitingScreen> {
               ),
               child: const Text('Start Game'),
             ),
-          
+
           const SizedBox(height: 12),
-          
+
           // Leave lobby button
           ElevatedButton(
             onPressed: () {
@@ -234,4 +237,4 @@ class _LobbyWaitingScreenState extends State<LobbyWaitingScreen> {
       ),
     );
   }
-} 
+}

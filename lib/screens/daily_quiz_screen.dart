@@ -6,15 +6,11 @@ import '../blocs/quiz/quiz_event.dart';
 import '../blocs/quiz/quiz_state.dart';
 import '../models/question.dart';
 import '../widgets/quiz/typing_indicator.dart';
-import '../widgets/quiz/waiting_room.dart';
-import '../utils/quiz/time_utility.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DailyQuizScreen extends StatefulWidget {
-  final VoidCallback toggleTheme;
-
-  const DailyQuizScreen({required this.toggleTheme, super.key});
+  const DailyQuizScreen({super.key});
 
   @override
   State<DailyQuizScreen> createState() => _DailyQuizScreenState();
@@ -25,12 +21,12 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
   Timer? _timer;
   int _secondsRemaining = 15; // 15 seconds to answer
   late TextEditingController _answerController;
-  
+
   // For bulk submission
   final List<Map<String, dynamic>> _collectedAnswers = [];
   bool _bulkSubmissionMode = true; // Set to true to use bulk submission
   int _startTime = 0;
-  
+
   late SharedPreferences prefs; // Declare the prefs variable
 
   @override
@@ -59,7 +55,7 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
       _secondsRemaining = 15;
       _startTime = DateTime.now().millisecondsSinceEpoch; // Record start time
     });
-    
+
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         if (_secondsRemaining > 0) {
@@ -90,32 +86,34 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
 
   void _handleAnswerSubmission(String answer) {
     final quizState = context.read<QuizBloc>().state;
-    
-    if (quizState is QuizLoaded && quizState.questionsAnswered < quizState.questions.length) {
+
+    if (quizState is QuizLoaded &&
+        quizState.questionsAnswered < quizState.questions.length) {
       final currentQuestion = quizState.questions[quizState.questionsAnswered];
       final timeSpent = _calculateTimeSpent();
-      
+
       // Debug the current question ID
       print('Handling answer for question: ${currentQuestion.text}');
       print('Question ID: ${currentQuestion.id}');
-      
+
       if (_bulkSubmissionMode) {
         // Check if the ID is a valid MongoDB ObjectId (24-character hex string)
-        final isValidId = currentQuestion.id.length == 24 && 
-                          RegExp(r'^[0-9a-fA-F]{24}$').hasMatch(currentQuestion.id);
-        
+        final isValidId =
+            currentQuestion.id.length == 24 &&
+            RegExp(r'^[0-9a-fA-F]{24}$').hasMatch(currentQuestion.id);
+
         if (isValidId) {
           _collectedAnswers.add({
             'questionId': currentQuestion.id,
             'answer': answer.trim(),
             'timeSpent': timeSpent,
           });
-          
+
           print('Added answer for question ID: ${currentQuestion.id}');
         } else {
           print('Skipping question with invalid ID: ${currentQuestion.id}');
         }
-        
+
         // If this was the last question, submit all answers in bulk
         if (quizState.questionsAnswered + 1 >= quizState.questions.length) {
           _submitBulkAnswers();
@@ -127,9 +125,9 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
               questionsAnswered: quizState.questionsAnswered + 1,
               correctAnswers: quizState.correctAnswers,
               totalPoints: quizState.totalPoints,
-            )
+            ),
           );
-          
+
           // Start the timer for the next question
           _startTimer();
         }
@@ -143,12 +141,12 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
           ),
         );
       }
-      
+
       _stopTimer();
       _resetAnswerField();
     }
   }
-  
+
   void _submitBulkAnswers() {
     if (_collectedAnswers.isEmpty) {
       print('No answers to submit');
@@ -160,17 +158,15 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
       );
       return;
     }
-    
+
     print('Submitting ${_collectedAnswers.length} answers in bulk');
     // Debug the answers being submitted
     for (var i = 0; i < _collectedAnswers.length; i++) {
       print('Answer $i: ${jsonEncode(_collectedAnswers[i])}');
     }
-    
+
     context.read<QuizBloc>().add(
-      SubmitQuizAnswersBulk(
-        answers: _collectedAnswers,
-      ),
+      SubmitQuizAnswersBulk(answers: _collectedAnswers),
     );
   }
 
@@ -178,10 +174,10 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
     await initPrefs(); // Ensure prefs is initialized
     // Get today's date in the format YYYY-MM-DD
     final today = DateTime.now().toIso8601String().split('T')[0];
-    
+
     // Get the last date the user accessed the daily quiz
     final lastAccessDate = prefs.getString('lastDailyQuizDate');
-    
+
     if (lastAccessDate != today) {
       // It's a new day, reset any local daily quiz data
       await prefs.setString('lastDailyQuizDate', today);
@@ -209,27 +205,31 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
             } else if (state is QuizAnswerSubmitted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(state.isCorrect
-                      ? 'Correct! ${state.explanation} (+${state.points} points)'
-                      : 'Incorrect. ${state.explanation}'),
-                  backgroundColor: state.isCorrect ? Colors.green : Colors.orange,
+                  content: Text(
+                    state.isCorrect
+                        ? 'Correct! ${state.explanation} (+${state.points} points)'
+                        : 'Incorrect. ${state.explanation}',
+                  ),
+                  backgroundColor:
+                      state.isCorrect ? Colors.green : Colors.orange,
                 ),
               );
-              
+
               // Start timer for the next question if available
               final quizBloc = context.read<QuizBloc>();
               if (quizBloc.state is QuizLoaded) {
                 final loadedState = quizBloc.state as QuizLoaded;
-                if (loadedState.questionsAnswered < loadedState.questions.length) {
+                if (loadedState.questionsAnswered <
+                    loadedState.questions.length) {
                   _startTimer();
                 }
               }
             } else if (state is QuizBulkAnswersSubmitted) {
               // Show a summary of the bulk submission
               _showBulkSubmissionResults(context, state);
-            } else if (state is QuizLoaded && 
-                      state.questionsAnswered < state.questions.length &&
-                      _timer == null) {
+            } else if (state is QuizLoaded &&
+                state.questionsAnswered < state.questions.length &&
+                _timer == null) {
               // Start timer when quiz is first loaded
               _startTimer();
             }
@@ -270,7 +270,7 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
                   ),
                 );
               }
-              
+
               final questions = state.questions;
               return Padding(
                 padding: const EdgeInsets.all(20),
@@ -286,7 +286,10 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
                         ),
                         // Timer display
                         Container(
-                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: _getTimerColor(),
                             borderRadius: BorderRadius.circular(16),
@@ -319,8 +322,12 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
                     ),
                     const SizedBox(height: 24),
                     if (state.questionsAnswered < questions.length)
-                      _buildActiveQuiz(context, questions[state.questionsAnswered])
-                    else if (_bulkSubmissionMode && _collectedAnswers.isNotEmpty)
+                      _buildActiveQuiz(
+                        context,
+                        questions[state.questionsAnswered],
+                      )
+                    else if (_bulkSubmissionMode &&
+                        _collectedAnswers.isNotEmpty)
                       _buildQuizProcessing()
                     else
                       _buildQuizCompleted(context, state),
@@ -330,14 +337,18 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
             } else if (state is QuizBulkAnswersSubmitted) {
               return _buildBulkSubmissionResults(context, state);
             }
-            
+
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.quiz, size: 64, color: Theme.of(context).primaryColor),
+                    Icon(
+                      Icons.quiz,
+                      size: 64,
+                      color: Theme.of(context).primaryColor,
+                    ),
                     SizedBox(height: 16),
                     Text(
                       'Daily Quiz 🧠',
@@ -371,7 +382,7 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
       ),
     );
   }
-  
+
   Widget _buildActiveQuiz(BuildContext context, Question question) {
     // Difficulty badge color
     Color difficultyColor = Colors.green;
@@ -380,7 +391,7 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
     } else if (question.difficulty == 'hard') {
       difficultyColor = Colors.red;
     }
-    
+
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -394,7 +405,10 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
             ),
             child: Text(
               question.difficulty.toUpperCase(),
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -435,7 +449,10 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
                             filled: true,
                             suffixIcon: IconButton(
                               icon: Icon(Icons.send),
-                              onPressed: () => _handleAnswerSubmission(_answerController.text),
+                              onPressed:
+                                  () => _handleAnswerSubmission(
+                                    _answerController.text,
+                                  ),
                             ),
                           ),
                           style: Theme.of(context).textTheme.titleMedium,
@@ -475,7 +492,7 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
       ),
     );
   }
-  
+
   Widget _buildQuizProcessing() {
     return Expanded(
       child: Center(
@@ -498,15 +515,16 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
       ),
     );
   }
-  
+
   Widget _buildQuizCompleted(BuildContext context, QuizLoaded state) {
-    final percentage = state.questions.isEmpty 
-        ? 0.0 
-        : (state.correctAnswers / state.questions.length) * 100;
-    
+    final percentage =
+        state.questions.isEmpty
+            ? 0.0
+            : (state.correctAnswers / state.questions.length) * 100;
+
     String remarks = 'Try again!';
     Color remarksColor = Colors.red;
-    
+
     if (percentage >= 80) {
       remarks = 'Excellent!';
       remarksColor = Colors.green;
@@ -517,7 +535,7 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
       remarks = 'Not bad!';
       remarksColor = Colors.orange;
     }
-    
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -551,9 +569,9 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
           SizedBox(height: 8),
           Text(
             'Total Points: ${state.totalPoints}',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 32),
@@ -573,21 +591,25 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
       ),
     );
   }
-  
-  Widget _buildBulkSubmissionResults(BuildContext context, QuizBulkAnswersSubmitted state) {
+
+  Widget _buildBulkSubmissionResults(
+    BuildContext context,
+    QuizBulkAnswersSubmitted state,
+  ) {
     final summary = state.summary;
     final correctAnswers = summary['correctAnswers'] ?? 0;
     final questionsAnswered = summary['questionsAnswered'] ?? 0;
     final totalScore = summary['totalScore'] ?? 0;
     final streak = summary['streak'] ?? 0;
-    
-    final percentage = questionsAnswered > 0 
-        ? (correctAnswers / questionsAnswered) * 100 
-        : 0.0;
-    
+
+    final percentage =
+        questionsAnswered > 0
+            ? (correctAnswers / questionsAnswered) * 100
+            : 0.0;
+
     String remarks = 'Try again!';
     Color remarksColor = Colors.red;
-    
+
     if (percentage >= 80) {
       remarks = 'Excellent!';
       remarksColor = Colors.green;
@@ -598,7 +620,7 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
       remarks = 'Not bad!';
       remarksColor = Colors.orange;
     }
-    
+
     return Padding(
       padding: const EdgeInsets.all(20.0),
       child: Column(
@@ -623,7 +645,13 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 24),
-          _buildSummaryCard(context, correctAnswers, questionsAnswered, totalScore, streak),
+          _buildSummaryCard(
+            context,
+            correctAnswers,
+            questionsAnswered,
+            totalScore,
+            streak,
+          ),
           SizedBox(height: 24),
           if (state.newAchievements.isNotEmpty)
             _buildAchievementsSection(context, state.newAchievements),
@@ -646,9 +674,14 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
       ),
     );
   }
-  
-  Widget _buildSummaryCard(BuildContext context, int correctAnswers, int questionsAnswered, 
-      int totalScore, int streak) {
+
+  Widget _buildSummaryCard(
+    BuildContext context,
+    int correctAnswers,
+    int questionsAnswered,
+    int totalScore,
+    int streak,
+  ) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -656,17 +689,29 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Text(
-              'Summary',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
+            Text('Summary', style: Theme.of(context).textTheme.headlineSmall),
             SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildSummaryItem(context, 'Score', '$correctAnswers/$questionsAnswered', Icons.check_circle),
-                _buildSummaryItem(context, 'Points', '$totalScore', Icons.stars),
-                _buildSummaryItem(context, 'Streak', '$streak', Icons.local_fire_department),
+                _buildSummaryItem(
+                  context,
+                  'Score',
+                  '$correctAnswers/$questionsAnswered',
+                  Icons.check_circle,
+                ),
+                _buildSummaryItem(
+                  context,
+                  'Points',
+                  '$totalScore',
+                  Icons.stars,
+                ),
+                _buildSummaryItem(
+                  context,
+                  'Streak',
+                  '$streak',
+                  Icons.local_fire_department,
+                ),
               ],
             ),
           ],
@@ -674,27 +719,32 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
       ),
     );
   }
-  
-  Widget _buildSummaryItem(BuildContext context, String label, String value, IconData icon) {
+
+  Widget _buildSummaryItem(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
+  ) {
     return Column(
       children: [
         Icon(icon, size: 32, color: Theme.of(context).primaryColor),
         SizedBox(height: 8),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
+        Text(label, style: Theme.of(context).textTheme.bodyMedium),
         Text(
           value,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
       ],
     );
   }
-  
-  Widget _buildAchievementsSection(BuildContext context, List<Map<String, dynamic>> achievements) {
+
+  Widget _buildAchievementsSection(
+    BuildContext context,
+    List<Map<String, dynamic>> achievements,
+  ) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -708,23 +758,36 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
             ),
             SizedBox(height: 16),
             Column(
-              children: achievements.map((achievement) => _buildAchievementItem(context, achievement)).toList(),
+              children:
+                  achievements
+                      .map(
+                        (achievement) =>
+                            _buildAchievementItem(context, achievement),
+                      )
+                      .toList(),
             ),
           ],
         ),
       ),
     );
   }
-  
-  Widget _buildAchievementItem(BuildContext context, Map<String, dynamic> achievement) {
+
+  Widget _buildAchievementItem(
+    BuildContext context,
+    Map<String, dynamic> achievement,
+  ) {
     IconData iconData = Icons.emoji_events;
-    if (achievement['icon'] == 'bolt') iconData = Icons.bolt;
-    else if (achievement['icon'] == 'star') iconData = Icons.star;
-    
+    if (achievement['icon'] == 'bolt')
+      iconData = Icons.bolt;
+    else if (achievement['icon'] == 'star')
+      iconData = Icons.star;
+
     Color tierColor = Colors.brown;
-    if (achievement['tier'] == 'silver') tierColor = Colors.grey;
-    else if (achievement['tier'] == 'gold') tierColor = Colors.amber;
-    
+    if (achievement['tier'] == 'silver')
+      tierColor = Colors.grey;
+    else if (achievement['tier'] == 'gold')
+      tierColor = Colors.amber;
+
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: tierColor,
@@ -734,8 +797,11 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
       subtitle: Text(achievement['description'] ?? ''),
     );
   }
-  
-  Widget _buildAnswerResultsList(BuildContext context, List<Map<String, dynamic>> results) {
+
+  Widget _buildAnswerResultsList(
+    BuildContext context,
+    List<Map<String, dynamic>> results,
+  ) {
     return Expanded(
       child: Card(
         elevation: 4,
@@ -756,9 +822,10 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
                   itemBuilder: (context, index) {
                     final result = results[index];
                     return Card(
-                      color: result['isCorrect'] == true 
-                          ? Colors.green.withOpacity(0.1) 
-                          : Colors.red.withOpacity(0.1),
+                      color:
+                          result['isCorrect'] == true
+                              ? Colors.green.withOpacity(0.1)
+                              : Colors.red.withOpacity(0.1),
                       margin: EdgeInsets.only(bottom: 8),
                       child: Padding(
                         padding: const EdgeInsets.all(12.0),
@@ -773,10 +840,15 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
                                   style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 Text(
-                                  result['isCorrect'] == true ? '+${result['points']} points' : '0 points',
+                                  result['isCorrect'] == true
+                                      ? '+${result['points']} points'
+                                      : '0 points',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: result['isCorrect'] == true ? Colors.green : Colors.red,
+                                    color:
+                                        result['isCorrect'] == true
+                                            ? Colors.green
+                                            : Colors.red,
                                   ),
                                 ),
                               ],
@@ -787,8 +859,8 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
                             Row(
                               children: [
                                 Text(
-                                  'Correct answer: ', 
-                                  style: TextStyle(fontWeight: FontWeight.bold)
+                                  'Correct answer: ',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 Text('${result['correctAnswer']}'),
                               ],
@@ -806,22 +878,27 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
       ),
     );
   }
-  
-  void _showBulkSubmissionResults(BuildContext context, QuizBulkAnswersSubmitted state) {
+
+  void _showBulkSubmissionResults(
+    BuildContext context,
+    QuizBulkAnswersSubmitted state,
+  ) {
     // This would show a notification or toast with the summary
     final correctAnswers = state.summary['correctAnswers'] ?? 0;
     final questionsAnswered = state.summary['questionsAnswered'] ?? 0;
     final totalPoints = state.summary['totalScore'] ?? 0;
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Quiz completed! Score: $correctAnswers/$questionsAnswered - $totalPoints points'),
+        content: Text(
+          'Quiz completed! Score: $correctAnswers/$questionsAnswered - $totalPoints points',
+        ),
         duration: Duration(seconds: 5),
         backgroundColor: Colors.purple,
       ),
     );
   }
-  
+
   Color _getTimerColor() {
     if (_secondsRemaining > 10) {
       return Colors.green;

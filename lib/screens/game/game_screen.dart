@@ -5,18 +5,15 @@ import 'package:text_the_answer/blocs/game/game_event.dart';
 import 'package:text_the_answer/blocs/game/game_state.dart';
 import 'package:text_the_answer/models/question.dart';
 
-
 class GameScreen extends StatefulWidget {
   final String gameId;
   final List<Question> questions;
   final List<dynamic> players;
-  final VoidCallback toggleTheme;
 
   const GameScreen({
     required this.gameId,
     required this.questions,
     required this.players,
-    required this.toggleTheme,
     super.key,
   });
 
@@ -35,12 +32,14 @@ class _GameScreenState extends State<GameScreen> {
           listener: (context, state) {
             if (state is GameError) {
               print('GameScreen Error: ${state.message}'); // Debug statement
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.message)));
             } else if (state is GameAnswerSubmitted) {
               if (state.allAnswered) {
-                context.read<GameBloc>().add(FetchGameResults(gameId: widget.gameId));
+                context.read<GameBloc>().add(
+                  FetchGameResults(gameId: widget.gameId),
+                );
               } else {
                 setState(() {
                   currentQuestionIndex++;
@@ -75,12 +74,12 @@ class _GameScreenState extends State<GameScreen> {
                     (index) => ElevatedButton(
                       onPressed: () {
                         context.read<GameBloc>().add(
-                              SubmitGameAnswer(
-                                gameId: widget.gameId,
-                                questionIndex: currentQuestionIndex,
-                                answer: question.options[index],
-                              ),
-                            );
+                          SubmitGameAnswer(
+                            gameId: widget.gameId,
+                            questionIndex: currentQuestionIndex,
+                            answer: question.options[index],
+                          ),
+                        );
                       },
                       child: Text(question.options[index]),
                     ),

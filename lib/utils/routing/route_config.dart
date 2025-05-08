@@ -72,7 +72,7 @@ final GoRouter router = GoRouter(
               name: AppRouteName.gameMode,
               path: AppRoutePath.gameMode,
               builder: (context, state) {
-                return GameModeScreen(toggleTheme: () {});
+                return GameModeScreen();
               },
             ),
           ],
@@ -85,7 +85,7 @@ final GoRouter router = GoRouter(
               name: AppRouteName.quiz,
               path: AppRoutePath.quiz,
               builder: (context, state) {
-                return DailyQuizScreen(toggleTheme: () {});
+                return DailyQuizScreen();
               },
             ),
           ],
