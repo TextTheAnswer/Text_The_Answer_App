@@ -138,23 +138,23 @@ class _WaitingRoomWidgetState extends State<WaitingRoomWidget> {
           const SizedBox(height: 12),
           _buildRuleItem(
             context,
+            Icons.hourglass_top_outlined,
+            '10-minute total time limit for the quiz',
+          ),
+          _buildRuleItem(
+            context,
             Icons.timer_outlined,
             'You have 15 seconds to answer each question',
           ),
           _buildRuleItem(
             context,
             Icons.speed_outlined,
-            'Answer faster for more points',
-          ),
-          _buildRuleItem(
-            context,
-            Icons.check_circle_outline,
-            'Type your answer precisely - spelling counts!',
+            'Winner determined by highest score & fastest time',
           ),
           _buildRuleItem(
             context,
             Icons.emoji_events_outlined,
-            'Top performer wins free premium access',
+            'Winner gets 1 month of free premium access',
           ),
         ],
       ),
@@ -181,30 +181,57 @@ class _WaitingRoomWidgetState extends State<WaitingRoomWidget> {
   }
   
   Widget _buildParticipantsCounter() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.people, color: Colors.blue),
-          const SizedBox(width: 12),
-          Text(
-            '${widget.participantCount} participants',
-            style: Theme.of(context).textTheme.titleMedium,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.people, color: Colors.blue),
+              const SizedBox(width: 12),
+              Text(
+                '${widget.participantCount} participants',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.amber.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.amber.shade300),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.access_time, color: Colors.amber),
+              const SizedBox(width: 8),
+              Text(
+                'Tiebreaker is based on completion time!',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.amber.shade800,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 } 

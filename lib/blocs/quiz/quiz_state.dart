@@ -1,4 +1,5 @@
 import '../../models/question.dart';
+import '../../models/leaderboard.dart';
 
 abstract class QuizState {}
 
@@ -11,12 +12,16 @@ class QuizLoaded extends QuizState {
   final int questionsAnswered;
   final int correctAnswers;
   final int totalPoints;
+  final Duration totalTimeElapsed;
+  final Duration totalTimeRemaining;
 
   QuizLoaded({
     required this.questions,
     required this.questionsAnswered,
     required this.correctAnswers,
     this.totalPoints = 0,
+    this.totalTimeElapsed = Duration.zero,
+    this.totalTimeRemaining = const Duration(minutes: 10),
   });
 }
 
@@ -51,6 +56,24 @@ class QuizBulkAnswersSubmitted extends QuizState {
     required this.results,
     required this.summary,
     this.newAchievements = const [],
+  });
+}
+
+class QuizResultsState extends QuizState {
+  final List<Map<String, dynamic>> results;
+  final Map<String, dynamic> summary;
+  final List<dynamic> leaderboard;
+  final bool isWinner;
+  final bool premiumAwarded;
+  final int completionTime; // Total time in milliseconds
+
+  QuizResultsState({
+    required this.results,
+    required this.summary,
+    required this.leaderboard,
+    this.isWinner = false,
+    this.premiumAwarded = false,
+    this.completionTime = 0,
   });
 }
 

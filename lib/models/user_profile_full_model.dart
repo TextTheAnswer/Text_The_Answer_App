@@ -31,6 +31,7 @@ class ProfileData {
   final bool isPremium;
   final bool isEducation;
   final EducationData? education;
+  final List<Achievement>? achievements;
 
   ProfileData({
     required this.id,
@@ -43,6 +44,7 @@ class ProfileData {
     required this.isPremium,
     required this.isEducation,
     this.education,
+    this.achievements,
   });
 
   factory ProfileData.fromJson(Map<String, dynamic> json) {
@@ -57,6 +59,9 @@ class ProfileData {
       isPremium: json['isPremium'] ?? false,
       isEducation: json['isEducation'] ?? false,
       education: json['education'] != null ? EducationData.fromJson(json['education']) : null,
+      achievements: json['achievements'] != null 
+          ? List<Achievement>.from(json['achievements'].map((a) => Achievement.fromJson(a)))
+          : null,
     );
   }
 }
@@ -194,6 +199,26 @@ class EducationData {
       studentEmail: json['studentEmail'],
       yearOfStudy: json['yearOfStudy'],
       verificationStatus: json['verificationStatus'],
+    );
+  }
+}
+
+class Achievement {
+  final String achievementId;
+  final String unlockedAt;
+  final bool viewed;
+
+  Achievement({
+    required this.achievementId,
+    required this.unlockedAt,
+    required this.viewed,
+  });
+
+  factory Achievement.fromJson(Map<String, dynamic> json) {
+    return Achievement(
+      achievementId: json['achievementId'] ?? '',
+      unlockedAt: json['unlockedAt'] ?? '',
+      viewed: json['viewed'] ?? false,
     );
   }
 } 

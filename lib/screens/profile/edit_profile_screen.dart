@@ -14,9 +14,14 @@ import 'package:text_the_answer/widgets/custom_3d_button.dart';
 import 'package:text_the_answer/widgets/custom_bottom_button_with_divider.dart';
 
 class EditProfileScreen extends StatefulWidget {
-  const EditProfileScreen({super.key, required this.profileDetails});
+  const EditProfileScreen({
+    super.key, 
+    required this.profileDetails,
+    this.onProfileUpdated,
+  });
 
   final ProfileData profileDetails;
+  final VoidCallback? onProfileUpdated;
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -66,6 +71,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Profile saved successfully')));
+      
+      // Call the onProfileUpdated callback
+      if (widget.onProfileUpdated != null) {
+        widget.onProfileUpdated!();
+      }
+      
+      Navigator.pop(context);
     }
   }
 

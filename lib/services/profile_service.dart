@@ -447,7 +447,7 @@ class ProfileService {
       final shortToken = token.length > 10 ? '${token.substring(0, 10)}...' : token;
       print('ProfileService: Using token starting with: $shortToken');
 
-      // Use the new /profile/full endpoint
+      // Use the /profile/full endpoint
       final url = '${baseUrl}/profile/full';
       print('ProfileService: Calling API endpoint: $url');
 
@@ -463,6 +463,7 @@ class ProfileService {
       );
       
       print('ProfileService: Get full profile response status: ${response.statusCode}');
+      print('ProfileService: Get full profile response body: ${response.body}');
       
       // Process response
       if (response.statusCode == 200) {
@@ -470,7 +471,46 @@ class ProfileService {
           final data = jsonDecode(response.body);
           print('ProfileService: Full profile response data keys: ${data.keys.toList()}');
           
-          return UserProfileFullResponse.fromJson(data);
+          // Ensure we're accurately parsing the response according to the API structure
+          if (data.containsKey('success') && data['success'] == true && data.containsKey('profile')) {
+            print('ProfileService: Parsing successful API response with profile data');
+            return UserProfileFullResponse.fromJson(data);
+          } 
+          // Alternative structure check - sometimes APIs nest data in a 'data' property
+          else if (data.containsKey('data') && data['data'] != null) {
+            print('ProfileService: Alternative data structure with nested "data" property');
+            if (data['data'].containsKey('profile')) {
+              print('ProfileService: Profile found in data.profile');
+              return UserProfileFullResponse(
+                success: true,
+                profile: full_model.ProfileData.fromJson(data['data']['profile']),
+              );
+            } else {
+              print('ProfileService: Using data object as the profile');
+              // Assume data itself contains the profile
+              return UserProfileFullResponse(
+                success: true,
+                profile: full_model.ProfileData.fromJson(data['data']),
+              );
+            }
+          } 
+          // For API responses that place profile directly at the root
+          else if (!data.containsKey('success') && !data.containsKey('profile') && data.containsKey('id')) {
+            print('ProfileService: Profile data appears to be at the root level');
+            return UserProfileFullResponse(
+              success: true,
+              profile: full_model.ProfileData.fromJson(data),
+            );
+          }
+          // Failed to find expected profile structure
+          else {
+            print('ProfileService: Unable to determine profile data structure in response');
+            print('ProfileService: Available keys: ${data.keys.toList()}');
+            return UserProfileFullResponse(
+              success: false,
+              message: 'Invalid response format: Could not locate profile data',
+            );
+          }
         } catch (e) {
           print('ProfileService: Error parsing full profile response: $e');
           return UserProfileFullResponse(
@@ -507,7 +547,7 @@ class ProfileService {
       print('ProfileService: Exception in getFullProfile: $e');
       return UserProfileFullResponse(
         success: false,
-        message: 'Error getting full profile: ${e.toString()}',
+        message: 'Error getting profile: ${e.toString()}',
       );
     }
   }

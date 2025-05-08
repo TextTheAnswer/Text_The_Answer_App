@@ -48,10 +48,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // Profile data and loading state
   ProfileData? _profileData;
-
-  // @shizzleclover You replaced the old [UserProfile] data model with [Profile]
-  // and their data structure is not the same
-  Profile? _basicProfile;
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -69,184 +65,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
 
     try {
-      final isAuth = await _profileService.isAuthenticated();
-
-      if (isAuth) {
-        // User is authenticated, fetch basic profile first
-        await _fetchBasicProfile();
-      } else {
-        // User is not authenticated, don't fetch profile
-        setState(() {
-          _isLoading = false;
-          _errorMessage = 'Authentication required. Please login again.';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'An error occurred: ${e.toString()}';
-      });
-    }
-  }
-
-  // Fetch basic profile from /api/auth/profile
-  Future<void> _fetchBasicProfile() async {
-    try {
-      final response = await _profileService.getProfile();
-
-      if (kDebugMode) {
-        print(
-          'ProfileScreen: Basic profile fetch response - ${response.success}',
-        );
-        print('ProfileScreen: Response message - "${response.message}"');
-        print(
-          'ProfileScreen: Profile data available - ${response.profile != null}',
-        );
-        if (response.profile != null) {
-          print('ProfileScreen: Profile ID - ${response.profile?.id}');
-          print('ProfileScreen: Profile Bio - ${response.profile?.bio}');
-          print(
-            'ProfileScreen: Profile ImageUrl - ${response.profile?.imageUrl}',
-          );
-        }
-      }
-
-      if (response.success && response.profile != null) {
-        // Store the basic profile
-        _basicProfile = response.profile;
-
-        if (kDebugMode) {
-          print('ProfileScreen: Basic profile stored successfully');
-          print('ProfileScreen: Stored profile ID - ${_basicProfile?.id}');
-        }
-
-        // Fetch the full profile after getting basic profile
-        await _fetchUserProfile();
-      } else {
-        if (kDebugMode) {
-          print('ProfileScreen: Failed to get profile data');
-          print('ProfileScreen: Success flag - ${response.success}');
-          print('ProfileScreen: Error message - "${response.message}"');
-        }
-
-        setState(() {
-          _isLoading = false;
-          _basicProfile = null;
-
-          if (response.message.toLowerCase().contains('not found')) {
-            _errorMessage = 'Profile not found. Please create your profile.';
-          } else if (response.message.toLowerCase().contains('auth')) {
-            _errorMessage = 'Authentication required. Please login again.';
-          } else if (response.message.toLowerCase().contains(
-            'no profile data',
-          )) {
-            _errorMessage =
-                'No profile data was returned from the server. Please try again or create your profile.';
-          } else {
-            _errorMessage = response.message;
-          }
-
-          if (kDebugMode) {
-            print('ProfileScreen: Error message set to - "${_errorMessage}"');
-          }
-        });
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('ProfileScreen: Exception in _fetchBasicProfile - $e');
-      }
-
-      setState(() {
-        _isLoading = false;
-        _basicProfile = null;
-        _errorMessage =
-            'An error occurred while fetching profile: ${e.toString()}';
-      });
-    }
-  }
-
-  // Fetch full profile
-  Future<void> _fetchUserProfile() async {
-    try {
+      // Call the getFullProfile method directly
       final response = await _profileService.getFullProfile();
 
       if (kDebugMode) {
-        print(
-          'ProfileScreen: Full profile fetch response - ${response.success}',
-        );
-        print('ProfileScreen: Full profile message - "${response.message}"');
-        print(
-          'ProfileScreen: Full profile data available - ${response.profile != null}',
-        );
-        if (response.profile != null) {
-          print(
-            'ProfileScreen: Full profile user ID - ${response.profile?.id}',
-          );
-          print('ProfileScreen: Full profile name - ${response.profile?.name}');
-          print(
-            'ProfileScreen: Full profile email - ${response.profile?.email}',
-          );
-          print(
-            'ProfileScreen: Full profile has profile data - ${response.profile?.profile != null}',
-          );
-        }
+        print('ProfileScreen: Full profile fetch response - ${response.success}');
+        print('ProfileScreen: Response message - "${response.message}"');
+        print('ProfileScreen: Profile data available - ${response.profile != null}');
       }
 
       setState(() {
         _isLoading = false;
+        
         if (response.success && response.profile != null) {
           _profileData = response.profile;
           _errorMessage = null;
-
+          
           if (kDebugMode) {
-            print('ProfileScreen: Full profile stored successfully');
-          }
-        } else if (response.message?.toLowerCase().contains('no profile') ??
-            false) {
-          // User is authenticated but doesn't have a full profile
-          _profileData = null;
-          if (_basicProfile == null) {
-            _errorMessage = 'Profile not found. Please create your profile.';
-            if (kDebugMode) {
-              print('ProfileScreen: No basic profile available, showing error');
-            }
-          } else {
-            _errorMessage = null; // Use basic profile as fallback
-            if (kDebugMode) {
-              print('ProfileScreen: Using basic profile as fallback');
-            }
+            print('ProfileScreen: Profile loaded successfully');
+            print('ProfileScreen: User: ${_profileData?.name}');
+            print('ProfileScreen: Email: ${_profileData?.email}');
+            print('ProfileScreen: Achievements: ${_profileData?.achievements?.length ?? 0}');
           }
         } else {
-          _errorMessage = response.message ?? 'Failed to load complete profile';
+          _profileData = null;
+          _errorMessage = response.message ?? 'Failed to load profile';
+          
           if (kDebugMode) {
-            print(
-              'ProfileScreen: Error getting full profile - "$_errorMessage"',
-            );
-            print(
-              'ProfileScreen: Having basic profile as fallback - ${_basicProfile != null}',
-            );
+            print('ProfileScreen: Failed to load profile: $_errorMessage');
           }
         }
       });
     } catch (e) {
       if (kDebugMode) {
-        print('ProfileScreen: Exception in _fetchUserProfile - $e');
+        print('ProfileScreen: Exception in _fetchProfileData - $e');
       }
 
       setState(() {
         _isLoading = false;
-        if (_basicProfile == null) {
-          _errorMessage = 'An error occurred: ${e.toString()}';
-          if (kDebugMode) {
-            print('ProfileScreen: No basic profile to fall back on');
-          }
-        } else {
-          _errorMessage =
-              'Failed to load complete profile. Showing basic information.';
-          if (kDebugMode) {
-            print('ProfileScreen: Using basic profile despite error');
-          }
-        }
+        _profileData = null;
+        _errorMessage = 'Error loading profile: ${e.toString()}';
       });
     }
   }
@@ -259,10 +117,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: backgroundColor,
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentIndex,
-        onTap: _onTabTapped,
-      ),
+      // bottomNavigationBar: BottomNavBar(
+      //   currentIndex: _currentIndex,
+      //   onTap: _onTabTapped,
+      // ),
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor:
@@ -342,7 +200,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     }
 
-    if (_profileData == null && _basicProfile == null) {
+    if (_profileData == null) {
       return Center(
         child: Text(
           'No profile data available',
@@ -373,7 +231,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 if (_profileData?.education != null &&
                     _profileData!.education!.isStudent)
                   _buildEducationSection(),
-                SizedBox(height: 24.h),
+                if (_profileData?.education != null &&
+                    _profileData!.education!.isStudent)
+                  SizedBox(height: 24.h),
+                if (_profileData?.achievements != null &&
+                    _profileData!.achievements!.isNotEmpty)
+                  _buildAchievementsSection(),
+                if (_profileData?.achievements != null &&
+                    _profileData!.achievements!.isNotEmpty)
+                  SizedBox(height: 24.h),
                 _buildActionButtons(),
               ],
             ),
@@ -433,7 +299,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Expanded(
                           child: Text(
                             _profileData?.name ??
-                                // _basicProfile?.name ??
                                 'User Name',
                             style: FontUtility.interBold(
                               fontSize: 20.sp,
@@ -467,7 +332,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     SizedBox(height: 4.h),
                     Text(
                       _profileData?.email ??
-                          // _basicProfile?.email ??
                           'email@example.com',
                       style: FontUtility.interRegular(
                         fontSize: 14.sp,
@@ -876,6 +740,123 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _buildAchievementsSection() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final cardColor =
+        isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
+
+    // Check if there are any achievements to display
+    if (_profileData?.achievements == null || _profileData!.achievements!.isEmpty) {
+      return SizedBox.shrink(); // Don't show the section if no achievements
+    }
+
+    return Card(
+      color: cardColor,
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.emoji_events, size: 20.sp, color: Colors.amber),
+                SizedBox(width: 8.w),
+                Text(
+                  'Achievements',
+                  style: FontUtility.interSemiBold(
+                    fontSize: 18.sp,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            // List the achievements
+            ...(_profileData?.achievements ?? []).map((achievement) {
+              // Format the unlock date
+              final formattedDate = _formatDate(achievement.unlockedAt);
+              
+              return Padding(
+                padding: EdgeInsets.only(bottom: 12.h),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40.w,
+                      height: 40.w,
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.star,
+                        color: Colors.amber,
+                        size: 24.sp,
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Achievement #${achievement.achievementId}',
+                            style: FontUtility.interSemiBold(
+                              fontSize: 16.sp,
+                              color: isDarkMode ? Colors.white : Colors.black87,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            'Unlocked on: $formattedDate',
+                            style: FontUtility.interRegular(
+                              fontSize: 12.sp,
+                              color: isDarkMode ? Colors.white70 : Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // "New" badge for unviewed achievements
+                    if (!achievement.viewed)
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w,
+                          vertical: 4.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: Text(
+                          'NEW',
+                          style: FontUtility.interBold(
+                            fontSize: 10.sp,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            }).toList(),
+            SizedBox(height: 12.h),
+            // Button to view all achievements
+            CustomButton(
+              text: 'View All Achievements',
+              onPressed: () {
+                // Navigate to a detailed achievements screen (to be implemented)
+              },
+              buttonType: CustomButtonType.outline,
+              icon: Icons.format_list_bulleted,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildStatItem({
     required IconData icon,
     required String value,
@@ -927,10 +908,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder:
-                    //@shizzleclover [EditProfileScreen] takes in a class [UserProfileFull] previous
-                    // The new [ProfileData] doesn't not contain
-                    (_) => EditProfileScreen(profileDetails: _profileData!),
+                builder: (_) => EditProfileScreen(
+                  profileDetails: _profileData!,
+                  onProfileUpdated: () {
+                    // Refresh profile data when returning from edit screen
+                    _fetchProfileData();
+                  },
+                ),
               ),
             );
           },
@@ -1019,14 +1003,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // Format date string for display
-  String _formatDate(dynamic date) {
+  String _formatDate(String isoDateString) {
     try {
-      final parsedDate =
-          date is String ? DateTime.parse(date) : date as DateTime;
-      return '${parsedDate.day}/${parsedDate.month}/${parsedDate.year}';
+      final date = DateTime.parse(isoDateString);
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final dateToCheck = DateTime(date.year, date.month, date.day);
+      
+      // For today's date, show time instead of date
+      if (dateToCheck.isAtSameMomentAs(today)) {
+        return 'Today at ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+      }
+      
+      // For yesterday's date
+      final yesterday = today.subtract(Duration(days: 1));
+      if (dateToCheck.isAtSameMomentAs(yesterday)) {
+        return 'Yesterday at ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+      }
+      
+      // For dates this year, omit the year
+      if (date.year == now.year) {
+        return '${_getMonthName(date.month)} ${date.day}';
+      }
+      
+      // For older dates, include the year
+      return '${_getMonthName(date.month)} ${date.day}, ${date.year}';
     } catch (e) {
-      return date.toString();
+      // In case of parsing error, return the original string
+      print('Error formatting date: $e');
+      return isoDateString;
     }
+  }
+  
+  // Helper to get month name from month number
+  String _getMonthName(int month) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    
+    if (month >= 1 && month <= 12) {
+      return months[month - 1];
+    }
+    
+    return 'Unknown';
   }
 
   // Navigate back to home
