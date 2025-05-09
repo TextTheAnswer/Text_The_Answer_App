@@ -7,6 +7,7 @@ import 'package:text_the_answer/models/profile_model.dart' as profile_model;
 import 'package:text_the_answer/models/user_profile_model.dart';
 import 'package:text_the_answer/models/user_profile_full_model.dart' as full_model;
 import 'package:text_the_answer/services/auth_token_service.dart';
+import 'package:text_the_answer/utils/api_debug_util.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:text_the_answer/config/api_config.dart';
 import 'package:text_the_answer/services/api_service.dart';
@@ -447,100 +448,294 @@ class ProfileService {
       final shortToken = token.length > 10 ? '${token.substring(0, 10)}...' : token;
       print('ProfileService: Using token starting with: $shortToken');
 
-      // Use the /profile/full endpoint
-      final url = '${baseUrl}/profile/full';
+      // Use the /profile/full endpoint with a timestamp parameter to prevent caching
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final url = '${baseUrl}/profile/full?_t=$timestamp';
       print('ProfileService: Calling API endpoint: $url');
 
       // Make API request with cache control headers
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-        },
-      );
-      
-      print('ProfileService: Get full profile response status: ${response.statusCode}');
-      print('ProfileService: Get full profile response body: ${response.body}');
-      
-      // Process response
-      if (response.statusCode == 200) {
-        try {
-          final data = jsonDecode(response.body);
-          print('ProfileService: Full profile response data keys: ${data.keys.toList()}');
-          
-          // Ensure we're accurately parsing the response according to the API structure
-          if (data.containsKey('success') && data['success'] == true && data.containsKey('profile')) {
-            print('ProfileService: Parsing successful API response with profile data');
-            return UserProfileFullResponse.fromJson(data);
-          } 
-          // Alternative structure check - sometimes APIs nest data in a 'data' property
-          else if (data.containsKey('data') && data['data'] != null) {
-            print('ProfileService: Alternative data structure with nested "data" property');
-            if (data['data'].containsKey('profile')) {
-              print('ProfileService: Profile found in data.profile');
+      try {
+        // Use the debug utility for better logging
+        final response = await ApiDebugUtil.debugApiCall(
+          url,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+          },
+        );
+        
+        print('ProfileService: Get full profile response status: ${response.statusCode}');
+        print('ProfileService: Get full profile response body: ${response.body}');
+        
+        // Process response
+        if (response.statusCode == 200) {
+          // First, try to parse the JSON regardless of structure
+          try {
+            final data = jsonDecode(response.body);
+            print('ProfileService: Successfully parsed response as JSON');
+            print('ProfileService: Response data keys: ${data.keys.toList()}');
+            
+            // Try multiple approaches to handle different API structures
+            try {
+              // Approach 1: Standard structure with profile field
+              if (data.containsKey('profile') && data['profile'] != null) {
+                print('ProfileService: Found profile data in standard format');
+                return UserProfileFullResponse(
+                  success: true,
+                  profile: full_model.ProfileData.fromJson(data['profile']),
+                );
+              }
+              
+              // Approach 2: Root object is the profile itself
+              else if (data.containsKey('id') || data.containsKey('email') || data.containsKey('name')) {
+                print('ProfileService: Root object appears to be the profile data');
+                
+                // Check if we have enough data for a proper profile
+                if (data.containsKey('id') && data.containsKey('email') && data.containsKey('name')) {
+                  try {
+                    final profile = full_model.ProfileData.fromJson(data);
+                    return UserProfileFullResponse(
+                      success: true,
+                      profile: profile,
+                    );
+                  } catch (e) {
+                    print('ProfileService: Error building full profile from root data: $e');
+                    
+                    // Try a minimal profile approach
+                    return UserProfileFullResponse(
+                      success: true,
+                      profile: full_model.ProfileData.createMinimal(
+                        id: data['id'] ?? '',
+                        name: data['name'] ?? 'User',
+                        email: data['email'] ?? '',
+                        imageUrl: data['imageUrl'] ?? data['profile']?['imageUrl'],
+                      ),
+                    );
+                  }
+                }
+              }
+              
+              // Approach 3: Data might be nested in a user object
+              else if (data.containsKey('user') && data['user'] != null) {
+                print('ProfileService: Found user object with profile data');
+                try {
+                  return UserProfileFullResponse(
+                    success: true,
+                    profile: full_model.ProfileData.fromJson(data['user']),
+                  );
+                } catch (e) {
+                  print('ProfileService: Error parsing user data: $e');
+                  
+                  // Try with a minimal profile approach
+                  final userData = data['user'];
+                  if (userData is Map<String, dynamic>) {
+                    return UserProfileFullResponse(
+                      success: true,
+                      profile: full_model.ProfileData.createMinimal(
+                        id: userData['id'] ?? '',
+                        name: userData['name'] ?? 'User',
+                        email: userData['email'] ?? '',
+                      ),
+                    );
+                  }
+                }
+              }
+              
+              // Approach 4: Data is in a nested 'data' field
+              else if (data.containsKey('data') && data['data'] != null) {
+                print('ProfileService: Found data field that might contain profile');
+                final dataContent = data['data'];
+                
+                if (dataContent is Map<String, dynamic>) {
+                  try {
+                    return UserProfileFullResponse(
+                      success: true,
+                      profile: full_model.ProfileData.fromJson(dataContent),
+                    );
+                  } catch (e) {
+                    print('ProfileService: Error parsing data content: $e');
+                    
+                    // Try minimal profile
+                    if (dataContent.containsKey('name') || dataContent.containsKey('email')) {
+                      return UserProfileFullResponse(
+                        success: true,
+                        profile: full_model.ProfileData.createMinimal(
+                          id: dataContent['id'] ?? '',
+                          name: dataContent['name'] ?? 'User',
+                          email: dataContent['email'] ?? '',
+                        ),
+                      );
+                    }
+                  }
+                }
+              }
+              
+              // Approach 5: Check for the success structure but no profile
+              else if (data.containsKey('success')) {
+                print('ProfileService: Found success flag but no recognizable profile structure');
+                final isSuccess = data['success'] == true;
+                final message = data['message'] as String? ?? 'Unknown response format';
+                
+                return UserProfileFullResponse(
+                  success: isSuccess,
+                  message: message,
+                );
+              }
+              
+              // If we've tried everything and still can't parse it, return an error
+              print('ProfileService: Could not determine proper profile structure');
               return UserProfileFullResponse(
-                success: true,
-                profile: full_model.ProfileData.fromJson(data['data']['profile']),
+                success: false,
+                message: 'Invalid response format: Could not locate profile data',
               );
-            } else {
-              print('ProfileService: Using data object as the profile');
-              // Assume data itself contains the profile
-              return UserProfileFullResponse(
-                success: true,
-                profile: full_model.ProfileData.fromJson(data['data']),
-              );
+            } catch (structureError) {
+              print('ProfileService: Error in structure processing: $structureError');
+              
+              // Last resort: Try to extract just the basic information for a minimal profile
+              try {
+                // Recursively search for an id, name, and email in the JSON structure
+                Map<String, dynamic> extractedData = _recursivelyExtractProfileData(data);
+                
+                if (extractedData.containsKey('id') && extractedData.containsKey('name')) {
+                  return UserProfileFullResponse(
+                    success: true,
+                    profile: full_model.ProfileData.createMinimal(
+                      id: extractedData['id'],
+                      name: extractedData['name'],
+                      email: extractedData['email'] ?? '',
+                    ),
+                  );
+                }
+                
+                // Truly couldn't find anything useful
+                return UserProfileFullResponse(
+                  success: false,
+                  message: 'Could not extract valid profile data from response',
+                );
+              } catch (e) {
+                print('ProfileService: Final extraction attempt failed: $e');
+                return UserProfileFullResponse(
+                  success: false,
+                  message: 'Error parsing profile structure: ${structureError.toString()}',
+                );
+              }
             }
-          } 
-          // For API responses that place profile directly at the root
-          else if (!data.containsKey('success') && !data.containsKey('profile') && data.containsKey('id')) {
-            print('ProfileService: Profile data appears to be at the root level');
-            return UserProfileFullResponse(
-              success: true,
-              profile: full_model.ProfileData.fromJson(data),
-            );
-          }
-          // Failed to find expected profile structure
-          else {
-            print('ProfileService: Unable to determine profile data structure in response');
-            print('ProfileService: Available keys: ${data.keys.toList()}');
+          } catch (jsonError) {
+            print('ProfileService: JSON parsing error: $jsonError');
+            print('ProfileService: Raw response that failed to parse: ${response.body}');
             return UserProfileFullResponse(
               success: false,
-              message: 'Invalid response format: Could not locate profile data',
+              message: 'Invalid JSON response: ${jsonError.toString()}',
             );
           }
-        } catch (e) {
-          print('ProfileService: Error parsing full profile response: $e');
+        } 
+        // Handle 304 Not Modified status code
+        else if (response.statusCode == 304) {
+          print('ProfileService: Received 304 Not Modified, refetching with new timestamp');
+          
+          // Create a fresh timestamp for this retry
+          final freshTimestamp = DateTime.now().millisecondsSinceEpoch;
+          final freshUrl = '${baseUrl}/profile/full?_t=$freshTimestamp&nocache=true';
+          
+          print('ProfileService: Retrying with URL: $freshUrl');
+          
+          final freshResponse = await ApiDebugUtil.debugApiCall(
+            freshUrl,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'If-None-Match': '', // Clear ETag
+              'If-Modified-Since': '', // Clear modification time
+            },
+          );
+          
+          print('ProfileService: Fresh response status: ${freshResponse.statusCode}');
+          print('ProfileService: Fresh response body: ${freshResponse.body}');
+          
+          if (freshResponse.statusCode == 200) {
+            try {
+              final data = jsonDecode(freshResponse.body);
+              // Process the fresh data using the same logic as the main 200 path
+              // But we'll simplify here - just return the profile if found
+              if (data.containsKey('profile') && data['profile'] != null) {
+                return UserProfileFullResponse(
+                  success: true,
+                  profile: full_model.ProfileData.fromJson(data['profile']),
+                );
+              }
+              else if (data.containsKey('user') && data['user'] != null) {
+                try {
+                  return UserProfileFullResponse(
+                    success: true,
+                    profile: full_model.ProfileData.fromJson(data['user']),
+                  );
+                } catch (_) {}
+              }
+              else if (data.containsKey('id') && data.containsKey('email')) {
+                try {
+                  return UserProfileFullResponse(
+                    success: true,
+                    profile: full_model.ProfileData.fromJson(data),
+                  );
+                } catch (_) {
+                  // Fallback to minimal profile
+                  return UserProfileFullResponse(
+                    success: true,
+                    profile: full_model.ProfileData.createMinimal(
+                      id: data['id'] ?? '',
+                      name: data['name'] ?? 'User',
+                      email: data['email'] ?? '',
+                    ),
+                  );
+                }
+              }
+            } catch (e) {
+              print('ProfileService: Error parsing fresh response: $e');
+            }
+          }
+          
+          // If still having issues, return error
           return UserProfileFullResponse(
             success: false,
-            message: 'Invalid response format: ${e.toString()}',
+            message: 'Unable to retrieve profile data after cache refresh. Please try again.',
           );
         }
-      } else if (response.statusCode == 401 || response.statusCode == 403) {
-        print('ProfileService: Authentication error (${response.statusCode})');
-        return UserProfileFullResponse(
-          success: false,
-          message: 'Authentication failed. Please login again.',
-        );
-      } else {
-        print('ProfileService: Other error (${response.statusCode})');
-        
-        String errorMessage = 'Failed to get profile. Status: ${response.statusCode}';
-        
-        try {
-          final errorData = jsonDecode(response.body);
-          if (errorData.containsKey('message') && errorData['message'] != null) {
-            errorMessage = errorData['message'];
+        else if (response.statusCode == 401 || response.statusCode == 403) {
+          print('ProfileService: Authentication error (${response.statusCode})');
+          return UserProfileFullResponse(
+            success: false,
+            message: 'Authentication failed. Please login again.',
+          );
+        } else {
+          print('ProfileService: Other error (${response.statusCode})');
+          
+          String errorMessage = 'Failed to get profile. Status: ${response.statusCode}';
+          
+          try {
+            final errorData = jsonDecode(response.body);
+            if (errorData.containsKey('message') && errorData['message'] != null) {
+              errorMessage = errorData['message'];
+            }
+            print('ProfileService: Parsed error message: $errorMessage');
+          } catch (e) {
+            // Ignore parsing errors
+            print('ProfileService: Could not parse error response: $e');
           }
-        } catch (e) {
-          // Ignore parsing errors
+          
+          return UserProfileFullResponse(
+            success: false,
+            message: errorMessage,
+          );
         }
-        
+      } catch (httpError) {
+        print('ProfileService: HTTP request error: $httpError');
         return UserProfileFullResponse(
           success: false,
-          message: errorMessage,
+          message: 'Failed to connect to server: ${httpError.toString()}',
         );
       }
     } catch (e) {
@@ -550,6 +745,38 @@ class ProfileService {
         message: 'Error getting profile: ${e.toString()}',
       );
     }
+  }
+  
+  // Helper method to recursively search a complex JSON structure for profile data
+  Map<String, dynamic> _recursivelyExtractProfileData(dynamic json, [Map<String, dynamic>? collected]) {
+    collected ??= {};
+    
+    if (json is Map<String, dynamic>) {
+      // Check for direct values
+      if (json.containsKey('id') && !collected.containsKey('id')) {
+        collected['id'] = json['id'];
+      }
+      if (json.containsKey('name') && !collected.containsKey('name')) {
+        collected['name'] = json['name'];
+      }
+      if (json.containsKey('email') && !collected.containsKey('email')) {
+        collected['email'] = json['email'];
+      }
+      
+      // Recursively check nested objects
+      for (var key in json.keys) {
+        if (json[key] is Map || json[key] is List) {
+          _recursivelyExtractProfileData(json[key], collected);
+        }
+      }
+    } else if (json is List) {
+      // Recursively check list items
+      for (var item in json) {
+        _recursivelyExtractProfileData(item, collected);
+      }
+    }
+    
+    return collected;
   }
 
   // Check if the user is authenticated

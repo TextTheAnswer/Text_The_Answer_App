@@ -64,6 +64,38 @@ class ProfileData {
           : null,
     );
   }
+  
+  // Static factory method to create a minimal profile with basic data
+  static ProfileData createMinimal({
+    required String id,
+    required String name, 
+    required String email,
+    String? imageUrl,
+  }) {
+    return ProfileData(
+      id: id,
+      name: name,
+      email: email,
+      profile: imageUrl != null ? ProfileDetails(imageUrl: imageUrl) : null,
+      subscription: SubscriptionData(
+        status: 'free',
+        cancelAtPeriodEnd: false,
+      ),
+      stats: StatsData(
+        streak: 0,
+        totalCorrect: 0,
+        totalAnswered: 0,
+        accuracy: '0%',
+      ),
+      dailyQuiz: DailyQuizData(
+        questionsAnswered: 0,
+        correctAnswers: 0,
+        score: 0,
+      ),
+      isPremium: false,
+      isEducation: false,
+    );
+  }
 }
 
 class ProfileDetails {

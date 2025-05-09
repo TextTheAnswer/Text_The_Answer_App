@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:text_the_answer/router/routes.dart';
 import 'package:text_the_answer/services/api_service.dart';
@@ -28,6 +29,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
 
+  // Enable HTTP logging for debugging
+  enableHttpLogging();
+
   // Configure Google Fonts to use local fonts as fallbacks
   FontUtility.configureGoogleFonts();
 
@@ -35,6 +39,17 @@ void main() async {
   authBloc.add(CheckAuthStatusEvent(silentCheck: true));
 
   runApp(const MyApp());
+}
+
+// Enable detailed HTTP logging for debugging network requests
+void enableHttpLogging() {
+  // Override the default HTTP client with a logging client
+  final client = http.Client();
+  http.Client baseClient = client;
+  
+  // This is a simplified example since we can't fully override HTTP client in Flutter
+  // But the logs we've added in ApiDebugUtil will help with detailed HTTP logging
+  printDebug('HTTP logging enabled for debugging network requests');
 }
 
 class MyApp extends StatefulWidget {

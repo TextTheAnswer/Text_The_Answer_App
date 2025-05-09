@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
+import 'package:text_the_answer/screens/profile/profile_debug_screen.dart';
 import 'package:text_the_answer/screens/profile/widgets/profile_card.dart';
 import 'package:text_the_answer/screens/profile/widgets/profile_image.dart';
 import 'package:text_the_answer/screens/profile/widgets/profile_stats.dart';
@@ -159,9 +160,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: _fetchProfileData,
-        child: _buildProfileBody(),
+      body: Stack(
+        children: [
+          RefreshIndicator(
+            onRefresh: _fetchProfileData,
+            child: _buildProfileBody(),
+          ),
+          // Hidden debug button in the corner that appears on long press
+          if (kDebugMode)
+            Positioned(
+              bottom: 20,
+              right: 20,
+              child: GestureDetector(
+                onLongPress: () {
+                  Navigator.push(
+                    context, 
+                    MaterialPageRoute(builder: (_) => ProfileDebugScreen()),
+                  );
+                },
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -195,6 +222,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
               bgColor: AppColors.primary,
               icon: Icons.refresh,
             ),
+            SizedBox(height: 12.h),
+            // Add debug button when there's an error
+            if (kDebugMode) // Only show in debug mode
+              CustomButton(
+                text: 'Debug API',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ProfileDebugScreen(),
+                    ),
+                  );
+                },
+                bgColor: Colors.purple,
+                icon: Icons.bug_report,
+              ),
           ],
         ),
       );
