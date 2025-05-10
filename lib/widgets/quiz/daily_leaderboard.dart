@@ -9,6 +9,7 @@ class DailyLeaderboardWidget extends StatefulWidget {
   final Map<String, dynamic>? winner;
   final Function refreshLeaderboard;
   final DateTime lastUpdated;
+  final bool showPremiumBadge;
 
   const DailyLeaderboardWidget({
     super.key,
@@ -19,6 +20,7 @@ class DailyLeaderboardWidget extends StatefulWidget {
     this.winner,
     required this.refreshLeaderboard,
     required this.lastUpdated,
+    this.showPremiumBadge = true,
   });
 
   @override
@@ -185,9 +187,32 @@ class _DailyLeaderboardWidgetState extends State<DailyLeaderboardWidget> with Si
                     fontSize: 14,
                   ),
                 ),
+                if (widget.winner!['totalTime'] != null)
+                  Text(
+                    'Time: ${_formatTime(widget.winner!['totalTime'])}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
               ],
             ),
           ),
+          if (widget.showPremiumBadge)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.amber,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'PREMIUM',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -330,13 +355,21 @@ class _DailyLeaderboardWidgetState extends State<DailyLeaderboardWidget> with Si
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '${entry['score']} points',
+                  '${entry['score']} pts',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                     color: isCurrentUser ? Theme.of(context).primaryColor : null,
                   ),
                 ),
+                if (entry['totalTime'] != null)
+                  Text(
+                    _formatTime(entry['totalTime']),
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 12,
+                    ),
+                  ),
                 if (entry['isPerfectScore'] == true)
                   Row(
                     children: [
@@ -355,6 +388,23 @@ class _DailyLeaderboardWidgetState extends State<DailyLeaderboardWidget> with Si
                         ),
                       ),
                     ],
+                  ),
+                if (rank == 1 && widget.showPremiumBadge)
+                  Container(
+                    margin: const EdgeInsets.only(top: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.amber,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text(
+                      'PREMIUM',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 9,
+                      ),
+                    ),
                   ),
               ],
             ),
@@ -482,5 +532,22 @@ class _DailyLeaderboardWidgetState extends State<DailyLeaderboardWidget> with Si
         ],
       ),
     );
+  }
+
+  // Helper method to format time in seconds
+  String _formatTime(dynamic totalTime) {
+    // Handle different types of time inputs
+    int timeInMs = 0;
+    if (totalTime is int) {
+      timeInMs = totalTime;
+    } else if (totalTime is String) {
+      timeInMs = int.tryParse(totalTime) ?? 0;
+    }
+    
+    if (timeInMs == 0) return '';
+    
+    // Convert to seconds with 1 decimal place
+    final seconds = (timeInMs / 1000).toStringAsFixed(1);
+    return '$seconds sec';
   }
 } 

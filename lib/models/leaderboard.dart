@@ -1,22 +1,25 @@
 class LeaderboardEntry {
-  final String userId;
+  final String id;
   final String name;
   final int score;
-  final int rank;
+  final bool isUser;
+  final int totalTime; // Time in milliseconds
 
   LeaderboardEntry({
-    required this.userId,
+    required this.id,
     required this.name,
     required this.score,
-    required this.rank,
+    this.isUser = false,
+    this.totalTime = 0,
   });
 
   factory LeaderboardEntry.fromJson(Map<String, dynamic> json) {
     return LeaderboardEntry(
-      userId: json['userId'],
-      name: json['name'],
-      score: json['score'],
-      rank: json['rank'],
+      id: json['id'] ?? json['userId'] ?? '',
+      name: json['name'] ?? 'Unknown User',
+      score: json['score'] ?? 0,
+      isUser: json['isUser'] ?? false,
+      totalTime: json['totalTime'] ?? json['completionTime'] ?? 0,
     );
   }
 }

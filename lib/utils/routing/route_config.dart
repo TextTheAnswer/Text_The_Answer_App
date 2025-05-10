@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:text_the_answer/blocs/auth/auth_bloc.dart';
+import 'package:text_the_answer/blocs/auth/auth_state.dart';
+import 'package:text_the_answer/main.dart';
 import 'package:text_the_answer/router/routes.dart';
 import 'package:text_the_answer/screens/auth/forgot_password_screen.dart';
 import 'package:text_the_answer/screens/auth/login_screen.dart';
@@ -14,14 +17,15 @@ import 'package:text_the_answer/screens/game/private_lobby_screen.dart';
 import 'package:text_the_answer/screens/game/public_lobby_screen.dart';
 import 'package:text_the_answer/screens/home/new_home_screen.dart';
 import 'package:text_the_answer/screens/main_app_screen.dart';
-import 'package:text_the_answer/screens/profile/profile_creation_screen.dart';
-import 'package:text_the_answer/screens/profile/profile_screen.dart';
+import 'package:text_the_answer/screens/placeholder_profile_screen.dart';
 import 'package:text_the_answer/screens/settings/about_screen.dart';
 import 'package:text_the_answer/screens/settings/help_center_screen.dart';
 import 'package:text_the_answer/screens/settings/music_effect_screen.dart';
 import 'package:text_the_answer/screens/settings/notification_screen.dart';
 import 'package:text_the_answer/screens/settings/security_screen.dart';
 import 'package:text_the_answer/screens/settings/settings_screen.dart';
+import 'package:text_the_answer/screens/profile/profile_screen.dart';
+import 'package:text_the_answer/utils/logger/debug_print.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(
   debugLabel: 'root',
@@ -32,7 +36,48 @@ final GlobalKey<NavigatorState> _sectionNavigatorKey =
 final GoRouter router = GoRouter(
   navigatorKey: _rootNavigatorKey,
   debugLogDiagnostics: true,
-  initialLocation: AppRoutePath.home,
+
+  initialLocation: AppRoutePath.splash,
+
+  // Redirect based on authentication state
+  redirect: (BuildContext context, GoRouterState state) {
+    // Get the current auth state
+    final isAuthenticated = authBloc.state is AuthAuthenticated;
+    printDebug(
+      'Route redirect check - Auth state: ${authBloc.state.runtimeType}',
+    );
+
+    // Don't redirect on these routes regardless of auth state
+    final noRedirectRoutes = [
+      AppRoutePath.splash,
+      AppRoutePath.onboarding,
+      AppRoutePath.login,
+      AppRoutePath.signup,
+      AppRoutePath.forgotPassword,
+      AppRoutePath.resetPassword,
+    ];
+
+    // Check if current path is a no-redirect route
+    final isNoRedirectRoute = noRedirectRoutes.any(
+      (route) => state.matchedLocation.startsWith(route),
+    );
+
+    // If on a login/registration route but already authenticated, go to home
+    if (isNoRedirectRoute &&
+        isAuthenticated &&
+        state.matchedLocation != AppRoutePath.splash) {
+      return AppRoutePath.home;
+    }
+
+    // If on a protected route but not authenticated, go to login
+    if (!isNoRedirectRoute && !isAuthenticated) {
+      return AppRoutePath.login;
+    }
+
+    // No redirection needed
+    return null;
+  },
+
   routes: <RouteBase>[
     // -- Splash
     GoRoute(
@@ -92,14 +137,14 @@ final GoRouter router = GoRouter(
       },
     ),
 
-    // -- Profile Create
-    GoRoute(
-      name: AppRouteName.profileCreate,
-      path: AppRoutePath.profileCreate,
-      builder: (context, state) {
-        return ProfileCreationScreen();
-      },
-    ),
+    // // -- Profile Create
+    // GoRoute(
+    //   name: AppRouteName.profileCreate,
+    //   path: AppRoutePath.profileCreate,
+    //   builder: (context, state) {
+    //     return ProfileCreationScreen();
+    //   },
+    // ),
 
     // -- Private Lobby
     GoRoute(
@@ -124,9 +169,6 @@ final GoRouter router = GoRouter(
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) => const SettingsScreen(),
       routes: <RouteBase>[
-        // -- Edit Profile Screen
-        // -- TODO
-
         // --Notification
         GoRoute(
           name: AppRouteName.notification,

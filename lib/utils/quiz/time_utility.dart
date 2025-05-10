@@ -2,37 +2,38 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class QuizTimeUtility {
-  // Daily quiz event times in UTC (9 AM, 3 PM, 9 PM)
-  static const List<int> eventHoursUTC = [9, 15, 21];
+  // Daily quiz event time in UTC (9 AM only)
+  static const int eventHourUTC = 9;
   
   // Get the next event time in user's local timezone
   static DateTime getNextEventTime() {
     final now = DateTime.now().toUtc();
     final today = DateTime.utc(now.year, now.month, now.day);
     
-    // Find the next event today or tomorrow
-    for (var hour in eventHoursUTC) {
-      final eventTime = DateTime.utc(today.year, today.month, today.day, hour);
-      
-      if (eventTime.isAfter(now)) {
-        // Convert to local time
-        return eventTime.toLocal();
-      }
-    }
+    // Check if today's event has passed
+    final todayEventTime = DateTime.utc(today.year, today.month, today.day, eventHourUTC);
     
-    // If all events today have passed, get the first event tomorrow
-    final tomorrow = today.add(const Duration(days: 1));
-    return DateTime.utc(tomorrow.year, tomorrow.month, tomorrow.day, eventHoursUTC[0]).toLocal();
+    if (todayEventTime.isAfter(now)) {
+      // Today's event is still upcoming
+      return todayEventTime.toLocal();
+    } else {
+      // Today's event has passed, get tomorrow's event
+      final tomorrow = today.add(const Duration(days: 1));
+      return DateTime.utc(tomorrow.year, tomorrow.month, tomorrow.day, eventHourUTC).toLocal();
+    }
   }
   
-  // Get all today's events in local time
-  static List<DateTime> getTodayEvents() {
+  // Get today's event in local time
+  static DateTime getTodayEvent() {
     final now = DateTime.now().toUtc();
     final today = DateTime.utc(now.year, now.month, now.day);
     
-    return eventHoursUTC.map((hour) {
-      return DateTime.utc(today.year, today.month, today.day, hour).toLocal();
-    }).toList();
+    return DateTime.utc(today.year, today.month, today.day, eventHourUTC).toLocal();
+  }
+  
+  // Get all upcoming events (for backward compatibility)
+  static List<DateTime> getTodayEvents() {
+    return [getTodayEvent()];
   }
   
   // Format event time for display
@@ -40,64 +41,34 @@ class QuizTimeUtility {
     return DateFormat('h:mm a').format(time);
   }
   
-  // Check if an event is happening now (within a 15-minute window)
+  // Check if an event is happening now (within a 10-minute window)
   static bool isEventHappeningNow() {
     final now = DateTime.now();
-    final eventTimes = getTodayEvents();
+    final eventTime = getTodayEvent();
     
-    for (var eventTime in eventTimes) {
-      // Event is considered "happening now" from exactly the start time to 15 minutes after
-      if (now.isAfter(eventTime) && 
-          now.isBefore(eventTime.add(const Duration(minutes: 15)))) {
-        return true;
-      }
-    }
-    
-    return false;
+    // Event is considered "happening now" from exactly the start time to 10 minutes after
+    return now.isAfter(eventTime) && 
+           now.isBefore(eventTime.add(getTotalQuizDuration()));
   }
   
   // Check if we're in the waiting room period (5 minutes before an event)
   static bool isWaitingRoomTime() {
     final now = DateTime.now();
-    final eventTimes = getTodayEvents();
+    final eventTime = getTodayEvent();
     
-    for (var eventTime in eventTimes) {
-      // Waiting room is 5 minutes before the event
-      if (now.isAfter(eventTime.subtract(const Duration(minutes: 5))) && 
-          now.isBefore(eventTime)) {
-        return true;
-      }
-    }
-    
-    return false;
+    // Waiting room is 5 minutes before the event
+    return now.isAfter(eventTime.subtract(const Duration(minutes: 5))) && 
+           now.isBefore(eventTime);
   }
   
   // Get the current or upcoming event time
   static DateTime getCurrentOrNextEventTime() {
     if (isEventHappeningNow()) {
-      // Find which event is happening now
-      final now = DateTime.now();
-      final eventTimes = getTodayEvents();
-      
-      for (var eventTime in eventTimes) {
-        if (now.isAfter(eventTime) && 
-            now.isBefore(eventTime.add(const Duration(minutes: 15)))) {
-          return eventTime;
-        }
-      }
+      return getTodayEvent();
     }
     
     if (isWaitingRoomTime()) {
-      // Find which event is about to happen
-      final now = DateTime.now();
-      final eventTimes = getTodayEvents();
-      
-      for (var eventTime in eventTimes) {
-        if (now.isAfter(eventTime.subtract(const Duration(minutes: 5))) && 
-            now.isBefore(eventTime)) {
-          return eventTime;
-        }
-      }
+      return getTodayEvent();
     }
     
     // If no event is happening now or about to happen, return the next event
@@ -119,5 +90,17 @@ class QuizTimeUtility {
       'minutes': minutes,
       'seconds': seconds,
     };
+  }
+  
+  // Get total quiz duration (10 minutes)
+  static Duration getTotalQuizDuration() {
+    return const Duration(minutes: 10);
+  }
+  
+  // Format duration to minutes and seconds string (MM:SS)
+  static String formatDuration(Duration duration) {
+    final minutes = duration.inMinutes;
+    final seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
   }
 } 

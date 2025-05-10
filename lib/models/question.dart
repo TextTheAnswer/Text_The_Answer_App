@@ -5,6 +5,7 @@ class Question {
   final List<String> acceptedAnswers;
   final String category;
   final String difficulty;
+  static int totalQuizDuration = 10; // minutes
 
   Question({
     required this.id,
@@ -21,6 +22,11 @@ class Question {
     
     // Log the ID for debugging
     print('Question.fromJson: Extracted ID: $questionId from JSON keys: ${json.keys.join(", ")}');
+    
+    // Check if there's quiz format information in the root json
+    if (json.containsKey('quizFormat') && json['quizFormat'].containsKey('duration')) {
+      Question.totalQuizDuration = json['quizFormat']['duration'] ?? 10;
+    }
     
     return Question(
       id: questionId,

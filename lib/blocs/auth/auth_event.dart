@@ -27,8 +27,9 @@ class SignOutEvent extends AuthEvent {}
 
 class CheckAuthStatusEvent extends AuthEvent {
   final bool silentCheck;
+  final bool priority;
   
-  CheckAuthStatusEvent({this.silentCheck = false});
+  CheckAuthStatusEvent({this.silentCheck = false, this.priority = false});
 }
 
 class RefreshTokenEvent extends AuthEvent {}

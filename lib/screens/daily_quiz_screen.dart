@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:text_the_answer/utils/quiz/time_utility.dart';
 import '../blocs/quiz/quiz_bloc.dart';
 import '../blocs/quiz/quiz_event.dart';
 import '../blocs/quiz/quiz_state.dart';
@@ -8,6 +9,8 @@ import '../models/question.dart';
 import '../widgets/quiz/typing_indicator.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:go_router/go_router.dart';
+import '../router/routes.dart';
 
 class DailyQuizScreen extends StatefulWidget {
   const DailyQuizScreen({super.key});
@@ -17,9 +20,15 @@ class DailyQuizScreen extends StatefulWidget {
 }
 
 class _DailyQuizScreenState extends State<DailyQuizScreen> {
-  // Timer for the countdown
+  // Timer for the question countdown
   Timer? _timer;
-  int _secondsRemaining = 15; // 15 seconds to answer
+  double _secondsRemaining = 15.0; // 15 seconds to answer
+
+  // Timer for total quiz duration (10 minutes)
+  Timer? _totalQuizTimer;
+  Duration _totalTimeRemaining = QuizTimeUtility.getTotalQuizDuration();
+  DateTime? _quizStartTime;
+
   late TextEditingController _answerController;
 
   // For bulk submission
@@ -40,6 +49,7 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
   @override
   void dispose() {
     _stopTimer();
+    _stopTotalQuizTimer();
     _answerController.dispose();
     super.dispose();
   }
@@ -49,17 +59,82 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
     prefs = await SharedPreferences.getInstance();
   }
 
+  void _startTotalQuizTimer() {
+    _stopTotalQuizTimer();
+
+    _totalTimeRemaining = QuizTimeUtility.getTotalQuizDuration();
+    _quizStartTime = DateTime.now();
+
+    // Use a 100ms interval for more precise timing
+    _totalQuizTimer = Timer.periodic(const Duration(milliseconds: 100), (
+      timer,
+    ) {
+      setState(() {
+        // Calculate the remaining time more precisely
+        final elapsed = DateTime.now().difference(_quizStartTime!);
+        _totalTimeRemaining = QuizTimeUtility.getTotalQuizDuration() - elapsed;
+
+        if (_totalTimeRemaining.inMilliseconds <= 0) {
+          // Time's up - submit all answers
+          _submitBulkAnswers();
+          timer.cancel();
+        }
+      });
+    });
+  }
+
+  void _stopTotalQuizTimer() {
+    _totalQuizTimer?.cancel();
+    _totalQuizTimer = null;
+  }
+
+  void _handleTotalQuizTimeExpired() {
+    final quizState = context.read<QuizBloc>().state;
+    if (quizState is QuizLoaded) {
+      // Calculate total elapsed time in milliseconds
+      final elapsedMilliseconds =
+          DateTime.now().difference(_quizStartTime!).inMilliseconds;
+
+      // Auto-submit current answers and any remaining questions with empty answers
+      if (_bulkSubmissionMode) {
+        // Submit only collected answers
+        if (_collectedAnswers.isNotEmpty) {
+          context.read<QuizBloc>().add(
+            SubmitQuizAnswersBulk(answers: _collectedAnswers),
+          );
+        }
+
+        // Notify about auto-submission
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Time\'s up! Your answers have been automatically submitted.',
+            ),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 5),
+          ),
+        );
+
+        // Add an event to track the total quiz time expiration
+        context.read<QuizBloc>().add(
+          QuizTotalTimeExpired(totalQuizTimeElapsed: elapsedMilliseconds),
+        );
+      }
+    }
+  }
+
   void _startTimer() {
     _stopTimer();
     setState(() {
-      _secondsRemaining = 15;
+      _secondsRemaining = 15.0; // Change to double for decimal seconds
       _startTime = DateTime.now().millisecondsSinceEpoch; // Record start time
     });
 
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    // Use a 100ms interval for more precise timing
+    _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       setState(() {
-        if (_secondsRemaining > 0) {
-          _secondsRemaining--;
+        if (_secondsRemaining > 0.1) {
+          _secondsRemaining -= 0.1; // Decrease by 0.1 second each interval
         } else {
           // Time's up - submit empty answer
           _handleAnswerSubmission("");
@@ -125,6 +200,9 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
               questionsAnswered: quizState.questionsAnswered + 1,
               correctAnswers: quizState.correctAnswers,
               totalPoints: quizState.totalPoints,
+              totalTimeElapsed:
+                  QuizTimeUtility.getTotalQuizDuration() - _totalTimeRemaining,
+              totalTimeRemaining: _totalTimeRemaining,
             ),
           );
 
@@ -137,7 +215,7 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
           SubmitQuizAnswer(
             questionId: currentQuestion.id,
             answer: answer.trim(),
-            timeRemaining: _secondsRemaining,
+            timeRemaining: _secondsRemaining.toInt(),
           ),
         );
       }
@@ -164,6 +242,15 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
     for (var i = 0; i < _collectedAnswers.length; i++) {
       print('Answer $i: ${jsonEncode(_collectedAnswers[i])}');
     }
+
+    // Stop total quiz timer when submitting
+    _stopTotalQuizTimer();
+
+    // Calculate total time taken for the quiz
+    final quizDuration =
+        _quizStartTime != null
+            ? DateTime.now().difference(_quizStartTime!).inMilliseconds
+            : 0;
 
     context.read<QuizBloc>().add(
       SubmitQuizAnswersBulk(answers: _collectedAnswers),
@@ -230,8 +317,11 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
             } else if (state is QuizLoaded &&
                 state.questionsAnswered < state.questions.length &&
                 _timer == null) {
-              // Start timer when quiz is first loaded
+              // Start timers when quiz is first loaded
               _startTimer();
+              if (_totalQuizTimer == null) {
+                _startTotalQuizTimer();
+              }
             }
           },
           builder: (context, state) {
@@ -284,7 +374,7 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
                           'Daily Quiz 🧠',
                           style: Theme.of(context).textTheme.headlineLarge,
                         ),
-                        // Timer display
+                        // Timer display for question
                         Container(
                           padding: EdgeInsets.symmetric(
                             horizontal: 12,
@@ -295,7 +385,7 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Text(
-                            '${_secondsRemaining}s',
+                            _formatQuestionTime(),
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -306,6 +396,9 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
+                    // Total quiz time remaining
+                    _buildTotalQuizTimeRemaining(),
+                    const SizedBox(height: 8),
                     Text(
                       'Questions: ${state.questionsAnswered}/${questions.length}',
                       style: Theme.of(context).textTheme.bodyMedium,
@@ -320,7 +413,7 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
                     if (state.questionsAnswered < questions.length)
                       _buildActiveQuiz(
                         context,
@@ -336,6 +429,8 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
               );
             } else if (state is QuizBulkAnswersSubmitted) {
               return _buildBulkSubmissionResults(context, state);
+            } else if (state is QuizResultsState) {
+              return _buildQuizResultsWithAwards(context, state);
             }
 
             return Center(
@@ -361,6 +456,43 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
                       style: Theme.of(context).textTheme.bodyLarge,
                       textAlign: TextAlign.center,
                     ),
+                    SizedBox(height: 8),
+                    // Note about the 10-minute time limit
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.amber),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Today\'s winner gets 1 month FREE premium!',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Complete quiz with highest score in less time to win.',
+                            style: TextStyle(fontSize: 14),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Total time limit: 10 minutes',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
                     SizedBox(height: 32),
                     ElevatedButton(
                       onPressed: () {
@@ -379,6 +511,126 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
             );
           },
         ),
+      ),
+    );
+  }
+
+  // Add a widget to display total quiz time remaining
+  Widget _buildTotalQuizTimeRemaining() {
+    final minutes = _totalTimeRemaining.inMinutes;
+    final seconds = (_totalTimeRemaining.inSeconds % 60);
+    final milliseconds =
+        (_totalTimeRemaining.inMilliseconds % 1000) ~/
+        10; // Show only tens of milliseconds
+
+    // Format as MM:SS:mm
+    final secondsStr = seconds.toString().padLeft(2, '0');
+    final millisecondsStr = milliseconds.toString().padLeft(2, '0');
+
+    // Determine color based on time remaining
+    Color timerColor;
+    if (minutes < 1) {
+      timerColor = Colors.red;
+    } else if (minutes < 3) {
+      timerColor = Colors.orange;
+    } else {
+      timerColor = Colors.blue;
+    }
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 8),
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: timerColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: timerColor),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.timelapse, size: 16, color: timerColor),
+          SizedBox(width: 4),
+          Text(
+            'Quiz Time: $minutes:$secondsStr:$millisecondsStr',
+            style: TextStyle(fontWeight: FontWeight.bold, color: timerColor),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // New method to build results with premium award information
+  Widget _buildQuizResultsWithAwards(
+    BuildContext context,
+    QuizResultsState state,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          Text(
+            'Quiz Results',
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+          SizedBox(height: 24),
+
+          // Premium award notice if user is the winner
+          if (state.isWinner)
+            Container(
+              margin: EdgeInsets.only(bottom: 24),
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.amber.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.amber, width: 2),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.emoji_events, color: Colors.amber, size: 32),
+                      SizedBox(width: 8),
+                      Text(
+                        'CONGRATULATIONS!',
+                        style: TextStyle(
+                          color: Colors.amber.shade800,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  Text(
+                    'You\'ve won 1 month of FREE premium access!',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Your premium features have been activated.',
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+
+          // Regular results display (use existing methods)
+          // Implementation depends on available data in QuizResultsState
+
+          // Button to return to home
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            icon: Icon(Icons.home),
+            label: Text('Return to Home'),
+            style: ElevatedButton.styleFrom(
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -658,17 +910,35 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
           SizedBox(height: 24),
           _buildAnswerResultsList(context, state.results),
           SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () {
-              // Clear any previous answers when restarting
-              _collectedAnswers.clear();
-              context.read<QuizBloc>().add(FetchDailyQuiz());
-            },
-            icon: Icon(Icons.refresh),
-            label: Text('Try Again'),
-            style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton.icon(
+                onPressed: () {
+                  // Clear any previous answers when restarting
+                  _collectedAnswers.clear();
+                  context.read<QuizBloc>().add(FetchDailyQuiz());
+                },
+                icon: Icon(Icons.refresh),
+                label: Text('Try Again'),
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: () {
+                  // Navigate back to the home page
+                  context.go(AppRoutePath.home);
+                },
+                icon: Icon(Icons.home),
+                label: Text('Back to Home'),
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -907,5 +1177,14 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
     } else {
       return Colors.red;
     }
+  }
+
+  String _formatQuestionTime() {
+    // Convert seconds to seconds:milliseconds format
+    // For simplicity, we'll simulate milliseconds by dividing the second into 10 parts
+    final seconds = _secondsRemaining ~/ 1;
+    final milliseconds =
+        (_secondsRemaining * 100) % 100; // Using 2 decimal places
+    return '$seconds:${milliseconds.toInt().toString().padLeft(2, '0')}';
   }
 }

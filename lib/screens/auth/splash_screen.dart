@@ -37,8 +37,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
     printDebug('SplashScreen: Checking auth status before navigation');
 
-    // Verify auth status silently
-    AuthHelper.verifyAuthentication(silentCheck: true);
+    // Verify auth status with priority flag to make sure it completes
+    AuthHelper.verifyAuthentication(silentCheck: true, priority: true);
 
     // Set a timeout to ensure we navigate even if auth check is delayed
     Future.delayed(const Duration(seconds: 3), () {
@@ -57,17 +57,12 @@ class _SplashScreenState extends State<SplashScreen> {
     );
 
     if (authBloc.state is AuthAuthenticated) {
-      // printDebug('SplashScreen: Navigating to home screen');
-      // Navigator.pushNamedAndRemoveUntil(context, Routes.home, (route) => false);
+      printDebug('SplashScreen: User is authenticated, navigating to home');
       context.go(AppRoutePath.home);
     } else {
-      // printDebug('SplashScreen: Navigating to onboarding screen');
-      // Navigator.pushNamedAndRemoveUntil(
-      //   context,
-      //   Routes.onboard,
-      //   (route) => false,
-      // );
-      context.go(AppRoutePath.onboarding);
+      printDebug('SplashScreen: User is not authenticated, navigating to login');
+      // Navigate to login instead of onboarding for a more direct flow
+      context.go(AppRoutePath.login);
     }
   }
 

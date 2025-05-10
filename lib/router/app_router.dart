@@ -10,7 +10,7 @@ import 'package:text_the_answer/screens/auth/reset_password_screen.dart';
 import 'package:text_the_answer/screens/home/home_screen.dart';
 import 'package:text_the_answer/screens/auth/onboarding_screen.dart';
 import 'package:text_the_answer/screens/auth/splash_screen.dart';
-import 'package:text_the_answer/screens/profile/profile_creation_screen.dart';
+
 import 'package:text_the_answer/screens/profile/profile_screen.dart';
 import 'package:text_the_answer/screens/settings/manage_subscription_screen.dart';
 import 'package:text_the_answer/screens/settings/settings_screen.dart';
@@ -81,8 +81,8 @@ class AppRouter {
               (_) => ResetPasswordScreen(email: email, resetToken: resetToken),
         );
 
-      case Routes.profileCreate:
-        return MaterialPageRoute(builder: (_) => const ProfileCreationScreen());
+      // case Routes.profileCreate:
+      //   return MaterialPageRoute(builder: (_) => const ProfileCreationScreen());
 
       case Routes.manageSubscription:
         return MaterialPageRoute(
@@ -92,8 +92,8 @@ class AppRouter {
       case Routes.settings:
         return MaterialPageRoute(builder: (_) => SettingsScreen());
 
-      case Routes.profile:
-        return MaterialPageRoute(builder: (_) => ProfileScreen());
+      // case Routes.profile:
+      //   return MaterialPageRoute(builder: (_) => ProfileScreen());
 
       case Routes.subscriptionPlans:
         return MaterialPageRoute(

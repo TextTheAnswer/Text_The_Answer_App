@@ -21,3 +21,21 @@ class SubmitQuizAnswersBulk extends QuizEvent {
     required this.answers,
   });
 }
+
+class QuizTotalTimeExpired extends QuizEvent {
+  final int totalQuizTimeElapsed;
+  
+  QuizTotalTimeExpired({
+    required this.totalQuizTimeElapsed,
+  });
+}
+
+class QuizCompleted extends QuizEvent {
+  final List<dynamic> leaderboard;
+  final bool isPremiumAwarded;
+  
+  QuizCompleted({
+    required this.leaderboard,
+    this.isPremiumAwarded = false,
+  });
+}
