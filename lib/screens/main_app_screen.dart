@@ -17,18 +17,23 @@ class MainAppScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final Color primaryColor = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
       key: AppScaffoldKeys.mainScaffoldKey,
       body: navigationShell,
       drawer: AppDrawer(toggleTheme: () {}, isDarkMode: isDarkMode),
       bottomNavigationBar: BottomNavigationBar(
+        selectedItemColor: primaryColor,
+        unselectedItemColor: isDarkMode ? Colors.white : Colors.black,
+        showUnselectedLabels: true,
         items: [
           // -- Home
           BottomNavigationBarItem(
             icon: Icon(IconlyLight.home),
             activeIcon: Icon(IconlyBold.home),
+
             label: 'Home',
           ),
 
@@ -41,9 +46,9 @@ class MainAppScreen extends StatelessWidget {
 
           // -- Game Mode
           BottomNavigationBarItem(
-            icon: Icon(IconlyLight.category),
-            activeIcon: Icon(IconlyBold.category),
-            label: 'GameMode',
+            icon: Icon(IconlyLight.game),
+            activeIcon: Icon(IconlyBold.game),
+            label: 'Join',
           ),
 
           // -- Quiz

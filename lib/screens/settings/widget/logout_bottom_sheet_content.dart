@@ -28,12 +28,12 @@ class LogoutBottomSheetContent extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: Custom3DButton(
-                  backgroundColor: Colors.grey,
+                  backgroundColor: Color(0xFF35383F),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
                   borderRadius: BorderRadius.circular(100),
-                  child: Text('Cancel'),
+                  child: Text('Cancel', style: TextStyle(color: Colors.white)),
                 ),
               ),
             ),
@@ -50,7 +50,7 @@ class LogoutBottomSheetContent extends StatelessWidget {
                     Navigator.pushReplacementNamed(context, Routes.login);
                   },
                   borderRadius: BorderRadius.circular(100),
-                  child: Text('Logout'),
+                  child: Text('Logout', style: TextStyle(color: Colors.white)),
                 ),
               ),
             ),
