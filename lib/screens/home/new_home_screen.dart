@@ -235,30 +235,33 @@ class HomeScreen extends StatelessWidget {
   Widget _buildNextQuizEvent(BuildContext context) {
     // Get the next event time
     final nextEventTime = QuizTimeUtility.getNextEventTime();
-    
+
     return EventCountdownWidget(
       eventTime: nextEventTime,
-      eventTheme: 'Daily Challenge', // This should come from the API in a real implementation
+      eventTheme:
+          'Daily Challenge', // This should come from the API in a real implementation
       onJoinWaitingRoom: () {
         // Navigate to the waiting room
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => Scaffold(
-              appBar: AppBar(title: const Text('Quiz Waiting Room')),
-              body: WaitingRoomWidget(
-                eventTime: nextEventTime,
-                theme: 'Daily Challenge',
-                participantCount: 42, // This should come from the API in a real implementation
-                onEventStart: () {
-                  // Navigate to the daily quiz screen when the event starts
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (context) => DailyQuizScreen(toggleTheme: () {}),
-                    ),
-                  );
-                },
-              ),
-            ),
+            builder:
+                (context) => Scaffold(
+                  appBar: AppBar(title: const Text('Quiz Waiting Room')),
+                  body: WaitingRoomWidget(
+                    eventTime: nextEventTime,
+                    theme: 'Daily Challenge',
+                    participantCount:
+                        42, // This should come from the API in a real implementation
+                    onEventStart: () {
+                      // Navigate to the daily quiz screen when the event starts
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) => DailyQuizScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
           ),
         );
       },

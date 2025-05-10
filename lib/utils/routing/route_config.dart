@@ -13,6 +13,8 @@ import 'package:text_the_answer/screens/auth/reset_password_screen.dart';
 import 'package:text_the_answer/screens/auth/splash_screen.dart';
 import 'package:text_the_answer/screens/daily_quiz_screen.dart';
 import 'package:text_the_answer/screens/game/game_mode_screen.dart';
+import 'package:text_the_answer/screens/game/private_lobby_screen.dart';
+import 'package:text_the_answer/screens/game/public_lobby_screen.dart';
 import 'package:text_the_answer/screens/home/new_home_screen.dart';
 import 'package:text_the_answer/screens/main_app_screen.dart';
 import 'package:text_the_answer/screens/placeholder_profile_screen.dart';
@@ -32,16 +34,19 @@ final GlobalKey<NavigatorState> _sectionNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'sectionNav');
 
 final GoRouter router = GoRouter(
-  debugLogDiagnostics: true,
   navigatorKey: _rootNavigatorKey,
+  debugLogDiagnostics: true,
+
   initialLocation: AppRoutePath.splash,
-  
+
   // Redirect based on authentication state
   redirect: (BuildContext context, GoRouterState state) {
     // Get the current auth state
     final isAuthenticated = authBloc.state is AuthAuthenticated;
-    printDebug('Route redirect check - Auth state: ${authBloc.state.runtimeType}');
-    
+    printDebug(
+      'Route redirect check - Auth state: ${authBloc.state.runtimeType}',
+    );
+
     // Don't redirect on these routes regardless of auth state
     final noRedirectRoutes = [
       AppRoutePath.splash,
@@ -51,100 +56,29 @@ final GoRouter router = GoRouter(
       AppRoutePath.forgotPassword,
       AppRoutePath.resetPassword,
     ];
-    
+
     // Check if current path is a no-redirect route
-    final isNoRedirectRoute = noRedirectRoutes.any((route) => 
-      state.matchedLocation.startsWith(route));
-    
+    final isNoRedirectRoute = noRedirectRoutes.any(
+      (route) => state.matchedLocation.startsWith(route),
+    );
+
     // If on a login/registration route but already authenticated, go to home
-    if (isNoRedirectRoute && isAuthenticated && state.matchedLocation != AppRoutePath.splash) {
+    if (isNoRedirectRoute &&
+        isAuthenticated &&
+        state.matchedLocation != AppRoutePath.splash) {
       return AppRoutePath.home;
     }
-    
+
     // If on a protected route but not authenticated, go to login
     if (!isNoRedirectRoute && !isAuthenticated) {
       return AppRoutePath.login;
     }
-    
+
     // No redirection needed
     return null;
   },
-  
+
   routes: <RouteBase>[
-    // -- Main App Screen
-    StatefulShellRoute.indexedStack(
-      builder: (context, state, navigationShell) {
-        return MainAppScreen(navigationShell: navigationShell);
-      },
-      branches: <StatefulShellBranch>[
-        // -- Home
-        StatefulShellBranch(
-          navigatorKey: _sectionNavigatorKey,
-          routes: <RouteBase>[
-            GoRoute(
-              name: AppRouteName.home,
-              path: AppRoutePath.home,
-              builder: (context, state) {
-                return HomeScreen();
-              },
-            ),
-          ],
-        ),
-
-        // -- Library
-        StatefulShellBranch(
-          routes: <RouteBase>[
-            GoRoute(
-              name: AppRouteName.library,
-              path: AppRoutePath.library,
-              builder: (context, state) {
-                return Scaffold(appBar: AppBar(title: Text('Library')));
-              },
-            ),
-          ],
-        ),
-
-        // -- Game-Mode
-        StatefulShellBranch(
-          routes: <RouteBase>[
-            GoRoute(
-              name: AppRouteName.gameMode,
-              path: AppRoutePath.gameMode,
-              builder: (context, state) {
-                return GameModeScreen(toggleTheme: () {});
-              },
-            ),
-          ],
-        ),
-
-        // -- Quiz
-        StatefulShellBranch(
-          routes: <RouteBase>[
-            GoRoute(
-              name: AppRouteName.quiz,
-              path: AppRoutePath.quiz,
-              builder: (context, state) {
-                return DailyQuizScreen(toggleTheme: () {});
-              },
-            ),
-          ],
-        ),
-
-        // -- Profile
-        StatefulShellBranch(
-          routes: <RouteBase>[
-            GoRoute(
-              name: AppRouteName.profile,
-              path: AppRoutePath.profile,
-              builder: (context, state) {
-                return ProfileScreen();
-              },
-            ),
-          ],
-        ),
-      ],
-    ),
-
     // -- Splash
     GoRoute(
       name: AppRouteName.splash,
@@ -203,10 +137,36 @@ final GoRouter router = GoRouter(
       },
     ),
 
+    // // -- Profile Create
+    // GoRoute(
+    //   name: AppRouteName.profileCreate,
+    //   path: AppRoutePath.profileCreate,
+    //   builder: (context, state) {
+    //     return ProfileCreationScreen();
+    //   },
+    // ),
+
+    // -- Private Lobby
+    GoRoute(
+      path: AppRoutePath.privateLobby,
+      name: AppRouteName.privateLobby,
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => PrivateLobbyScreen(),
+    ),
+
+    // -- Public Lobby
+    GoRoute(
+      path: AppRoutePath.publicLobby,
+      name: AppRouteName.publicLobby,
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => PublicLobbyScreen(),
+    ),
+
     // -- Settings
     GoRoute(
       name: AppRouteName.settings,
       path: AppRoutePath.settings,
+      parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) => const SettingsScreen(),
       routes: <RouteBase>[
         // --Notification
@@ -242,6 +202,80 @@ final GoRouter router = GoRouter(
           name: AppRouteName.about,
           path: AppRoutePath.about,
           builder: (context, state) => AboutScreen(),
+        ),
+      ],
+    ),
+
+    // -- Main App Screen
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, navigationShell) {
+        return MainAppScreen(navigationShell: navigationShell);
+      },
+      branches: <StatefulShellBranch>[
+        // -- Home
+        StatefulShellBranch(
+          navigatorKey: _sectionNavigatorKey,
+          routes: <RouteBase>[
+            GoRoute(
+              name: AppRouteName.home,
+              path: AppRoutePath.home,
+              builder: (context, state) {
+                return HomeScreen();
+              },
+            ),
+          ],
+        ),
+
+        // -- Library
+        StatefulShellBranch(
+          routes: <RouteBase>[
+            GoRoute(
+              name: AppRouteName.library,
+              path: AppRoutePath.library,
+              builder: (context, state) {
+                return Scaffold(appBar: AppBar(title: Text('Library')));
+              },
+            ),
+          ],
+        ),
+
+        // -- Game-Mode
+        StatefulShellBranch(
+          routes: <RouteBase>[
+            GoRoute(
+              name: AppRouteName.gameMode,
+              path: AppRoutePath.gameMode,
+              builder: (context, state) {
+                return GameModeScreen();
+              },
+            ),
+          ],
+        ),
+
+        // -- Quiz
+        StatefulShellBranch(
+          routes: <RouteBase>[
+            GoRoute(
+              name: AppRouteName.quiz,
+              path: AppRoutePath.quiz,
+              builder: (context, state) {
+                return DailyQuizScreen();
+              },
+            ),
+          ],
+        ),
+
+        // -- Profile
+        StatefulShellBranch(
+          routes: <RouteBase>[
+            GoRoute(
+              name: AppRouteName.profile,
+              path: AppRoutePath.profile,
+              builder: (context, state) {
+                return ProfileScreen();
+              },
+            ),
+          ],
         ),
       ],
     ),

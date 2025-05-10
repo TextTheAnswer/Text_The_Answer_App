@@ -1,28 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:text_the_answer/router/routes.dart';
 import '../../blocs/game/game_bloc.dart';
 import '../../blocs/game/game_event.dart';
-import '../../blocs/game/game_state.dart';
-import 'lobby_screen.dart';
 
 class GameModeScreen extends StatefulWidget {
-  final VoidCallback toggleTheme;
-  
-  const GameModeScreen({required this.toggleTheme, super.key});
+  const GameModeScreen({super.key});
 
   @override
   State<GameModeScreen> createState() => _GameModeScreenState();
 }
 
 class _GameModeScreenState extends State<GameModeScreen> {
-  
   @override
   void initState() {
     super.initState();
     // Initialize sockets when entering the game section
     context.read<GameBloc>().add(InitializeSockets());
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,7 +34,7 @@ class _GameModeScreenState extends State<GameModeScreen> {
                 style: Theme.of(context).textTheme.headlineLarge,
               ),
               const SizedBox(height: 40),
-              
+
               // Public game option
               _buildGameModeCard(
                 title: 'Public Game',
@@ -47,22 +44,14 @@ class _GameModeScreenState extends State<GameModeScreen> {
                 onTap: () {
                   // Fetch public lobbies first
                   context.read<GameBloc>().add(FetchPublicLobbies());
-                  
+
                   // Then navigate to the lobby screen
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => LobbyScreen(
-                        isPublic: true,
-                        toggleTheme: widget.toggleTheme,
-                      ),
-                    ),
-                  );
+                  context.pushNamed(AppRouteName.publicLobby);
                 },
               ),
-              
+
               const SizedBox(height: 20),
-              
+
               // Private game option
               _buildGameModeCard(
                 title: 'Private Game',
@@ -70,22 +59,22 @@ class _GameModeScreenState extends State<GameModeScreen> {
                 icon: Icons.lock,
                 color: Colors.green,
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => LobbyScreen(
-                        isPublic: false,
-                        toggleTheme: widget.toggleTheme,
-                      ),
-                    ),
-                  );
+                  context.pushNamed(AppRouteName.privateLobby);
+
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(
+                  //     builder: (_) => PrivateLobbyScreen(),
+                  //      builder: (_) => LobbyScreen(isPublic: false),
+                  //   ),
+                  // );
                 },
               ),
-              
+
               const SizedBox(height: 20),
-              
+
               const Divider(),
-              
+
               const SizedBox(height: 20),
               Text(
                 'How to Play',
@@ -105,7 +94,7 @@ class _GameModeScreenState extends State<GameModeScreen> {
       ),
     );
   }
-  
+
   Widget _buildGameModeCard({
     required String title,
     required String description,
@@ -115,9 +104,7 @@ class _GameModeScreenState extends State<GameModeScreen> {
   }) {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
@@ -141,7 +128,7 @@ class _GameModeScreenState extends State<GameModeScreen> {
                     Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 18, 
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

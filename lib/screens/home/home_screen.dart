@@ -79,9 +79,9 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         return const Center(child: Text('Library'));
       case 2:
-        return GameModeScreen(toggleTheme: widget.toggleTheme);
+        return GameModeScreen();
       case 3:
-        return DailyQuizScreen(toggleTheme: widget.toggleTheme);
+        return DailyQuizScreen();
       // Profile is now a separate page with its own route
       default:
         return _buildHomeTabContent();
@@ -94,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
       Navigator.pushNamed(context, Routes.profile);
       return;
     }
-    
+
     // Otherwise, update the current tab index
     setState(() {
       _currentIndex = index;

@@ -19,6 +19,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.actions,
     this.onPressed,
     this.bottom,
+    this.shouldCenterTitle = false,
   });
 
   final Widget? title;
@@ -27,6 +28,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final List<Widget>? actions;
   final VoidCallback? onPressed;
   final PreferredSizeWidget? bottom;
+  final bool shouldCenterTitle;
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +37,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       child: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.transparent,
-        centerTitle: false,
+        centerTitle: shouldCenterTitle,
         surfaceTintColor: Colors.transparent,
         leading:
             showBackArrow
