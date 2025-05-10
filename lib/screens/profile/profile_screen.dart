@@ -259,10 +259,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: backgroundColor,
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentIndex,
-        onTap: _onTabTapped,
-      ),
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor:
@@ -288,7 +284,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Icons.settings,
               color: isDarkMode ? Colors.white : Colors.black87,
             ),
-            onPressed: _navigateToSettings,
+            onPressed: () => context.push(AppRoutePath.settings),
           ),
           IconButton(
             icon: Icon(
