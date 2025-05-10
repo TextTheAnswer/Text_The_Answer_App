@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:text_the_answer/models/lobby.dart';
+import 'package:text_the_answer/router/routes.dart';
+import 'package:text_the_answer/screens/game/lobby_waiting_screen.dart';
+import 'package:text_the_answer/screens/game/public_lobby_screen.dart';
+import 'package:text_the_answer/screens/game/waiting_lobby_screen.dart';
 import '../../blocs/game/game_bloc.dart';
 import '../../blocs/game/game_event.dart';
 import 'lobby_screen.dart';
@@ -45,12 +51,7 @@ class _GameModeScreenState extends State<GameModeScreen> {
                   context.read<GameBloc>().add(FetchPublicLobbies());
 
                   // Then navigate to the lobby screen
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => LobbyScreen(isPublic: true),
-                    ),
-                  );
+                  context.pushNamed(AppRouteName.publicLobby);
                 },
               ),
 
