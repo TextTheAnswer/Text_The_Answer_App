@@ -53,7 +53,14 @@ class _PublicLobbyScreenState extends State<PublicLobbyScreen>
     return Scaffold(
       backgroundColor: Colors.blue,
       appBar: CustomAppBar(
-        title: Text('Join Game'),
+        title: Text(
+          'Join Game',
+          style: FontUtility.montserrat(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         showBackArrow: false,
         leadingIcon: Icons.close,
         onPressed: context.pop,
