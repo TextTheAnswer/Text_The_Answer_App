@@ -18,6 +18,7 @@ import 'blocs/quiz/quiz_bloc.dart';
 import 'blocs/game/game_bloc.dart';
 import 'blocs/leaderboard/leaderboard_bloc.dart';
 import 'blocs/subscription/subscription_bloc.dart';
+import 'blocs/profile/profile_bloc.dart';
 
 // Create a global key for the navigator to access it from anywhere
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -35,8 +36,8 @@ void main() async {
   // Configure Google Fonts to use local fonts as fallbacks
   FontUtility.configureGoogleFonts();
 
-  // Initialize authentication - with silentCheck to avoid immediate loading state
-  authBloc.add(CheckAuthStatusEvent(silentCheck: true));
+  // Initialize authentication with priority flag to ensure it's checked before any navigation
+  authBloc.add(CheckAuthStatusEvent(silentCheck: true, priority: true));
 
   runApp(const MyApp());
 }
@@ -90,6 +91,7 @@ class _MyAppState extends State<MyApp> {
                 create: (context) => SubscriptionBloc(apiService: _apiService),
               ),
               BlocProvider(create: (_) => ThemeCubit()),
+              BlocProvider(create: (_) => ProfileBloc()),
             ],
             child: BlocBuilder<ThemeCubit, ThemeState>(
               builder: (context, state) {
@@ -112,6 +114,9 @@ class _MyAppState extends State<MyApp> {
                               backgroundColor: Colors.red,
                             ),
                           );
+                        } else if (state is AuthInitial) {
+                          // When auth state changes to initial (logged out), redirect to login
+                          context.goNamed(AppRouteName.login);
                         }
                       },
                       child: child ?? Container(),

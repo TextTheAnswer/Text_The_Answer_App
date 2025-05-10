@@ -10,6 +10,8 @@ import '../widgets/quiz/waiting_room.dart';
 import '../utils/quiz/time_utility.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:go_router/go_router.dart';
+import '../router/routes.dart';
 
 class DailyQuizScreen extends StatefulWidget {
   final VoidCallback toggleTheme;
@@ -23,7 +25,7 @@ class DailyQuizScreen extends StatefulWidget {
 class _DailyQuizScreenState extends State<DailyQuizScreen> {
   // Timer for the question countdown
   Timer? _timer;
-  int _secondsRemaining = 15; // 15 seconds to answer
+  double _secondsRemaining = 15.0; // 15 seconds to answer
   
   // Timer for total quiz duration (10 minutes)
   Timer? _totalQuizTimer;
@@ -62,19 +64,20 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
 
   void _startTotalQuizTimer() {
     _stopTotalQuizTimer();
-    setState(() {
-      _totalTimeRemaining = QuizTimeUtility.getTotalQuizDuration();
-      _quizStartTime = DateTime.now();
-    });
     
-    _totalQuizTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    _totalTimeRemaining = QuizTimeUtility.getTotalQuizDuration();
+    _quizStartTime = DateTime.now();
+    
+    // Use a 100ms interval for more precise timing
+    _totalQuizTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       setState(() {
-        // Decrease remaining time by 1 second
-        if (_totalTimeRemaining.inSeconds > 0) {
-          _totalTimeRemaining = Duration(seconds: _totalTimeRemaining.inSeconds - 1);
-        } else {
-          // Total quiz time has expired - auto-submit all answers
-          _handleTotalQuizTimeExpired();
+        // Calculate the remaining time more precisely
+        final elapsed = DateTime.now().difference(_quizStartTime!);
+        _totalTimeRemaining = QuizTimeUtility.getTotalQuizDuration() - elapsed;
+        
+        if (_totalTimeRemaining.inMilliseconds <= 0) {
+          // Time's up - submit all answers
+          _submitBulkAnswers();
           timer.cancel();
         }
       });
@@ -125,14 +128,15 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
   void _startTimer() {
     _stopTimer();
     setState(() {
-      _secondsRemaining = 15;
+      _secondsRemaining = 15.0; // Change to double for decimal seconds
       _startTime = DateTime.now().millisecondsSinceEpoch; // Record start time
     });
     
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    // Use a 100ms interval for more precise timing
+    _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       setState(() {
-        if (_secondsRemaining > 0) {
-          _secondsRemaining--;
+        if (_secondsRemaining > 0.1) {
+          _secondsRemaining -= 0.1; // Decrease by 0.1 second each interval
         } else {
           // Time's up - submit empty answer
           _handleAnswerSubmission("");
@@ -210,7 +214,7 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
           SubmitQuizAnswer(
             questionId: currentQuestion.id,
             answer: answer.trim(),
-            timeRemaining: _secondsRemaining,
+            timeRemaining: _secondsRemaining.toInt(),
           ),
         );
       }
@@ -374,7 +378,7 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Text(
-                            '${_secondsRemaining}s',
+                            _formatQuestionTime(),
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -499,7 +503,12 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
   // Add a widget to display total quiz time remaining
   Widget _buildTotalQuizTimeRemaining() {
     final minutes = _totalTimeRemaining.inMinutes;
-    final seconds = (_totalTimeRemaining.inSeconds % 60).toString().padLeft(2, '0');
+    final seconds = (_totalTimeRemaining.inSeconds % 60);
+    final milliseconds = (_totalTimeRemaining.inMilliseconds % 1000) ~/ 10; // Show only tens of milliseconds
+    
+    // Format as MM:SS:mm
+    final secondsStr = seconds.toString().padLeft(2, '0');
+    final millisecondsStr = milliseconds.toString().padLeft(2, '0');
     
     // Determine color based on time remaining
     Color timerColor;
@@ -525,7 +534,7 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
           Icon(Icons.timelapse, size: 16, color: timerColor),
           SizedBox(width: 4),
           Text(
-            'Quiz Time: $minutes:$seconds',
+            'Quiz Time: $minutes:$secondsStr:$millisecondsStr',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: timerColor,
@@ -870,17 +879,35 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
           SizedBox(height: 24),
           _buildAnswerResultsList(context, state.results),
           SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () {
-              // Clear any previous answers when restarting
-              _collectedAnswers.clear();
-              context.read<QuizBloc>().add(FetchDailyQuiz());
-            },
-            icon: Icon(Icons.refresh),
-            label: Text('Try Again'),
-            style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton.icon(
+                onPressed: () {
+                  // Clear any previous answers when restarting
+                  _collectedAnswers.clear();
+                  context.read<QuizBloc>().add(FetchDailyQuiz());
+                },
+                icon: Icon(Icons.refresh),
+                label: Text('Try Again'),
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: () {
+                  // Navigate back to the home page
+                  context.go(AppRoutePath.home);
+                },
+                icon: Icon(Icons.home),
+                label: Text('Back to Home'),
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1070,5 +1097,13 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
     } else {
       return Colors.red;
     }
+  }
+
+  String _formatQuestionTime() {
+    // Convert seconds to seconds:milliseconds format
+    // For simplicity, we'll simulate milliseconds by dividing the second into 10 parts
+    final seconds = _secondsRemaining ~/ 1;
+    final milliseconds = (_secondsRemaining * 100) % 100; // Using 2 decimal places
+    return '$seconds:${milliseconds.toInt().toString().padLeft(2, '0')}';
   }
 }
