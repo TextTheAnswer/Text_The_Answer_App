@@ -10,7 +10,7 @@ import 'package:text_the_answer/screens/auth/reset_password_screen.dart';
 import 'package:text_the_answer/screens/auth/splash_screen.dart';
 import 'package:text_the_answer/screens/daily_quiz_screen.dart';
 import 'package:text_the_answer/screens/game/game_mode_screen.dart';
-import 'package:text_the_answer/screens/game/lobby_screen.dart';
+import 'package:text_the_answer/screens/game/private_lobby_screen.dart';
 import 'package:text_the_answer/screens/game/public_lobby_screen.dart';
 import 'package:text_the_answer/screens/home/new_home_screen.dart';
 import 'package:text_the_answer/screens/main_app_screen.dart';
@@ -106,7 +106,7 @@ final GoRouter router = GoRouter(
       path: AppRoutePath.privateLobby,
       name: AppRouteName.privateLobby,
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) => LobbyScreen(isPublic: false),
+      builder: (context, state) => PrivateLobbyScreen(),
     ),
 
     // -- Public Lobby
