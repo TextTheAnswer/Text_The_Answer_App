@@ -39,9 +39,9 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
   String _selectedTheme = 'default'; // default, light, dark
   
   // Profile picture option
-  String _selectedProfilePicture = 'default-1';
+  String _selectedProfilePicture = 'man.png';
   final List<String> _profilePictureOptions = [
-    'default-1', 'default-2', 'default-3', 'default-4', 'default-5',
+    'man.png', 'woman.png',
   ];
   
   bool _isSubmitting = false;
@@ -173,10 +173,18 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
           
           // Profile Picture Selection
           Text(
-            'Choose a profile picture',
+            'Select your gender',
             style: FontUtility.montserratSemiBold(
               fontSize: 18.sp,
               color: isDarkMode ? Colors.white : AppColors.darkGray,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            'Choose a profile image that represents your gender',
+            style: FontUtility.montserratRegular(
+              fontSize: 14.sp,
+              color: isDarkMode ? Colors.white70 : AppColors.lightGray,
             ),
           ),
           SizedBox(height: 16.h),
@@ -249,42 +257,60 @@ class _ProfileCreationScreenState extends State<ProfileCreationScreen> {
   }
   
   Widget _buildProfilePictureSelector(bool isDarkMode) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: _profilePictureOptions.map((option) {
-          final isSelected = _selectedProfilePicture == option;
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                _selectedProfilePicture = option;
-              });
-            },
-            child: Container(
-              margin: EdgeInsets.only(right: 16.w),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isSelected 
-                    ? Theme.of(context).primaryColor 
-                    : Colors.transparent,
-                  width: 3,
-                ),
-              ),
-              child: CircleAvatar(
-                radius: 36.r,
-                backgroundColor: Theme.of(context).cardColor,
-                child: Text(
-                  option.split('-')[1],
-                  style: FontUtility.montserratBold(
-                    fontSize: 18.sp,
+    return Column(
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: _profilePictureOptions.map((option) {
+              final isSelected = _selectedProfilePicture == option;
+              final label = option == 'man.png' ? 'Male' : 'Female';
+              
+              return Column(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedProfilePicture = option;
+                      });
+                    },
+                    child: Container(
+                      margin: EdgeInsets.only(right: 16.w),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected 
+                            ? Theme.of(context).primaryColor 
+                            : Colors.transparent,
+                          width: 3,
+                        ),
+                      ),
+                      child: CircleAvatar(
+                        radius: 36.r,
+                        backgroundColor: Theme.of(context).cardColor,
+                        backgroundImage: AssetImage('assets/images/$option'),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
+                  SizedBox(height: 8.h),
+                  Container(
+                    margin: EdgeInsets.only(right: 16.w),
+                    child: Text(
+                      label,
+                      style: FontUtility.montserratMedium(
+                        fontSize: 14.sp,
+                        color: isSelected
+                          ? Theme.of(context).primaryColor
+                          : isDarkMode ? Colors.white : AppColors.darkGray,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }).toList(),
+          ),
+        ),
+      ],
     );
   }
   

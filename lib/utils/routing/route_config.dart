@@ -25,6 +25,7 @@ import 'package:text_the_answer/screens/settings/security_screen.dart';
 import 'package:text_the_answer/screens/settings/settings_screen.dart';
 import 'package:text_the_answer/screens/profile/profile_screen.dart';
 import 'package:text_the_answer/utils/logger/debug_print.dart';
+import 'package:text_the_answer/utils/theme/theme_utils.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(
   debugLabel: 'root',
@@ -112,7 +113,9 @@ final GoRouter router = GoRouter(
               name: AppRouteName.gameMode,
               path: AppRoutePath.gameMode,
               builder: (context, state) {
-                return GameModeScreen(toggleTheme: () {});
+                return GameModeScreen(
+                  toggleTheme: ThemeUtils.getThemeToggler(context),
+                );
               },
             ),
           ],
@@ -125,7 +128,9 @@ final GoRouter router = GoRouter(
               name: AppRouteName.quiz,
               path: AppRoutePath.quiz,
               builder: (context, state) {
-                return DailyQuizScreen(toggleTheme: () {});
+                return DailyQuizScreen(
+                  toggleTheme: ThemeUtils.getThemeToggler(context),
+                );
               },
             ),
           ],

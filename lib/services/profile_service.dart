@@ -163,10 +163,16 @@ class ProfileService {
         throw Exception('Authentication token not found');
       }
 
+      // Format the profile picture correctly for the API
+      // If it's an image filename, we'll use it directly as a default image
+      final formattedProfilePicture = profilePicture.contains('.png') 
+          ? profilePicture  // Just use the filename (e.g., "man.png")
+          : 'default-1';    // Fall back to default-1 if not an image filename
+
       final Map<String, dynamic> requestData = {
         "bio": bio,
         "location": location,
-        "profilePicture": profilePicture,
+        "profilePicture": formattedProfilePicture,
         "preferences": {
           "favoriteCategories": favoriteCategories,
           "notificationSettings": notificationSettings,

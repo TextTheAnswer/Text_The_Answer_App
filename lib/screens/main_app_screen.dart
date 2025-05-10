@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:iconly/iconly.dart';
-import 'package:text_the_answer/widgets/app_drawer.dart';
+import '../widgets/common/theme_aware_widget.dart';
+import '../widgets/app_drawer.dart';
 
 //TODO: Do this in a better way
 abstract class AppScaffoldKeys {
@@ -9,68 +9,70 @@ abstract class AppScaffoldKeys {
       GlobalKey<ScaffoldState>();
 }
 
-class MainAppScreen extends StatelessWidget {
-  const MainAppScreen({super.key, required this.navigationShell});
-
-  /// The navigation shell and container for the branch Navigators.
+class MainAppScreen extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
 
+  const MainAppScreen({
+    Key? key,
+    required this.navigationShell,
+  }) : super(key: key);
+
+  @override
+  State<MainAppScreen> createState() => _MainAppScreenState();
+}
+
+class _MainAppScreenState extends State<MainAppScreen> {
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    return Scaffold(
-      key: AppScaffoldKeys.mainScaffoldKey,
-      body: navigationShell,
-      drawer: AppDrawer(toggleTheme: () {}, isDarkMode: isDarkMode),
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          // -- Home
-          BottomNavigationBarItem(
-            icon: Icon(IconlyLight.home),
-            activeIcon: Icon(IconlyBold.home),
-            label: 'Home',
+    return ThemeAwareWidget(
+      builder: (context, themeState) {
+        final isDarkMode = themeState.themeData.brightness == Brightness.dark;
+        
+        return Scaffold(
+          key: AppScaffoldKeys.mainScaffoldKey,
+          body: widget.navigationShell,
+          drawer: AppDrawer(
+            toggleTheme: () => context.toggleTheme(),
+            isDarkMode: isDarkMode,
           ),
-
-          // -- Library
-          BottomNavigationBarItem(
-            icon: Icon(IconlyLight.category),
-            activeIcon: Icon(IconlyBold.category),
-            label: 'Library',
-          ),
-
-          // -- Game Mode
-          BottomNavigationBarItem(
-            icon: Icon(IconlyLight.category),
-            activeIcon: Icon(IconlyBold.category),
-            label: 'GameMode',
-          ),
-
-          // -- Quiz
-          BottomNavigationBarItem(
-            icon: Icon(IconlyLight.plus),
-            activeIcon: Icon(IconlyBold.plus),
-            label: 'Quiz',
-          ),
-
-          // -- Quiz
-          BottomNavigationBarItem(
-            icon: Icon(IconlyLight.profile),
-            activeIcon: Icon(IconlyBold.profile),
-            label: 'Profile',
-          ),
-        ],
-        currentIndex: navigationShell.currentIndex,
-        onTap: _onTap,
-      ),
+          bottomNavigationBar: _buildBottomNavigationBar(),
+        );
+      },
     );
   }
 
-  /// Function to navigate to the right screen
-  void _onTap(int index) {
-    navigationShell.goBranch(
-      index,
-      initialLocation: index == navigationShell.currentIndex,
+  Widget _buildBottomNavigationBar() {
+    return BottomNavigationBar(
+      currentIndex: widget.navigationShell.currentIndex,
+      onTap: (index) {
+        widget.navigationShell.goBranch(
+          index,
+          initialLocation: index == widget.navigationShell.currentIndex,
+        );
+      },
+      type: BottomNavigationBarType.fixed,
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home),
+          label: 'Home',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.book),
+          label: 'Library',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.gamepad),
+          label: 'Games',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.quiz),
+          label: 'Quiz',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.person),
+          label: 'Profile',
+        ),
+      ],
     );
   }
 }

@@ -5,6 +5,7 @@ import '../../blocs/game/game_bloc.dart';
 import '../../blocs/game/game_event.dart';
 import '../../blocs/game/game_state.dart';
 import '../../models/lobby.dart';
+import '../../utils/theme/theme_cubit.dart';
 import 'game_screen.dart';
 import 'lobby_waiting_screen.dart';
 
@@ -24,6 +25,22 @@ class _LobbyScreenState extends State<LobbyScreen> {
   final _maxPlayersController = TextEditingController(text: '4');
   Lobby? _currentLobby;
   bool _isReady = false;
+
+  void _toggleTheme() {
+    // Get the current ThemeCubit and its state
+    final ThemeCubit cubit = context.read<ThemeCubit>();
+    final currentState = cubit.state;
+    
+    // Toggle between light and dark modes
+    if (currentState.mode == AppThemeMode.dark) {
+      cubit.setTheme(AppThemeMode.light);
+    } else {
+      cubit.setTheme(AppThemeMode.dark);
+    }
+    
+    // Call the original toggleTheme callback
+    widget.toggleTheme();
+  }
 
   @override
   void initState() {
@@ -48,97 +65,101 @@ class _LobbyScreenState extends State<LobbyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.isPublic ? 'Public Game Lobbies' : 'Private Game'),
-      ),
-      body: BlocConsumer<GameBloc, GameState>(
-        listener: (context, state) {
-          if (state is GameError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
-          } else if (state is LobbyJoined) {
-            setState(() {
-              _currentLobby = state.lobby;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Joined lobby successfully')),
-            );
-            // Navigate to the waiting screen after joining
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => LobbyWaitingScreen(
-                  lobby: state.lobby,
-                  toggleTheme: widget.toggleTheme,
-                ),
-              ),
-            );
-          } else if (state is LobbyCreated) {
-            setState(() {
-              _currentLobby = state.lobby;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Created lobby successfully')),
-            );
-            // Navigate to the waiting screen after creating
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => LobbyWaitingScreen(
-                  lobby: state.lobby,
-                  toggleTheme: widget.toggleTheme,
-                ),
-              ),
-            );
-          } else if (state is LobbyUpdated) {
-            setState(() {
-              _currentLobby = state.lobby;
-            });
-          } else if (state is LobbyLeft) {
-            setState(() {
-              _currentLobby = null;
-              _isReady = false;
-            });
-            Navigator.pop(context);
-          } else if (state is GameStarted) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => GameScreen(
-                  gameId: state.gameId,
-                  questions: state.questions,
-                  players: state.players,
-                  toggleTheme: widget.toggleTheme,
-                ),
-              ),
-            );
-          } else if (state is AllPlayersReady) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('All players are ready!')),
-            );
-          }
-        },
-        builder: (context, state) {
-          if (state is GameLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    return BlocBuilder<ThemeCubit, ThemeState>(
+      builder: (context, themeState) {
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(widget.isPublic ? 'Public Game Lobbies' : 'Private Game'),
+          ),
+          body: BlocConsumer<GameBloc, GameState>(
+            listener: (context, state) {
+              if (state is GameError) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(state.message)),
+                );
+              } else if (state is LobbyJoined) {
+                setState(() {
+                  _currentLobby = state.lobby;
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Joined lobby successfully')),
+                );
+                // Navigate to the waiting screen after joining
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => LobbyWaitingScreen(
+                      lobby: state.lobby,
+                      toggleTheme: _toggleTheme,
+                    ),
+                  ),
+                );
+              } else if (state is LobbyCreated) {
+                setState(() {
+                  _currentLobby = state.lobby;
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Created lobby successfully')),
+                );
+                // Navigate to the waiting screen after creating
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => LobbyWaitingScreen(
+                      lobby: state.lobby,
+                      toggleTheme: _toggleTheme,
+                    ),
+                  ),
+                );
+              } else if (state is LobbyUpdated) {
+                setState(() {
+                  _currentLobby = state.lobby;
+                });
+              } else if (state is LobbyLeft) {
+                setState(() {
+                  _currentLobby = null;
+                  _isReady = false;
+                });
+                Navigator.pop(context);
+              } else if (state is GameStarted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => GameScreen(
+                      gameId: state.gameId,
+                      questions: state.questions,
+                      players: state.players,
+                      toggleTheme: _toggleTheme,
+                    ),
+                  ),
+                );
+              } else if (state is AllPlayersReady) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('All players are ready!')),
+                );
+              }
+            },
+            builder: (context, state) {
+              if (state is GameLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-          // If user is in a lobby, show the lobby screen
-          if (_currentLobby != null) {
-            return _buildLobbyView(_currentLobby!);
-          }
+              // If user is in a lobby, show the lobby screen
+              if (_currentLobby != null) {
+                return _buildLobbyView(_currentLobby!);
+              }
 
-          // If user is viewing public lobbies
-          if (widget.isPublic && state is PublicLobbiesLoaded) {
-            return _buildPublicLobbiesView(state.lobbies);
-          }
+              // If user is viewing public lobbies
+              if (widget.isPublic && state is PublicLobbiesLoaded) {
+                return _buildPublicLobbiesView(state.lobbies);
+              }
 
-          // Default view for entering a code or creating a lobby
-          return _buildLobbyEntryView();
-        },
-      ),
+              // Default view for entering a code or creating a lobby
+              return _buildLobbyEntryView();
+            },
+          ),
+        );
+      },
     );
   }
   

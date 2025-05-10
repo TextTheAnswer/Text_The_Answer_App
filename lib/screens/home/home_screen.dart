@@ -1,11 +1,13 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:text_the_answer/config/colors.dart';
 import 'package:text_the_answer/router/routes.dart';
 import 'package:text_the_answer/screens/profile/profile_screen.dart';
 import 'package:text_the_answer/utils/common_ui.dart';
+import 'package:text_the_answer/utils/theme/theme_cubit.dart';
 import 'package:text_the_answer/widgets/app_bar/custom_app_bar.dart';
 import 'package:text_the_answer/widgets/bottom_nav_bar.dart';
 import '../daily_quiz_screen.dart';
@@ -24,51 +26,62 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
+  void _toggleTheme() {
+    // Get the current ThemeCubit and its state
+    final ThemeCubit cubit = context.read<ThemeCubit>();
+    final currentState = cubit.state;
+    
+    // Toggle between light and dark modes
+    if (currentState.mode == AppThemeMode.dark) {
+      cubit.setTheme(AppThemeMode.light);
+    } else {
+      cubit.setTheme(AppThemeMode.dark);
+    }
+    
+    // Call the original toggleTheme callback
+    widget.toggleTheme();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor =
-        isDarkMode ? AppColors.darkBackground : AppColors.lightBackground;
+    // Use BlocBuilder to rebuild the entire widget when theme changes
+    return BlocBuilder<ThemeCubit, ThemeState>(
+      builder: (context, themeState) {
+        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+        final backgroundColor =
+            isDarkMode ? AppColors.darkBackground : AppColors.lightBackground;
 
-    String title = 'Text the Answer';
-    if (_currentIndex == 1) {
-      title = 'Library';
-    } else if (_currentIndex == 2)
-      title = 'Games';
-    else if (_currentIndex == 3)
-      title = 'Daily Quiz';
-    else if (_currentIndex == 4)
-      title = 'Profile';
+        String title = 'Text the Answer';
+        if (_currentIndex == 1) {
+          title = 'Library';
+        } else if (_currentIndex == 2)
+          title = 'Games';
+        else if (_currentIndex == 3)
+          title = 'Daily Quiz';
+        else if (_currentIndex == 4)
+          title = 'Profile';
 
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      appBar:
-          _currentIndex == 0
-              ? CustomAppBar(
-                showBackArrow: false,
-                title: Text('Text the Answer'),
-              )
-              : null,
-      // appBar:
-      // _currentIndex == 0
-      //     ? CommonUI.buildAppBar(
-      //       context: context,
-      //       title: title,
-      //       isDarkMode: isDarkMode,
-      //       toggleTheme: widget.toggleTheme,
-      //     )
-      //     : null,
-      // : AppBar(backgroundColor: Colors.transparent, elevation: 0),
-      drawer: CommonUI.buildDrawer(
-        context: context,
-        toggleTheme: widget.toggleTheme,
-        isDarkMode: isDarkMode,
-      ),
-      body: SafeArea(child: _buildCurrentScreen()),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentIndex,
-        onTap: _onTabTapped,
-      ),
+        return Scaffold(
+          backgroundColor: backgroundColor,
+          appBar:
+              _currentIndex == 0
+                  ? CustomAppBar(
+                    showBackArrow: false,
+                    title: Text('Text the Answer'),
+                  )
+                  : null,
+          drawer: CommonUI.buildDrawer(
+            context: context,
+            toggleTheme: _toggleTheme,
+            isDarkMode: isDarkMode,
+          ),
+          body: SafeArea(child: _buildCurrentScreen()),
+          bottomNavigationBar: BottomNavBar(
+            currentIndex: _currentIndex,
+            onTap: _onTabTapped,
+          ),
+        );
+      },
     );
   }
 
@@ -79,9 +92,9 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         return const Center(child: Text('Library'));
       case 2:
-        return GameModeScreen(toggleTheme: widget.toggleTheme);
+        return GameModeScreen(toggleTheme: _toggleTheme);
       case 3:
-        return DailyQuizScreen(toggleTheme: widget.toggleTheme);
+        return DailyQuizScreen(toggleTheme: _toggleTheme);
       // Profile is now a separate page with its own route
       default:
         return _buildHomeTabContent();
