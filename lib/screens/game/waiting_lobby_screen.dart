@@ -1,13 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:text_the_answer/blocs/game/game_bloc.dart';
+import 'package:text_the_answer/blocs/game/game_event.dart';
 import 'package:text_the_answer/models/lobby.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
 import 'package:text_the_answer/widgets/app_bar/custom_app_bar.dart';
 
-class WaitingLobbyScreen extends StatelessWidget {
+//TODO: Do a complete port of [LobbyWaitingScreen]
+class WaitingLobbyScreen extends StatefulWidget {
   const WaitingLobbyScreen({super.key, required this.lobby});
 
   final Lobby lobby;
+
+  @override
+  State<WaitingLobbyScreen> createState() => _WaitingLobbyScreenState();
+}
+
+class _WaitingLobbyScreenState extends State<WaitingLobbyScreen> {
+  late Lobby _currentLobby;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentLobby = widget.lobby;
+  }
+
+  @override
+  void dispose() {
+    // Leave the lobby when exiting screen
+    context.read<GameBloc>().add(LeaveLobby(lobbyId: _currentLobby.id));
+
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +48,7 @@ class WaitingLobbyScreen extends StatelessWidget {
       body: Column(
         children: [
           // -- Lobby Card
-          LobbyCard(),
+          LobbyCard(lobby: _currentLobby),
           const SizedBox(height: 30),
 
           // -- Players
@@ -31,7 +56,7 @@ class WaitingLobbyScreen extends StatelessWidget {
             spacing: 12,
             runSpacing: 12,
             children:
-                lobby.players.map((player) {
+                _currentLobby.players.map((player) {
                   return PlayerChip();
                 }).toList(),
           ),
@@ -72,7 +97,9 @@ class PlayerChip extends StatelessWidget {
 }
 
 class LobbyCard extends StatelessWidget {
-  const LobbyCard({super.key});
+  const LobbyCard({super.key, required this.lobby});
+
+  final Lobby lobby;
 
   @override
   Widget build(BuildContext context) {
@@ -87,11 +114,14 @@ class LobbyCard extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
+            //TODO: Replace with image
             child: Container(height: 200, color: Colors.deepPurpleAccent),
           ),
           SizedBox(height: 12),
+
+          // -- Lobby Title
           Text(
-            'Back to School Quiz Game',
+            lobby.name,
             style: FontUtility.montserrat(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -103,7 +133,7 @@ class LobbyCard extends StatelessWidget {
 
           // -- Player number
           Text(
-            '${20} players have joined',
+            '${lobby.players.length} players have joined',
             style: FontUtility.montserrat(
               fontSize: 16,
               color: Colors.grey[300],
