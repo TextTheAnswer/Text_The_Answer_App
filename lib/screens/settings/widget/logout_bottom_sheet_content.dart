@@ -47,7 +47,6 @@ class LogoutBottomSheetContent extends StatelessWidget {
                   onPressed: () {
                     context.read<AuthBloc>().add(SignOutEvent());
                     Navigator.of(context).pop();
-                    Navigator.pushReplacementNamed(context, Routes.login);
                   },
                   borderRadius: BorderRadius.circular(100),
                   child: Text('Logout'),

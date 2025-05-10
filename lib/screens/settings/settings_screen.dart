@@ -3,11 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconly/iconly.dart';
 // import 'package:text_the_answer/models/profile_model.dart';
-import 'package:text_the_answer/models/user_profile_full_model.dart';
+
 // import 'package:text_the_answer/models/user_profile_model.dart';
 import 'package:text_the_answer/router/custom_bottom_sheet_route.dart';
 import 'package:text_the_answer/router/routes.dart';
-import 'package:text_the_answer/screens/profile/edit_profile_screen.dart';
+
 import 'package:text_the_answer/screens/settings/widget/logout_bottom_sheet_content.dart';
 import 'package:text_the_answer/screens/settings/widget/settings_list_tile.dart';
 import 'package:text_the_answer/screens/settings/widget/theme_switcher.dart';
@@ -55,41 +55,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       onTap: () {
                         //TODO: Pass the details through the constructor or refactor
                         // EditProfileScreen to acess details from a state provider
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (_) => EditProfileScreen(
-                                  profileDetails: ProfileData(
-                                    id: 'Testing',
-                                    email: '@superhim',
-                                    name: 'Daniel Olayinka',
-                                    profile: ProfileDetails(
-                                      bio: 'A love gaming',
-                                      location: 'London',
-                                      imageUrl: '',
-                                    ),
-                                    dailyQuiz: DailyQuizData(
-                                      questionsAnswered: 5,
-                                      correctAnswers: 2,
-                                      score: 2,
-                                    ),
-                                    subscription: SubscriptionData(
-                                      status: '',
-                                      cancelAtPeriodEnd: false,
-                                    ),
-                                    stats: StatsData(
-                                      streak: 2,
-                                      totalCorrect: 10,
-                                      totalAnswered: 15,
-                                      accuracy: '10',
-                                    ),
-                                    isPremium: true,
-                                    isEducation: false,
-                                  ),
-                                ),
-                          ),
-                        );
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //     builder:
+                        //         (_) => EditProfileScreen(
+                        //           profileDetails: ProfileData(
+                        //             id: 'Testing',
+                        //             email: '@superhim',
+                        //             name: 'Daniel Olayinka',
+                        //             profile: ProfileDetails(
+                        //               bio: 'A love gaming',
+                        //               location: 'London',
+                        //               imageUrl: '',
+                        //             ),
+                        //             dailyQuiz: DailyQuizData(
+                        //               questionsAnswered: 5,
+                        //               correctAnswers: 2,
+                        //               score: 2,
+                        //             ),
+                        //             subscription: SubscriptionData(
+                        //               status: '',
+                        //               cancelAtPeriodEnd: false,
+                        //             ),
+                        //             stats: StatsData(
+                        //               streak: 2,
+                        //               totalCorrect: 10,
+                        //               totalAnswered: 15,
+                        //               accuracy: '10',
+                        //             ),
+                        //             isPremium: true,
+                        //             isEducation: false,
+                        //           ),
+                        //         ),
+                        //   ),
+                        // );
                       },
                     ),
 

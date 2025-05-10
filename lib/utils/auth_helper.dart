@@ -44,18 +44,8 @@ class AuthHelper {
   }
   
   /// Verify authentication status, optionally in silent mode (no loading state)
-  static Future<bool> verifyAuthentication({bool silentCheck = false}) async {
-    print('AuthHelper: Verifying authentication (silent: $silentCheck)');
-    // Add the check auth status event
-    authBloc.add(CheckAuthStatusEvent(silentCheck: silentCheck));
-    
-    // Wait a short time for authentication check to complete
-    await Future.delayed(const Duration(milliseconds: 500));
-    
-    // Return current authentication status
-    final isAuth = isAuthenticated();
-    print('AuthHelper: After verification, authentication status: $isAuth');
-    return isAuth;
+  static void verifyAuthentication({bool silentCheck = false, bool priority = false}) {
+    authBloc.add(CheckAuthStatusEvent(silentCheck: silentCheck, priority: priority));
   }
   
   /// Sign out the user

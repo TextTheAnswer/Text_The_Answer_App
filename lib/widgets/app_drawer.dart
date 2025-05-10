@@ -95,19 +95,13 @@ class AppDrawer extends StatelessWidget {
               title: 'Profile',
               onTap: () {
                 Navigator.pop(context);
-
-                // if (Navigator.canPop(context)) {
-                //   Navigator.pop(context);
-                // }
-                // Navigator.pushNamedAndRemoveUntil(
-                //   context,
-                //   Routes.home,
-                //   (route) => false,
-                // );
-                context.goNamed(AppRouteName.profile);
-
-        
-
+                // Profile feature has been removed
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Profile feature is currently unavailable'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
               },
               textColor: textColor,
               accentColor: accentColor,

@@ -91,7 +91,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthInitial());
     } catch (e) {
       if (kDebugMode) print('AuthBloc Error (SignOutEvent): $e');
-      emit(AuthError(message: e.toString()));
+      // Even if server logout fails, still clear local tokens and redirect to login
+      await _tokenService.deleteToken();
+      _lastTokenValidationTime = null;
+      emit(AuthInitial());
     }
   }
   
@@ -106,8 +109,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       // Don't emit the same state again to prevent unnecessary rebuilds and navigation
       final currentState = state;
       
-      // Check if we need to validate the token (first time or after interval)
-      final bool shouldValidateToken = _lastTokenValidationTime == null || 
+      // Always validate token if priority is true or it's been a while since last validation
+      final bool shouldValidateToken = event.priority || 
+        _lastTokenValidationTime == null || 
         DateTime.now().difference(_lastTokenValidationTime!) > tokenValidationInterval;
         
       if (shouldValidateToken) {
@@ -121,8 +125,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             // Update the last validation time
             _lastTokenValidationTime = DateTime.now();
             
-            // Only emit if the state is different
-            if (currentState is! AuthAuthenticated) {
+            // Only emit if the state is different or if priority is true
+            if (currentState is! AuthAuthenticated || event.priority) {
               emit(AuthAuthenticated(user: user));
             }
             return;
@@ -132,8 +136,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
             await _tokenService.deleteToken();
             _lastTokenValidationTime = null;
             
-            // Only emit if the state is different
-            if (currentState is! AuthInitial) {
+            // Only emit if the state is different or if priority is true
+            if (currentState is! AuthInitial || event.priority) {
               emit(AuthInitial());
             }
             return;
@@ -142,8 +146,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           // No token found
           _lastTokenValidationTime = null;
           
-          // Only emit if the state is different
-          if (currentState is! AuthInitial) {
+          // Only emit if the state is different or if priority is true
+          if (currentState is! AuthInitial || event.priority) {
             emit(AuthInitial());
           }
           return;

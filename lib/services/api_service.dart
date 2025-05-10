@@ -114,61 +114,40 @@ class ApiService {
   }
 
   // User Profile Endpoints
-  Future<User> getProfile() async {
-    final token = await _getToken();
-    final response = await http.get(
-      Uri.parse('$baseUrl/profile/full'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      print('API response for getProfile: $data');
-      
-      // Check different possible response structures
-      if (data['user'] != null) {
-        return User.fromJson(data['user']);
-      } else if (data['data'] != null && data['data']['user'] != null) {
-        return User.fromJson(data['data']['user']);
-      } else if (data['data'] != null) {
-        return User.fromJson(data['data']);
-      } else {
-        // Try to parse the root object itself
-        try {
-          return User.fromJson(data);
-        } catch (e) {
-          print('Error parsing profile data: $e');
-          throw Exception('Failed to parse profile data: ${response.body}');
-        }
-      }
-    } else {
-      throw Exception('Failed to get profile: ${response.body}');
-    }
-  }
-
   Future<User> getUserProfile() async {
-    return await getProfile();
-  }
+    try {
+      final token = await _getToken();
+      if (token == null || token.isEmpty) {
+        throw Exception('No authentication token found');
+      }
+      
+      final response = await http.get(
+        Uri.parse('$baseUrl/user/profile'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
 
-  Future<User> updateProfile(Map<String, dynamic> profileData) async {
-    final token = await _getToken();
-    final response = await http.put(
-      Uri.parse('$baseUrl /api/profile'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode(profileData),
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return User.fromJson(data['user']);
-    } else {
-      throw Exception('Failed to update profile: ${response.body}');
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return User.fromJson(data['user']);
+      } else if (response.statusCode == 401) {
+        // Clear token on 401 Unauthorized
+        await _clearToken();
+        throw Exception('Authentication token expired or invalid');
+      } else {
+        throw Exception('Failed to get user profile: ${response.body}');
+      }
+    } catch (e) {
+      // Make sure to clear token on any authentication errors
+      if (e.toString().contains('authentication') || 
+          e.toString().contains('token') || 
+          e.toString().contains('401')) {
+        await _clearToken();
+      }
+      
+      throw Exception('Failed to get user profile: $e');
     }
   }
 
