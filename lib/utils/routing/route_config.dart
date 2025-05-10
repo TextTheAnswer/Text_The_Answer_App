@@ -16,6 +16,7 @@ import 'package:text_the_answer/screens/game/game_mode_screen.dart';
 import 'package:text_the_answer/screens/home/new_home_screen.dart';
 import 'package:text_the_answer/screens/main_app_screen.dart';
 import 'package:text_the_answer/screens/placeholder_profile_screen.dart';
+import 'package:text_the_answer/screens/profile/profile_creation_screen.dart';
 import 'package:text_the_answer/screens/settings/about_screen.dart';
 import 'package:text_the_answer/screens/settings/help_center_screen.dart';
 import 'package:text_the_answer/screens/settings/music_effect_screen.dart';
@@ -201,6 +202,13 @@ final GoRouter router = GoRouter(
 
         return ResetPasswordScreen(email: email, resetToken: resetToken);
       },
+    ),
+
+    // -- Profile Creation
+    GoRoute(
+      name: AppRouteName.profileCreate,
+      path: AppRoutePath.profileCreate,
+      builder: (context, state) => const ProfileCreationScreen(),
     ),
 
     // -- Settings

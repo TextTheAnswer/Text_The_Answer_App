@@ -11,6 +11,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   ProfileBloc() : super(ProfileInitial()) {
     on<FetchProfileEvent>(_onFetchProfile);
     on<UpdateProfileEvent>(_onUpdateProfile);
+    on<CreateProfileEvent>(_onCreateProfile);
   }
 
   Future<void> _onFetchProfile(FetchProfileEvent event, Emitter<ProfileState> emit) async {
@@ -115,6 +116,48 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         } else {
           emit(ProfileError(e.toString()));
         }
+      }
+    }
+  }
+
+  Future<void> _onCreateProfile(CreateProfileEvent event, Emitter<ProfileState> emit) async {
+    emit(ProfileLoading());
+    
+    try {
+      printDebug('ProfileBloc: Creating new profile');
+      final success = await _profileService.createProfile(
+        bio: event.bio,
+        location: event.location,
+        profilePicture: event.profilePicture,
+        favoriteCategories: event.favoriteCategories,
+        notificationSettings: event.notificationSettings,
+        displayTheme: event.displayTheme,
+      );
+
+      if (success) {
+        // After successful creation, fetch the profile data
+        printDebug('ProfileBloc: Profile creation successful, fetching profile');
+        final profile = await _profileService.getFullProfile();
+        
+        if (profile != null) {
+          emit(ProfileLoaded(profile));
+          printDebug('ProfileBloc: Successfully loaded profile after creation');
+        } else {
+          emit(ProfileError('Failed to fetch profile data after creation'));
+        }
+      } else {
+        emit(ProfileError('Failed to create profile'));
+      }
+    } catch (e) {
+      if (kDebugMode) print('ProfileBloc Error (CreateProfileEvent): $e');
+      
+      // Check for authentication errors specifically
+      if (e.toString().contains('Authentication token') || 
+          e.toString().contains('Unauthorized') || 
+          e.toString().contains('401')) {
+        emit(ProfileAuthError('Authentication required. Please log in.'));
+      } else {
+        emit(ProfileError(e.toString()));
       }
     }
   }
