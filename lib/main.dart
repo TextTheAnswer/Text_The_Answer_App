@@ -11,6 +11,9 @@ import 'package:text_the_answer/utils/font_utility.dart';
 import 'package:text_the_answer/utils/logger/debug_print.dart';
 import 'package:text_the_answer/utils/routing/route_config.dart';
 import 'package:text_the_answer/utils/theme/theme_cubit.dart';
+import 'package:text_the_answer/services/achievement_service.dart';
+import 'package:text_the_answer/services/auth_token_service.dart';
+import 'package:text_the_answer/blocs/achievement/achievement_bloc.dart';
 import 'blocs/auth/auth_bloc.dart';
 import 'blocs/auth/auth_event.dart';
 import 'blocs/auth/auth_state.dart';
@@ -19,6 +22,7 @@ import 'blocs/game/game_bloc.dart';
 import 'blocs/leaderboard/leaderboard_bloc.dart';
 import 'blocs/subscription/subscription_bloc.dart';
 import 'blocs/profile/profile_bloc.dart';
+import 'config/api_config.dart';
 
 // Create a global key for the navigator to access it from anywhere
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -62,6 +66,12 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final ApiService _apiService = ApiService();
+  late final AuthTokenService _authTokenService = AuthTokenService();
+  late final AchievementService _achievementService = AchievementService(
+    apiService: _apiService, 
+    tokenService: _authTokenService,
+    baseUrl: ApiConfig.baseUrl,
+  );
 
   @override
   void initState() {
@@ -78,6 +88,8 @@ class _MyAppState extends State<MyApp> {
         return MultiProvider(
           providers: [
             Provider<ApiService>.value(value: _apiService),
+            Provider<AuthTokenService>.value(value: _authTokenService),
+            Provider<AchievementService>.value(value: _achievementService),
           ],
           child: MultiBlocProvider(
             providers: [
@@ -92,6 +104,11 @@ class _MyAppState extends State<MyApp> {
               ),
               BlocProvider(create: (_) => ThemeCubit()),
               BlocProvider(create: (_) => ProfileBloc()),
+              BlocProvider(
+                create: (context) => AchievementBloc(
+                  achievementService: _achievementService,
+                ),
+              ),
             ],
             child: BlocBuilder<ThemeCubit, ThemeState>(
               buildWhen: (previous, current) => previous.mode != current.mode,

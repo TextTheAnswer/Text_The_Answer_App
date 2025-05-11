@@ -11,6 +11,11 @@ import 'package:text_the_answer/widgets/quiz/event_countdown.dart';
 import 'package:text_the_answer/widgets/quiz/waiting_room.dart';
 import 'package:text_the_answer/utils/quiz/time_utility.dart';
 import 'package:text_the_answer/screens/daily_quiz_screen.dart';
+import 'package:text_the_answer/blocs/profile/profile_bloc.dart';
+import 'package:text_the_answer/blocs/profile/profile_event.dart';
+import 'package:text_the_answer/blocs/profile/profile_state.dart';
+import 'package:text_the_answer/widgets/quiz/daily_quiz_countdown.dart';
+import 'package:text_the_answer/models/profile.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,120 +32,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   bool _isPremiumBenefitsExpanded = false;
   bool _isActivityExpanded = false;
   
-  // Mock Data
-  final String _userName = 'Alex Johnson';
-  final String _userEmail = 'alex.johnson@example.com';
-  final bool _isUserVerified = true;
-  final String _userAvatar = 'https://i.pravatar.cc/150?img=12';
-  final double _profileCompletionPercentage = 0.75;
-  final bool _isPremiumUser = true;
-  final String _subscriptionRenewalDate = '25 Dec 2023';
-  final bool _autoRenewEnabled = true;
-  
-  // Stats
-  final int _gamesPlayed = 24;
-  final int _correctAnswers = 18;
-  final int _totalPoints = 320;
-  final int _currentStreak = 7;
-  
-  // Dummy streak data for chart
-  final List<int> _streakHistory = [3, 4, 2, 5, 7, 6, 7];
-  
-  // Achievement badges
-  final List<Map<String, dynamic>> _achievements = [
-    {
-      'name': 'Perfect Streak',
-      'description': 'Maintained a 7-day streak without missing a quiz',
-      'icon': Icons.local_fire_department,
-      'color': Colors.orange,
-      'earned': true,
-      'date': '2023-11-15',
-    },
-    {
-      'name': 'Quiz Master',
-      'description': 'Achieved a perfect score in 5 consecutive quizzes',
-      'icon': Icons.star,
-      'color': Colors.amber,
-      'earned': true,
-      'date': '2023-11-10',
-    },
-    {
-      'name': 'Fast Learner',
-      'description': 'Completed 10 quizzes in a single day',
-      'icon': Icons.bolt,
-      'color': Colors.blue,
-      'earned': true,
-      'date': '2023-11-05',
-    },
-    {
-      'name': 'Knowledge Seeker',
-      'description': 'Answered 100 questions correctly',
-      'icon': Icons.school,
-      'color': Colors.green,
-      'earned': false,
-      'date': null,
-    },
-  ];
-  
-  // Recent activities
-  final List<Map<String, dynamic>> _recentActivities = [
-    {
-      'type': 'quiz_completed',
-      'title': 'Completed Science Quiz',
-      'description': 'Scored 8/10',
-      'time': '2 hours ago',
-      'icon': Icons.science,
-      'color': Colors.blue,
-    },
-    {
-      'type': 'subscription_renewed',
-      'title': 'Premium Subscription Renewed',
-      'description': 'Next renewal on Dec 25, 2023',
-      'time': '1 day ago',
-      'icon': Icons.card_membership,
-      'color': Colors.amber,
-    },
-    {
-      'type': 'badge_earned',
-      'title': 'Earned Perfect Streak Badge',
-      'description': 'Maintained a 7-day streak',
-      'time': '3 days ago',
-      'icon': Icons.local_fire_department,
-      'color': Colors.orange,
-    },
-  ];
-  
-  // Educational info
-  final Map<String, dynamic> _educationInfo = {
-    'email': 'alex.j@university.edu',
-    'year': '3rd Year',
-    'verified': true,
-    'institution': 'University of Technology',
-  };
-  
-  // Social links
-  final Map<String, String?> _socialLinks = {
-    'twitter': '@alexjohnson',
-    'linkedin': 'alex-johnson',
-    'github': 'alexjdev',
-  };
-  
-  // Recent games
-  final List<Map<String, dynamic>> _recentGames = [
-    {
-      'title': 'Science Trivia',
-      'subtitle': '8/10 correct',
-      'icon': Icons.science,
-      'category': 'science',
-    },
-    {
-      'title': 'History Masters',
-      'subtitle': '6/10 correct',
-      'icon': Icons.history_edu,
-      'category': 'history',
-    },
-  ];
-  
   @override
   void initState() {
     super.initState();
@@ -148,6 +39,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
+    
+    // Fetch profile data when the screen loads
+    context.read<ProfileBloc>().add(FetchProfileEvent());
   }
   
   @override
@@ -186,42 +80,135 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               ),
             ],
           ),
-          body: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Padding(
-              padding: EdgeInsets.all(16.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildProfileCard(context),
-                  SizedBox(height: 24.h),
-                  _buildStatsSection(context),
-                  SizedBox(height: 24.h),
-                  _buildAchievementsSection(context),
-                  SizedBox(height: 24.h),
-                  _buildRecentActivitySection(context),
-                  SizedBox(height: 24.h),
-                  _buildDailyChallengeSection(context),
-                  SizedBox(height: 24.h),
-                  _buildRecentGamesSection(context),
-                ],
-              ),
-            ),
-          ),
-          floatingActionButton: FloatingActionButton(
-            onPressed: () {
-              // Show quick profile settings
-              _showProfileSettingsModal(context);
+          body: BlocBuilder<ProfileBloc, ProfileState>(
+            builder: (context, state) {
+              if (state is ProfileLoading) {
+                return Center(child: CircularProgressIndicator());
+              } else if (state is ProfileError) {
+                return Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.w),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.error, size: 64.sp, color: Colors.red),
+                        SizedBox(height: 16.h),
+                        Text(
+                          'Error loading profile data',
+                          style: Theme.of(context).textTheme.titleLarge,
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: 8.h),
+                        Text(
+                          state.message,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: 24.h),
+                        ElevatedButton(
+                          onPressed: () {
+                            context.read<ProfileBloc>().add(FetchProfileEvent());
+                          },
+                          child: Text('Try Again'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              } else if (state is ProfileLoaded) {
+                final ProfileData profile = state.profile;
+                
+                // Extract real data from the profile
+                final String userName = profile.name;
+                final String userEmail = profile.email;
+                final bool isPremiumUser = profile.isPremium;
+                final String userAvatar = profile.profile.imageUrl.isNotEmpty
+                    ? profile.profile.imageUrl
+                    : 'https://i.pravatar.cc/150?img=12'; // Fallback avatar
+                
+                // Extract stats
+                final int currentStreak = profile.stats.streak;
+                final int totalCorrect = profile.stats.totalCorrect;
+                final int totalAnswered = profile.stats.totalAnswered;
+                final String accuracy = profile.stats.accuracy;
+                
+                // Create streakHistory (mock if not available)
+                final List<int> streakHistory = [
+                  math.max(1, currentStreak - 6),
+                  math.max(1, currentStreak - 5),
+                  math.max(1, currentStreak - 3),
+                  math.max(1, currentStreak - 2),
+                  math.max(1, currentStreak - 1),
+                  currentStreak,
+                  currentStreak,
+                ];
+                
+                return SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Padding(
+                    padding: EdgeInsets.all(16.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Daily Quiz Countdown
+                        DailyQuizCountdown(
+                          dailyQuizData: profile.dailyQuiz,
+                        ),
+                        SizedBox(height: 24.h),
+                        
+                        _buildProfileCard(
+                          context, 
+                          userName: userName,
+                          userEmail: userEmail,
+                          userAvatar: userAvatar,
+                          isPremiumUser: isPremiumUser,
+                        ),
+                        SizedBox(height: 24.h),
+                        _buildStatsSection(
+                          context,
+                          streak: currentStreak,
+                          totalCorrect: totalCorrect,
+                          totalAnswered: totalAnswered,
+                          streakHistory: streakHistory,
+                        ),
+                        SizedBox(height: 24.h),
+                        _buildAchievementsSection(context),
+                        SizedBox(height: 24.h),
+                        _buildRecentActivitySection(context),
+                      ],
+                    ),
+                  ),
+                );
+              } else {
+                // Initial state or unknown state
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Welcome to Text the Answer',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      SizedBox(height: 16.h),
+                      CircularProgressIndicator(),
+                    ],
+                  ),
+                );
+              }
             },
-            child: Icon(Icons.settings),
-            backgroundColor: accentColor,
           ),
         );
       },
     );
   }
-
-  Widget _buildProfileCard(BuildContext context) {
+  
+  Widget _buildProfileCard(
+    BuildContext context, {
+    required String userName,
+    required String userEmail,
+    required String userAvatar,
+    required bool isPremiumUser,
+  }) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final cardColor =
         isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
@@ -277,20 +264,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    _userName,
+                    userName,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  if (_isUserVerified)
-                    Padding(
-                      padding: EdgeInsets.only(left: 8.w),
-                      child: Icon(
-                        Icons.verified,
-                        color: Colors.blue,
-                        size: 20.sp,
-                      ),
-                    ),
                 ],
               ),
               
@@ -298,7 +276,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               
               // Email
               Text(
-                _userEmail,
+                userEmail,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: secondaryTextColor,
                 ),
@@ -317,20 +295,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         'Profile Completion',
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
-                      Text(
-                        '${(_profileCompletionPercentage * 100).toInt()}%',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: accentColor,
-                        ),
-                      ),
                     ],
                   ),
                   SizedBox(height: 8.h),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4.r),
                     child: LinearProgressIndicator(
-                      value: _profileCompletionPercentage,
+                      value: 0.75, // Placeholder for actual implementation
                       backgroundColor: accentColor.withOpacity(0.1),
                       valueColor: AlwaysStoppedAnimation<Color>(accentColor),
                       minHeight: 8.h,
@@ -370,7 +341,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               ),
               
               // Premium badge
-              if (_isPremiumUser)
+              if (isPremiumUser)
                 Container(
                   margin: EdgeInsets.only(top: 16.h),
                   padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
@@ -427,7 +398,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     width: 80.w,
                     height: 80.w,
                     child: CircularProgressIndicator(
-                      value: _profileCompletionPercentage,
+                      value: 0.75, // Placeholder for actual implementation
                       strokeWidth: 4.w,
                       backgroundColor: Colors.grey.withOpacity(0.2),
                       valueColor: AlwaysStoppedAnimation<Color>(accentColor),
@@ -453,7 +424,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           ),
                         ],
                         image: DecorationImage(
-                          image: NetworkImage(_userAvatar),
+                          image: NetworkImage(userAvatar),
                           fit: BoxFit.cover,
                           onError: (exception, stackTrace) {
                             // Handle error loading image
@@ -533,53 +504,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  void _showProfileSettingsModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
-      ),
-      builder: (context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.7,
-          minChildSize: 0.5,
-          maxChildSize: 0.9,
-          expand: false,
-          builder: (context, scrollController) {
-            return Container(
-              padding: EdgeInsets.all(16.w),
-              child: ListView(
-                controller: scrollController,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40.w,
-                      height: 4.h,
-                      margin: EdgeInsets.only(bottom: 16.h),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(2.r),
-                      ),
-                    ),
-                  ),
-                  Text(
-                    'Profile Settings',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 24.h),
-                  // Profile settings options would go here
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-  
-  Widget _buildStatsSection(BuildContext context) {
+  Widget _buildStatsSection(
+    BuildContext context, {
+    required int streak,
+    required int totalCorrect,
+    required int totalAnswered,
+    required List<int> streakHistory,
+  }) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final cardColor =
         isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
@@ -639,7 +570,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '$_currentStreak Day Streak',
+                        '$streak Day Streak',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 18.sp,
@@ -648,7 +579,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ),
                       SizedBox(height: 4.h),
                       Text(
-                        'Keep it going!',
+                        'Keep it up!',
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.8),
                           fontSize: 14.sp,
@@ -658,72 +589,73 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                 ],
               ),
-              SizedBox(height: 24.h),
-              
-              // Streak chart
+              SizedBox(height: 20.h),
               SizedBox(
                 height: 80.h,
-                child: _buildStreakChart(context),
+                child: _buildStreakChart(context, streakHistory),
               ),
             ],
           ),
         ),
-        
         SizedBox(height: 16.h),
         
         // Stats grid
-        GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 16.w,
-          mainAxisSpacing: 16.h,
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
+        Row(
           children: [
-            _buildStatCard(
-              context,
-              title: 'Games Played',
-              value: _gamesPlayed.toString(),
-              icon: Icons.gamepad,
-              gradient: [Colors.purple.shade300, Colors.purple.shade600],
+            Expanded(
+              child: _buildStatCard(
+                context,
+                title: 'Games Played',
+                value: totalAnswered.toString(),
+                icon: Icons.gamepad,
+                gradient: [Colors.purple.shade300, Colors.purple.shade600],
+              ),
             ),
-            _buildStatCard(
-              context,
-              title: 'Correct Answers',
-              value: _correctAnswers.toString(),
-              icon: Icons.check_circle,
-              gradient: [Colors.green.shade300, Colors.green.shade600],
+            SizedBox(width: 16.w),
+            Expanded(
+              child: _buildStatCard(
+                context,
+                title: 'Correct Answers',
+                value: totalCorrect.toString(),
+                icon: Icons.check_circle,
+                gradient: [Colors.green.shade300, Colors.green.shade600],
+              ),
             ),
-            _buildStatCard(
-              context,
-              title: 'Total Points',
-              value: _totalPoints.toString(),
-              icon: Icons.star,
-              gradient: [Colors.amber.shade300, Colors.amber.shade600],
+          ],
+        ),
+        SizedBox(height: 16.h),
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                context,
+                title: 'Accuracy',
+                value: totalAnswered > 0 
+                    ? '${(totalCorrect * 100 / totalAnswered).toInt()}%' 
+                    : '0%',
+                icon: Icons.precision_manufacturing,
+                gradient: [Colors.amber.shade300, Colors.amber.shade600],
+              ),
             ),
-            _buildStatCard(
-              context,
-              title: 'Accuracy',
-              value: '${(_correctAnswers * 100 / (_gamesPlayed * 10)).toInt()}%',
-              icon: Icons.precision_manufacturing,
-              gradient: [Colors.blue.shade300, Colors.blue.shade600],
-            ),
+            SizedBox(width: 16.w),
+            Expanded(child: Container()), // Empty space for balance
           ],
         ),
       ],
     );
   }
   
-  Widget _buildStreakChart(BuildContext context) {
+  Widget _buildStreakChart(BuildContext context, List<int> streakHistory) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: List.generate(
-        _streakHistory.length,
+        streakHistory.length,
         (index) {
-          final int value = _streakHistory[index];
-          final double normalizedHeight = (value / _streakHistory.reduce(math.max)) * 60.h;
+          final int value = streakHistory[index];
+          final double normalizedHeight = (value / streakHistory.reduce(math.max)) * 60.h;
           
           return Column(
             mainAxisAlignment: MainAxisAlignment.end,
@@ -850,17 +782,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             physics: BouncingScrollPhysics(),
-            itemCount: _achievements.length,
+            itemCount: 5, // Placeholder for actual implementation
             itemBuilder: (context, index) {
-              final achievement = _achievements[index];
               return _buildAchievementBadge(
                 context,
-                name: achievement['name'],
-                description: achievement['description'],
-                icon: achievement['icon'],
-                color: achievement['color'],
-                earned: achievement['earned'],
-                date: achievement['date'],
+                name: 'Achievement ${index + 1}',
+                description: 'Description for Achievement ${index + 1}',
+                icon: Icons.star,
+                color: Colors.amber,
+                earned: true,
+                date: '2023-11-${index + 5}',
               );
             },
           ),
@@ -1111,19 +1042,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ),
           child: Column(
             children: List.generate(
-              _isActivityExpanded ? _recentActivities.length : math.min(2, _recentActivities.length),
+              _isActivityExpanded ? 5 : 2, // Placeholder for actual implementation
               (index) {
-                final activity = _recentActivities[index];
                 return _buildActivityItem(
                   context,
-                  title: activity['title'],
-                  description: activity['description'],
-                  time: activity['time'],
-                  icon: activity['icon'],
-                  color: activity['color'],
-                  isLast: index == (_isActivityExpanded 
-                      ? _recentActivities.length - 1 
-                      : math.min(2, _recentActivities.length) - 1),
+                  title: 'Activity ${index + 1}',
+                  description: 'Description for Activity ${index + 1}',
+                  time: '${index + 1} hours ago',
+                  icon: Icons.star,
+                  color: Colors.amber,
+                  isLast: index == (_isActivityExpanded ? 4 : 1),
                 );
               },
             ),
@@ -1205,312 +1133,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                   ),
                 ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildDailyChallengeSection(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final secondaryTextColor =
-        isDarkMode ? AppColors.darkLabelText : AppColors.lightLabelText;
-    final accentColor =
-        isDarkMode ? AppColors.darkOutlineBg : AppColors.lightOutlineBg;
-        
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Daily Challenge',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
-        SizedBox(height: 16.h),
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.blue.shade400,
-                Colors.blue.shade700,
-              ],
-            ),
-            borderRadius: BorderRadius.circular(16.r),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.blue.shade700.withOpacity(0.3),
-                blurRadius: 10.r,
-                offset: Offset(0, 5.h),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              ClipRRect(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(16.r),
-                  topRight: Radius.circular(16.r),
-                ),
-                child: Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(16.w),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(10.w),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.bolt,
-                          color: Colors.white,
-                          size: 24.sp,
-                        ),
-                      ),
-                      SizedBox(width: 16.w),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Pop Culture Quiz',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            '10 questions · 5 min',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
-                              fontSize: 14.sp,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              
-              // Body
-              Padding(
-                padding: EdgeInsets.all(16.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Complete today\'s challenge to earn bonus points!',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16.sp,
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.star,
-                          color: Colors.amber,
-                          size: 16.sp,
-                        ),
-                        SizedBox(width: 4.w),
-                        Text(
-                          'Earn up to 100 bonus points',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14.sp,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 4.h),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.emoji_events,
-                          color: Colors.amber,
-                          size: 16.sp,
-                        ),
-                        SizedBox(width: 4.w),
-                        Text(
-                          'Top 3 players get special badges',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14.sp,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 16.h),
-                    ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.blue.shade700,
-                        minimumSize: Size(double.infinity, 50.h),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        'Start Challenge',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-  
-  Widget _buildRecentGamesSection(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final accentColor =
-        isDarkMode ? AppColors.darkOutlineBg : AppColors.lightOutlineBg;
-        
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Recent Games',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            TextButton(
-              onPressed: () {},
-              child: Text('See All'),
-            ),
-          ],
-        ),
-        SizedBox(height: 16.h),
-        ..._recentGames.map((game) {
-          return Padding(
-            padding: EdgeInsets.only(bottom: 12.h),
-            child: _buildRecentGameItem(
-              context,
-              title: game['title'],
-              subtitle: game['subtitle'],
-              icon: game['icon'],
-              category: game['category'],
-            ),
-          );
-        }).toList(),
-      ],
-    );
-  }
-  
-  Widget _buildRecentGameItem(
-    BuildContext context, {
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required String category,
-  }) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final cardColor =
-        isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
-    final secondaryTextColor =
-        isDarkMode ? AppColors.darkLabelText : AppColors.lightLabelText;
-    
-    // Determine color based on category
-    Color iconColor;
-    switch (category) {
-      case 'science':
-        iconColor = Colors.blue;
-        break;
-      case 'history':
-        iconColor = Colors.amber;
-        break;
-      case 'literature':
-        iconColor = Colors.green;
-        break;
-      case 'sports':
-        iconColor = Colors.red;
-        break;
-      case 'entertainment':
-        iconColor = Colors.purple;
-        break;
-      default:
-        iconColor = Colors.blue;
-    }
-
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            // color: Cells.black.withOpacity(0.03),
-            blurRadius: 8.r,
-            offset: Offset(0, 3.h),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Hero(
-            tag: 'game_icon_$title',
-            child: Container(
-              padding: EdgeInsets.all(12.w),
-              decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: iconColor, size: 24.sp),
-            ),
-          ),
-          SizedBox(width: 16.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: secondaryTextColor,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(20.r),
-              onTap: () {
-                // Navigate to game details
-              },
-              child: Container(
-                padding: EdgeInsets.all(8.w),
-                child: Icon(
-                  Icons.arrow_forward_ios,
-                  color: secondaryTextColor,
-                  size: 16.sp,
-                ),
               ),
             ),
           ),

@@ -7,6 +7,9 @@ import 'package:text_the_answer/blocs/auth/auth_state.dart';
 import 'package:text_the_answer/blocs/profile/profile_bloc.dart';
 import 'package:text_the_answer/blocs/profile/profile_event.dart';
 import 'package:text_the_answer/blocs/profile/profile_state.dart';
+import 'package:text_the_answer/blocs/achievement/achievement_bloc.dart';
+import 'package:text_the_answer/blocs/achievement/achievement_event.dart';
+import 'package:text_the_answer/blocs/achievement/achievement_state.dart';
 import 'package:text_the_answer/config/colors.dart';
 import 'package:text_the_answer/router/routes.dart';
 import 'package:text_the_answer/screens/profile/edit_profile_screen.dart';
@@ -18,6 +21,7 @@ import 'package:text_the_answer/utils/logger/debug_print.dart';
 import 'package:text_the_answer/widgets/error_widget.dart';
 import 'package:text_the_answer/widgets/loading_widget.dart';
 import 'package:text_the_answer/utils/theme/theme_cubit.dart';
+import 'package:text_the_answer/widgets/common/achievement_badge.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -44,6 +48,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (authState is AuthAuthenticated) {
       printDebug('User is authenticated, loading profile data');
       _profileBloc.add(FetchProfileEvent());
+      
+      // Also load user achievements
+      context.read<AchievementBloc>().add(LoadUserAchievements());
     } else {
       printDebug('User is not authenticated, cannot load profile data');
       // Don't try to load profile if not authenticated
@@ -252,7 +259,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       ProfileHeader(
                                         profile: profile,
                                         isDarkMode: isDarkMode,
+                                        isUpdating: isUpdating,
+                                        onEditPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => EditProfileScreen(
+                                                profile: profile,
+                                              ),
+                                            ),
+                                          ).then(
+                                            (_) => _loadProfileData(),
+                                          );
+                                        },
                                       ),
+
+                                      SizedBox(height: 24.h),
+
+                                      // Add achievements section
+                                      _buildAchievementsSection(),
 
                                       SizedBox(height: 24.h),
 
@@ -391,6 +416,182 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // New method to build the achievements section
+  Widget _buildAchievementsSection() {
+    return BlocBuilder<AchievementBloc, AchievementState>(
+      builder: (context, state) {
+        // Loading state
+        if (state is AchievementLoading) {
+          return _buildSectionCard(
+            title: 'Achievements',
+            child: SizedBox(
+              height: 70.h,
+              child: const Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          );
+        }
+        
+        // Error state
+        if (state is AchievementError) {
+          return _buildSectionCard(
+            title: 'Achievements',
+            child: SizedBox(
+              height: 70.h,
+              child: Center(
+                child: Text(
+                  'Could not load achievements',
+                  style: FontUtility.interRegular(
+                    fontSize: 14.sp,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+        
+        // No achievements yet
+        if (state is UserAchievementsLoaded && state.achievements.isEmpty) {
+          return _buildSectionCard(
+            title: 'Achievements',
+            child: SizedBox(
+              height: 70.h,
+              child: Center(
+                child: Text(
+                  'Complete quizzes to earn achievements!',
+                  style: FontUtility.interRegular(
+                    fontSize: 14.sp,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+        
+        // User achievements loaded
+        if (state is UserAchievementsLoaded) {
+          return _buildSectionCard(
+            title: 'Achievements',
+            actionText: 'View All',
+            onActionTap: () {
+              // Navigate to achievements page
+              context.go('${AppRoutePath.library}/achievements');
+            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Badges row
+                AchievementBadgeRow(
+                  achievements: state.achievements,
+                  badgeSize: 50.h,
+                  onViewAll: () {
+                    context.go('${AppRoutePath.library}/achievements');
+                  },
+                ),
+                if (state.unviewedAchievements.isNotEmpty) ...[
+                  SizedBox(height: 16.h),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 8.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade100,
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(color: Colors.amber),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.celebration, color: Colors.amber),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: Text(
+                            'You have ${state.unviewedAchievements.length} new achievements!',
+                            style: FontUtility.interMedium(
+                              fontSize: 14.sp,
+                              color: Colors.amber.shade900,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          );
+        }
+        
+        // Default view if no state matches
+        return _buildSectionCard(
+          title: 'Achievements',
+          child: SizedBox(
+            height: 70.h,
+            child: Center(
+              child: Text(
+                'Complete quizzes to earn achievements!',
+                style: FontUtility.interRegular(
+                  fontSize: 14.sp,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+  
+  // Helper method to build consistent section cards
+  Widget _buildSectionCard({
+    required String title,
+    required Widget child,
+    String? actionText,
+    VoidCallback? onActionTap,
+  }) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title,
+                  style: FontUtility.montserratBold(
+                    fontSize: 18.sp,
+                  ),
+                ),
+                if (actionText != null && onActionTap != null)
+                  GestureDetector(
+                    onTap: onActionTap,
+                    child: Text(
+                      actionText,
+                      style: FontUtility.interMedium(
+                        fontSize: 14.sp,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            child,
+          ],
+        ),
       ),
     );
   }

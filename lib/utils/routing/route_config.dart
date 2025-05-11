@@ -26,6 +26,7 @@ import 'package:text_the_answer/screens/settings/notification_screen.dart';
 import 'package:text_the_answer/screens/settings/security_screen.dart';
 import 'package:text_the_answer/screens/settings/settings_screen.dart';
 import 'package:text_the_answer/screens/profile/profile_screen.dart';
+import 'package:text_the_answer/screens/achievements/achievements_page.dart';
 import 'package:text_the_answer/utils/logger/debug_print.dart';
 import 'package:text_the_answer/utils/theme/theme_utils.dart';
 
@@ -207,6 +208,16 @@ final GoRouter router = GoRouter(
               builder: (context, state) {
                 return Scaffold(appBar: AppBar(title: Text('Library')));
               },
+              routes: [
+                // -- Achievements page as a subroute of Library
+                GoRoute(
+                  name: AppRouteName.achievements,
+                  path: 'achievements',
+                  builder: (context, state) {
+                    return const AchievementsPage();
+                  },
+                ),
+              ],
             ),
           ],
         ),

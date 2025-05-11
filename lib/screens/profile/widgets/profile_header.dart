@@ -7,11 +7,15 @@ import 'package:text_the_answer/utils/font_utility.dart';
 class ProfileHeader extends StatelessWidget {
   final ProfileData profile;
   final bool isDarkMode;
+  final bool isUpdating;
+  final VoidCallback? onEditPressed;
 
   const ProfileHeader({
     Key? key,
     required this.profile,
     required this.isDarkMode,
+    this.isUpdating = false,
+    this.onEditPressed,
   }) : super(key: key);
 
   @override
@@ -27,21 +31,47 @@ class ProfileHeader extends StatelessWidget {
           // Profile image and basic info
           Row(
             children: [
-              CircleAvatar(
-                radius: 40.r,
-                backgroundColor: isDarkMode 
-                  ? AppColors.primary.withOpacity(0.3)
-                  : AppColors.primary.withOpacity(0.2),
-                backgroundImage: profile.profile.imageUrl.isNotEmpty
-                  ? NetworkImage(profile.profile.imageUrl)
-                  : null,
-                child: profile.profile.imageUrl.isEmpty
-                  ? Icon(
-                      Icons.person,
-                      size: 40.r,
-                      color: AppColors.primary,
-                    )
-                  : null,
+              Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 40.r,
+                    backgroundColor: isDarkMode 
+                      ? AppColors.primary.withOpacity(0.3)
+                      : AppColors.primary.withOpacity(0.2),
+                    backgroundImage: profile.profile.imageUrl.isNotEmpty
+                      ? NetworkImage(profile.profile.imageUrl)
+                      : null,
+                    child: profile.profile.imageUrl.isEmpty
+                      ? Icon(
+                          Icons.person,
+                          size: 40.r,
+                          color: AppColors.primary,
+                        )
+                      : null,
+                  ),
+                  if (onEditPressed != null)
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: GestureDetector(
+                        onTap: isUpdating ? null : onEditPressed,
+                        child: Container(
+                          padding: EdgeInsets.all(4.r),
+                          decoration: BoxDecoration(
+                            color: isUpdating
+                                ? Colors.grey
+                                : AppColors.primary,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.edit,
+                            size: 16.r,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
               SizedBox(width: 16.w),
               Expanded(

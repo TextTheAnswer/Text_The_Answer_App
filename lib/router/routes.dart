@@ -5,6 +5,7 @@ abstract class AppRouteName {
   static const String gameMode = 'game-mode';
   static const String quiz = 'quiz';
   static const String profile = 'profile';
+  static const String achievements = 'achievements';
 
   // -- Login and Onboarding
   static const String splash = 'splash';
@@ -38,6 +39,9 @@ abstract class AppRoutePath {
   static const String gameMode = '/game-mode';
   static const String quiz = '/quiz';
   static const String profile = '/profile';
+  static const String dailyQuiz = '/daily-quiz';
+  static const String leaderboard = '/leaderboard';
+  static const String achievements = '/achievements';
 
   // -- Login and Onboarding
   static const String splash = '/splash';
@@ -87,6 +91,7 @@ class Routes {
   static const String cancellationConfirmation =
       '/subscription/cancellation-confirmation';
   static const String profile = '/profile';
+  static const String achievements = '/achievements';
 
   //Add routes here
 }

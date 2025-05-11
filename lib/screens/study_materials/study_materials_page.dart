@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:text_the_answer/blocs/study_material/study_material_bloc.dart';
 import 'package:text_the_answer/blocs/study_material/study_material_event.dart';
 import 'package:text_the_answer/blocs/study_material/study_material_state.dart';
 import 'package:text_the_answer/models/study_material.dart';
 import 'package:text_the_answer/widgets/error_widget.dart';
 import 'package:text_the_answer/widgets/loading_widget.dart';
+import 'package:text_the_answer/router/routes.dart';
 
 class StudyMaterialsPage extends StatefulWidget {
   const StudyMaterialsPage({Key? key}) : super(key: key);
@@ -39,6 +41,13 @@ class _StudyMaterialsPageState extends State<StudyMaterialsPage> {
       appBar: AppBar(
         title: const Text('Study Materials'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.emoji_events),
+            tooltip: 'Achievements',
+            onPressed: () {
+              context.go('${AppRoutePath.library}/achievements');
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () => _showAddMaterialDialog(context),

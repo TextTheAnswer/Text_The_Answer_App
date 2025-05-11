@@ -12,6 +12,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
 import '../router/routes.dart';
 import '../utils/theme/theme_cubit.dart';
+import '../blocs/achievement/achievement_bloc.dart';
+import '../blocs/achievement/achievement_event.dart';
+import '../models/achievement.dart';
 
 class DailyQuizScreen extends StatefulWidget {
   final Function()? toggleTheme;
@@ -884,12 +887,28 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
     if (percentage >= 80) {
       remarks = 'Excellent!';
       remarksColor = Colors.green;
+      
+      // Check for perfect quiz achievement
+      if (percentage == 100 && questionsAnswered >= 5) {
+        _checkForAchievement('perfect_quiz');
+      }
     } else if (percentage >= 60) {
       remarks = 'Good job!';
       remarksColor = Colors.blue;
     } else if (percentage >= 40) {
       remarks = 'Not bad!';
       remarksColor = Colors.orange;
+    }
+    
+    // Check for streak achievement
+    if (streak >= 3) {
+      _checkForAchievement('streak_master');
+    }
+    
+    // Check for questions answered achievement
+    if (summary['totalQuestionsAnswered'] != null && 
+        summary['totalQuestionsAnswered'] >= 50) {
+      _checkForAchievement('question_milestone');
     }
 
     return Padding(
@@ -1205,5 +1224,57 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
     final milliseconds =
         (_secondsRemaining * 100) % 100; // Using 2 decimal places
     return '$seconds:${milliseconds.toInt().toString().padLeft(2, '0')}';
+  }
+
+  // New method to check and trigger achievements
+  void _checkForAchievement(String achievementType) {
+    try {
+      // Only trigger if the achievement bloc is available
+      if (context.read<AchievementBloc>() != null) {
+        // These would normally come from the backend, but we're simulating for demo
+        // In a real implementation, achievements would be unlocked by the backend
+        // and we would just display them
+        
+        switch (achievementType) {
+          case 'perfect_quiz':
+            final achievement = Achievement(
+              id: 'perfect_quiz_achievement',
+              name: 'Perfect Quiz Master',
+              description: 'Complete a quiz with a perfect score',
+              icon: 'star',
+              tier: 'gold',
+              unlockedAt: DateTime.now(),
+            );
+            context.read<AchievementBloc>().add(UnlockAchievement(achievement));
+            break;
+            
+          case 'streak_master':
+            final achievement = Achievement(
+              id: 'streak_master_achievement',
+              name: 'Streak Master',
+              description: 'Maintain a 3-day streak',
+              icon: 'fire',
+              tier: 'silver',
+              unlockedAt: DateTime.now(),
+            );
+            context.read<AchievementBloc>().add(UnlockAchievement(achievement));
+            break;
+            
+          case 'question_milestone':
+            final achievement = Achievement(
+              id: 'question_milestone_achievement',
+              name: 'Knowledge Seeker',
+              description: 'Answer 50 questions',
+              icon: 'brain',
+              tier: 'bronze',
+              unlockedAt: DateTime.now(),
+            );
+            context.read<AchievementBloc>().add(UnlockAchievement(achievement));
+            break;
+        }
+      }
+    } catch (e) {
+      print('Error checking for achievements: $e');
+    }
   }
 }
