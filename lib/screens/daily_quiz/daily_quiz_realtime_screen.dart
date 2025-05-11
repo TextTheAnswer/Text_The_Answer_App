@@ -10,6 +10,7 @@ import '../../blocs/socket/socket_state.dart' as socket_state;
 import '../../models/question.dart';
 import '../../widgets/quiz/quiz_countdown_timer.dart';
 import '../../widgets/quiz/participant_list.dart';
+import '../../utils/socket_test.dart';
 
 class DailyQuizRealtimeScreen extends StatefulWidget {
   const DailyQuizRealtimeScreen({Key? key}) : super(key: key);
@@ -157,6 +158,20 @@ class _DailyQuizRealtimeScreenState extends State<DailyQuizRealtimeScreen> {
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 40),
             child: LinearProgressIndicator(),
+          ),
+          const SizedBox(height: 30),
+          ElevatedButton.icon(
+            onPressed: () async {
+              // Test the socket connection
+              await testDailyQuizSocketConnection();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Check console for connection test results'),
+                ),
+              );
+            },
+            icon: const Icon(Icons.network_check),
+            label: const Text('Test Socket Connection'),
           ),
         ],
       ),

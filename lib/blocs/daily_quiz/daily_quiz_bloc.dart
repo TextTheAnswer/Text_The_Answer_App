@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../services/socket_service.dart';
+import '../../services/daily_quiz_socket.dart';
 import '../../models/question.dart';
 import '../../services/auth_token_service.dart';
 import 'daily_quiz_event.dart';
@@ -8,7 +10,9 @@ import 'daily_quiz_state.dart';
 
 class DailyQuizBloc extends Bloc<DailyQuizEvent, DailyQuizState> {
   final SocketService _socketService = SocketService();
+  late final DailyQuizSocket _dailyQuizSocket;
   final AuthTokenService _authTokenService = AuthTokenService();
+  final String socketUrl = dotenv.env['SOCKET_IO_URL'] ?? 'http://localhost:3000';
   
   // Stream subscriptions for socket events
   StreamSubscription? _playerJoinedSubscription;
@@ -21,16 +25,15 @@ class DailyQuizBloc extends Bloc<DailyQuizEvent, DailyQuizState> {
   StreamSubscription? _socketErrorSubscription;
   
   DailyQuizBloc() : super(DailyQuizInitial()) {
+    _dailyQuizSocket = DailyQuizSocket(serverUrl: socketUrl);
+    
     on<JoinDailyQuiz>((event, emit) async {
       emit(DailyQuizLoading());
       try {
-        // Initialize socket if needed
-        await _socketService.init();
+        // Initialize the daily quiz socket connection
+        await _dailyQuizSocket.init();
         
-        // Subscribe to daily quiz
-        _socketService.subscribeToDailyLeaderboard();
-        
-        // Initialize socket event listeners
+        // Setup socket event listeners
         _setupSocketListeners();
         
         emit(DailyQuizWaiting(message: 'Waiting for quiz to start...'));
@@ -40,8 +43,8 @@ class DailyQuizBloc extends Bloc<DailyQuizEvent, DailyQuizState> {
     });
     
     on<LeaveDailyQuiz>((event, emit) {
-      // Unsubscribe from daily quiz
-      _socketService.unsubscribeFromDailyLeaderboard();
+      // Disconnect socket
+      _dailyQuizSocket.disconnect();
       
       // Cancel all subscriptions
       _cancelSubscriptions();
@@ -82,11 +85,13 @@ class DailyQuizBloc extends Bloc<DailyQuizEvent, DailyQuizState> {
         ));
         
         // Submit answer via socket
-        _socketService.socket!.emit('submit-answer', {
-          'questionId': currentState.question.id,
-          'answer': event.answer,
-          'timeRemaining': event.timeRemaining,
-        });
+        if (_dailyQuizSocket.socket != null && _dailyQuizSocket.socket!.connected) {
+          _dailyQuizSocket.socket!.emit('submit-answer', {
+            'questionId': currentState.question.id,
+            'answer': event.answer,
+            'timeRemaining': event.timeRemaining,
+          });
+        }
       }
     });
     
@@ -158,24 +163,8 @@ class DailyQuizBloc extends Bloc<DailyQuizEvent, DailyQuizState> {
   }
   
   void _setupSocketListeners() {
-    // Listen for new participants 
-    _playerJoinedSubscription = _socketService.playerJoinedStreamController.stream.listen((data) {
-      add(UpdateLeaderboard(
-        participants: data['participants'] ?? [],
-        userRank: data['userRank'] ?? 0
-      ));
-    });
-    
-    // Listen for participants leaving
-    _playerLeftSubscription = _socketService.playerLeftStreamController.stream.listen((data) {
-      add(UpdateLeaderboard(
-        participants: data['participants'] ?? [],
-        userRank: data['userRank'] ?? 0
-      ));
-    });
-    
     // Listen for new questions
-    _socketService.socket!.on('new-question', (data) {
+    _dailyQuizSocket.socket?.on('new-question', (data) {
       final question = Question.fromJson(data['question']);
       add(ReceiveQuestion(
         question: question,
@@ -187,12 +176,12 @@ class DailyQuizBloc extends Bloc<DailyQuizEvent, DailyQuizState> {
     });
     
     // Listen for question ended
-    _socketService.socket!.on('question-ended', (data) {
+    _dailyQuizSocket.socket?.on('question-ended', (data) {
       // Usually transitions to the results screen
     });
     
     // Listen for answer results
-    _socketService.socket!.on('answer-result', (data) {
+    _dailyQuizSocket.socket?.on('answer-result', (data) {
       add(ReceiveAnswerResult(
         isCorrect: data['isCorrect'] ?? false,
         correctAnswer: data['correctAnswer'] ?? '',
@@ -205,7 +194,7 @@ class DailyQuizBloc extends Bloc<DailyQuizEvent, DailyQuizState> {
     });
     
     // Listen for leaderboard updates
-    _socketService.socket!.on('leaderboard-update', (data) {
+    _dailyQuizSocket.socket?.on('leaderboard-update', (data) {
       add(UpdateLeaderboard(
         participants: data['participants'] ?? [],
         userRank: data['userRank'] ?? 0
@@ -213,7 +202,7 @@ class DailyQuizBloc extends Bloc<DailyQuizEvent, DailyQuizState> {
     });
     
     // Listen for quiz ended
-    _socketService.socket!.on('quiz-ended', (data) {
+    _dailyQuizSocket.socket?.on('quiz-ended', (data) {
       add(QuizEnded(
         totalQuestions: data['totalQuestions'] ?? 10,
         correctAnswers: data['correctAnswers'] ?? 0,
@@ -225,7 +214,8 @@ class DailyQuizBloc extends Bloc<DailyQuizEvent, DailyQuizState> {
     });
     
     // Listen for socket errors
-    _socketErrorSubscription = _socketService.errorStreamController.stream.listen((errorMsg) {
+    _dailyQuizSocket.socket?.on('error', (data) {
+      final errorMsg = data is String ? data : (data is Map ? data['message'] ?? 'Socket error occurred' : 'Socket error occurred');
       add(SocketError(message: errorMsg));
     });
   }
@@ -244,6 +234,7 @@ class DailyQuizBloc extends Bloc<DailyQuizEvent, DailyQuizState> {
   @override
   Future<void> close() {
     _cancelSubscriptions();
+    _dailyQuizSocket.dispose();
     return super.close();
   }
 } 
