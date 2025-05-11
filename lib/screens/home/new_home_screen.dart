@@ -194,25 +194,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildProfileCard(context),
-                  
                   SizedBox(height: 24.h),
-                  
                   _buildStatsSection(context),
-                  
                   SizedBox(height: 24.h),
-                  
                   _buildAchievementsSection(context),
-                  
                   SizedBox(height: 24.h),
-                  
                   _buildRecentActivitySection(context),
-                  
                   SizedBox(height: 24.h),
-                  
                   _buildDailyChallengeSection(context),
-                  
                   SizedBox(height: 24.h),
-                  
                   _buildRecentGamesSection(context),
                 ],
               ),
@@ -1465,7 +1455,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Cells.black.withOpacity(0.03),
             blurRadius: 8.r,
             offset: Offset(0, 3.h),
           ),

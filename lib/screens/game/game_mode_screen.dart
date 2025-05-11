@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:text_the_answer/router/routes.dart';
 import '../../blocs/game/game_bloc.dart';
 import '../../blocs/game/game_event.dart';
 import '../../blocs/game/game_state.dart';
@@ -7,16 +9,13 @@ import '../../utils/theme/theme_cubit.dart';
 import 'lobby_screen.dart';
 
 class GameModeScreen extends StatefulWidget {
-  final VoidCallback toggleTheme;
-  
-  const GameModeScreen({required this.toggleTheme, super.key});
+  const GameModeScreen({super.key});
 
   @override
   State<GameModeScreen> createState() => _GameModeScreenState();
 }
 
 class _GameModeScreenState extends State<GameModeScreen> {
-  
   void _toggleTheme() {
     // Get the current ThemeCubit and its state
     final ThemeCubit cubit = context.read<ThemeCubit>();
@@ -32,14 +31,14 @@ class _GameModeScreenState extends State<GameModeScreen> {
     // Call the original toggleTheme callback
     widget.toggleTheme();
   }
-  
+
   @override
   void initState() {
     super.initState();
     // Initialize sockets when entering the game section
     context.read<GameBloc>().add(InitializeSockets());
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ThemeCubit, ThemeState>(
@@ -126,7 +125,7 @@ class _GameModeScreenState extends State<GameModeScreen> {
       },
     );
   }
-  
+
   Widget _buildGameModeCard({
     required String title,
     required String description,
@@ -136,9 +135,7 @@ class _GameModeScreenState extends State<GameModeScreen> {
   }) {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
@@ -162,7 +159,7 @@ class _GameModeScreenState extends State<GameModeScreen> {
                     Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 18, 
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

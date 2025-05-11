@@ -15,12 +15,13 @@ class BottomSheetShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: DecoratedBox(
         decoration: ShapeDecoration(
-          //TODO: Change color
-          color: Color(0xFF1F222A),
+          color: isDarkMode ? Color(0xFF1F222A) : Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(36),
           ),

@@ -7,7 +7,6 @@ import 'package:text_the_answer/models/question.dart';
 import '../../utils/theme/theme_cubit.dart';
 import '../../widgets/common/theme_aware_widget.dart';
 
-
 class GameScreen extends StatefulWidget {
   final String gameId;
   final List<Question> questions;

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../blocs/game/game_bloc.dart';
 import '../../blocs/game/game_event.dart';
 import '../../blocs/game/game_state.dart';
@@ -13,7 +12,7 @@ class LobbyScreen extends StatefulWidget {
   final bool isPublic;
   final VoidCallback toggleTheme;
 
-  const LobbyScreen({required this.isPublic, required this.toggleTheme, super.key});
+  const LobbyScreen({required this.isPublic,required this.toggleTheme, super.key});
 
   @override
   State<LobbyScreen> createState() => _LobbyScreenState();
@@ -54,12 +53,12 @@ class _LobbyScreenState extends State<LobbyScreen> {
     _codeController.dispose();
     _nameController.dispose();
     _maxPlayersController.dispose();
-    
+
     // Leave the lobby when exiting screen if in one
     if (_currentLobby != null) {
       context.read<GameBloc>().add(LeaveLobby(lobbyId: _currentLobby!.id));
     }
-    
+
     super.dispose();
   }
 
@@ -162,10 +161,10 @@ class _LobbyScreenState extends State<LobbyScreen> {
       },
     );
   }
-  
+
   Widget _buildLobbyView(Lobby lobby) {
     final bool isHost = lobby.host == lobby.players.first['user'];
-    
+
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -176,7 +175,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
             style: Theme.of(context).textTheme.headlineLarge,
           ),
           const SizedBox(height: 20),
-          
+
           // Lobby info
           Card(
             child: Padding(
@@ -188,7 +187,10 @@ class _LobbyScreenState extends State<LobbyScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('Lobby Code:'),
-                      SelectableText(lobby.code, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      SelectableText(
+                        lobby.code,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -203,9 +205,9 @@ class _LobbyScreenState extends State<LobbyScreen> {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Player list
           Expanded(
             child: Card(
@@ -215,7 +217,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
                   final player = lobby.players[index];
                   final bool playerIsHost = player['user'] == lobby.host;
                   final bool isReady = player['ready'] ?? false;
-                  
+
                   return ListTile(
                     leading: CircleAvatar(
                       child: Text(player['name']?[0] ?? '?'),
@@ -223,7 +225,8 @@ class _LobbyScreenState extends State<LobbyScreen> {
                     title: Text(
                       player['name'] ?? 'Unknown Player',
                       style: TextStyle(
-                        fontWeight: playerIsHost ? FontWeight.bold : FontWeight.normal,
+                        fontWeight:
+                            playerIsHost ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
                     subtitle: playerIsHost ? const Text('Host') : null,
@@ -243,9 +246,9 @@ class _LobbyScreenState extends State<LobbyScreen> {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Ready button
           ElevatedButton(
             onPressed: () {
@@ -260,9 +263,9 @@ class _LobbyScreenState extends State<LobbyScreen> {
             ),
             child: Text(_isReady ? 'Ready' : 'Not Ready'),
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           // Start game button (host only)
           if (isHost)
             ElevatedButton(
@@ -275,9 +278,9 @@ class _LobbyScreenState extends State<LobbyScreen> {
               ),
               child: const Text('Start Game'),
             ),
-          
+
           const SizedBox(height: 12),
-          
+
           // Leave lobby button
           ElevatedButton(
             onPressed: () {
@@ -293,7 +296,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
       ),
     );
   }
-  
+
   Widget _buildPublicLobbiesView(List<Map<String, dynamic>> lobbies) {
     return Padding(
       padding: const EdgeInsets.all(20),
@@ -305,11 +308,11 @@ class _LobbyScreenState extends State<LobbyScreen> {
             style: Theme.of(context).textTheme.headlineLarge,
           ),
           const SizedBox(height: 20),
-          
+
           // Join by code
           TextField(
             controller: _codeController,
-            decoration: const InputDecoration(
+            decoration: const InputRadiation(
               labelText: 'Enter Lobby Code',
               border: OutlineInputBorder(),
               suffixIcon: Icon(Icons.login),
@@ -319,7 +322,9 @@ class _LobbyScreenState extends State<LobbyScreen> {
           ElevatedButton(
             onPressed: () {
               if (_codeController.text.isNotEmpty) {
-                context.read<GameBloc>().add(JoinLobby(code: _codeController.text));
+                context.read<GameBloc>().add(
+                  JoinLobby(code: _codeController.text),
+                );
               }
             },
             style: ElevatedButton.styleFrom(
@@ -327,9 +332,9 @@ class _LobbyScreenState extends State<LobbyScreen> {
             ),
             child: const Text('Join by Code'),
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Create new lobby
           ElevatedButton(
             onPressed: () {
@@ -341,31 +346,38 @@ class _LobbyScreenState extends State<LobbyScreen> {
             ),
             child: const Text('Create New Lobby'),
           ),
-          
+
           const SizedBox(height: 20),
-          const Text('Available Lobbies:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text(
+            'Available Lobbies:',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 10),
-          
+
           // Lobby list
           Expanded(
-            child: lobbies.isEmpty 
-                ? const Center(child: Text('No lobbies available')) 
+            child: lobbies.isEmpty
+                ? const Center(child: Text('No lobbies available'))
                 : ListView.builder(
                     itemCount: lobbies.length,
                     itemBuilder: (context, index) {
                       final lobby = lobbies[index];
                       final bool isFull = (lobby['playerCount'] ?? 0) >= (lobby['maxPlayers'] ?? 4);
-                      
+
                       return Card(
                         margin: const EdgeInsets.only(bottom: 8),
                         child: ListTile(
                           title: Text(lobby['name'] ?? 'Game Lobby'),
-                          subtitle: Text('Players: ${lobby['playerCount'] ?? 0}/${lobby['maxPlayers'] ?? 4}'),
-                          trailing: isFull 
+                          subtitle: Text(
+                            'Players: ${lobby['playerCount'] ?? 0}/${lobby['maxPlayers'] ?? 4}',
+                          ),
+                          trailing: isFull
                               ? const Chip(label: Text('Full'))
                               : ElevatedButton(
                                   onPressed: () {
-                                    context.read<GameBloc>().add(JoinLobby(code: lobby['code']));
+                                    context.read<GameBloc>().add(
+                                          JoinLobby(code: lobby['code']),
+                                        );
                                   },
                                   child: const Text('Join'),
                                 ),
@@ -374,7 +386,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
                     },
                   ),
           ),
-          
+
           // Refresh button
           ElevatedButton.icon(
             onPressed: () {
@@ -390,7 +402,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
       ),
     );
   }
-  
+
   Widget _buildLobbyEntryView() {
     return Padding(
       padding: const EdgeInsets.all(20),
@@ -402,7 +414,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
             style: Theme.of(context).textTheme.headlineLarge,
           ),
           const SizedBox(height: 20),
-          
+
           if (widget.isPublic) ...[
             // Join by code
             TextField(
@@ -416,7 +428,9 @@ class _LobbyScreenState extends State<LobbyScreen> {
             ElevatedButton(
               onPressed: () {
                 if (_codeController.text.isNotEmpty) {
-                  context.read<GameBloc>().add(JoinLobby(code: _codeController.text));
+                  context.read<GameBloc>().add(
+                    JoinLobby(code: _codeController.text),
+                  );
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -452,11 +466,11 @@ class _LobbyScreenState extends State<LobbyScreen> {
       ),
     );
   }
-  
+
   void _showCreateLobbyDialog(BuildContext context) {
     final nameController = TextEditingController(text: 'My Game Lobby');
     final maxPlayersController = TextEditingController(text: '4');
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -492,14 +506,14 @@ class _LobbyScreenState extends State<LobbyScreen> {
               Navigator.pop(context);
               final name = nameController.text.isEmpty ? 'My Game Lobby' : nameController.text;
               final maxPlayers = int.tryParse(maxPlayersController.text) ?? 4;
-              
+
               context.read<GameBloc>().add(
-                CreateLobby(
-                  name: name,
-                  isPublic: widget.isPublic,
-                  maxPlayers: maxPlayers.clamp(2, 8),
-                ),
-              );
+                    CreateLobby(
+                      name: name,
+                      isPublic: widget.isPublic,
+                      maxPlayers: maxPlayers.clamp(2, 8),
+                    ),
+                  );
             },
             child: const Text('Create'),
           ),

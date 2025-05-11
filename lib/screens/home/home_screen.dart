@@ -54,22 +54,22 @@ class _HomeScreenState extends State<HomeScreen> {
         String title = 'Text the Answer';
         if (_currentIndex == 1) {
           title = 'Library';
-        } else if (_currentIndex == 2)
+        } else if (_currentIndex == 2) {
           title = 'Games';
-        else if (_currentIndex == 3)
+        } else if (_currentIndex == 3) {
           title = 'Daily Quiz';
-        else if (_currentIndex == 4)
+        } else if (_currentIndex == 4) {
           title = 'Profile';
+        }
 
         return Scaffold(
           backgroundColor: backgroundColor,
-          appBar:
-              _currentIndex == 0
-                  ? CustomAppBar(
-                    showBackArrow: false,
-                    title: Text('Text the Answer'),
-                  )
-                  : null,
+          appBar: _currentIndex == 0
+              ? CustomAppBar(
+                  showBackArrow: false,
+                  title: Text('Text the Answer'),
+                )
+              : null,
           drawer: CommonUI.buildDrawer(
             context: context,
             toggleTheme: _toggleTheme,
@@ -107,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
       Navigator.pushNamed(context, Routes.profile);
       return;
     }
-    
+
     // Otherwise, update the current tab index
     setState(() {
       _currentIndex = index;
@@ -146,8 +146,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       'Player Name',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: secondaryTextColor,
-                      ),
+                            color: secondaryTextColor,
+                          ),
                     ),
                   ],
                 ),
@@ -344,9 +344,7 @@ class _HomeScreenState extends State<HomeScreen> {
         SizedBox(height: 4.h),
         Text(
           label,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: secondaryTextColor),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: secondaryTextColor),
         ),
       ],
     );
@@ -397,9 +395,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 SizedBox(height: 4.h),
                 Text(
                   subtitle,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: secondaryTextColor),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: secondaryTextColor),
                 ),
               ],
             ),

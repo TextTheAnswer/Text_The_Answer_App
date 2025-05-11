@@ -18,6 +18,9 @@ class ThemeSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
+
     return BottomSheetShell(
       headerText: 'Appearance',
       children: [
@@ -74,6 +77,8 @@ class _Item extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return OnTapScaler(
       onTap: onTap,
       child: DecoratedBox(
@@ -88,7 +93,10 @@ class _Item extends StatelessWidget {
 
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.grey, //TODO: Use a good color
+            color:
+                isDarkMode
+                    ? Color.fromARGB(255, 54, 50, 50)
+                    : Color.fromRGBO(247, 248, 249, 1),
             borderRadius: const BorderRadius.all(Radius.circular(18)),
           ),
           child: Center(
