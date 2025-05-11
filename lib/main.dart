@@ -94,6 +94,7 @@ class _MyAppState extends State<MyApp> {
               BlocProvider(create: (_) => ProfileBloc()),
             ],
             child: BlocBuilder<ThemeCubit, ThemeState>(
+              buildWhen: (previous, current) => previous.mode != current.mode,
               builder: (context, state) {
                 return MaterialApp.router(
                   debugShowCheckedModeBanner: false,

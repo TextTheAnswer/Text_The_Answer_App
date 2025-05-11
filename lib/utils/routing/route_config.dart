@@ -18,6 +18,7 @@ import 'package:text_the_answer/screens/game/public_lobby_screen.dart';
 import 'package:text_the_answer/screens/home/new_home_screen.dart';
 import 'package:text_the_answer/screens/main_app_screen.dart';
 import 'package:text_the_answer/screens/placeholder_profile_screen.dart';
+import 'package:text_the_answer/screens/profile/profile_creation_screen.dart';
 import 'package:text_the_answer/screens/settings/about_screen.dart';
 import 'package:text_the_answer/screens/settings/help_center_screen.dart';
 import 'package:text_the_answer/screens/settings/music_effect_screen.dart';
@@ -26,6 +27,7 @@ import 'package:text_the_answer/screens/settings/security_screen.dart';
 import 'package:text_the_answer/screens/settings/settings_screen.dart';
 import 'package:text_the_answer/screens/profile/profile_screen.dart';
 import 'package:text_the_answer/utils/logger/debug_print.dart';
+import 'package:text_the_answer/utils/theme/theme_utils.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(
   debugLabel: 'root',
@@ -36,18 +38,13 @@ final GlobalKey<NavigatorState> _sectionNavigatorKey =
 final GoRouter router = GoRouter(
   navigatorKey: _rootNavigatorKey,
   debugLogDiagnostics: true,
-
   initialLocation: AppRoutePath.splash,
-
-  // Redirect based on authentication state
   redirect: (BuildContext context, GoRouterState state) {
-    // Get the current auth state
     final isAuthenticated = authBloc.state is AuthAuthenticated;
     printDebug(
       'Route redirect check - Auth state: ${authBloc.state.runtimeType}',
     );
 
-    // Don't redirect on these routes regardless of auth state
     final noRedirectRoutes = [
       AppRoutePath.splash,
       AppRoutePath.onboarding,
@@ -57,27 +54,22 @@ final GoRouter router = GoRouter(
       AppRoutePath.resetPassword,
     ];
 
-    // Check if current path is a no-redirect route
     final isNoRedirectRoute = noRedirectRoutes.any(
       (route) => state.matchedLocation.startsWith(route),
     );
 
-    // If on a login/registration route but already authenticated, go to home
     if (isNoRedirectRoute &&
         isAuthenticated &&
         state.matchedLocation != AppRoutePath.splash) {
       return AppRoutePath.home;
     }
 
-    // If on a protected route but not authenticated, go to login
     if (!isNoRedirectRoute && !isAuthenticated) {
       return AppRoutePath.login;
     }
 
-    // No redirection needed
     return null;
   },
-
   routes: <RouteBase>[
     // -- Splash
     GoRoute(
@@ -85,46 +77,39 @@ final GoRouter router = GoRouter(
       path: AppRoutePath.splash,
       builder: (context, state) => const SplashScreen(),
     ),
-
     // -- Onboarding
     GoRoute(
       name: AppRouteName.onboarding,
       path: AppRoutePath.onboarding,
       builder: (context, state) => const OnboardingScreen(),
     ),
-
     // -- Login
     GoRoute(
       name: AppRouteName.login,
       path: AppRoutePath.login,
       builder: (context, state) => const LoginScreen(),
     ),
-
     // -- Signup
     GoRoute(
       name: AppRouteName.signup,
       path: AppRoutePath.signup,
       builder: (context, state) => const RegisterScreen(),
     ),
-
     // -- Forget Password
     GoRoute(
       name: AppRouteName.forgotPassword,
       path: AppRoutePath.forgotPassword,
       builder: (context, state) => const ForgotPasswordScreen(),
     ),
-
     // -- OTP Verification
     GoRoute(
       name: AppRouteName.otpVerification,
       path: AppRoutePath.otpVerificationPattern,
       builder: (context, state) {
         final email = state.pathParameters['email'] ?? '';
-
         return OTPVerificationScreen(email: email);
       },
     ),
-
     // -- Reset Password
     GoRoute(
       name: AppRouteName.resetPassword,
@@ -132,20 +117,15 @@ final GoRouter router = GoRouter(
       builder: (context, state) {
         final email = state.uri.queryParameters['email'] ?? '';
         final resetToken = state.uri.queryParameters['resetToken'] ?? '';
-
         return ResetPasswordScreen(email: email, resetToken: resetToken);
       },
     ),
-
-    // // -- Profile Create
-    // GoRoute(
-    //   name: AppRouteName.profileCreate,
-    //   path: AppRoutePath.profileCreate,
-    //   builder: (context, state) {
-    //     return ProfileCreationScreen();
-    //   },
-    // ),
-
+    // -- Profile Creation
+    GoRoute(
+      name: AppRouteName.profileCreate,
+      path: AppRoutePath.profileCreate,
+      builder: (context, state) => const ProfileCreationScreen(),
+    ),
     // -- Private Lobby
     GoRoute(
       path: AppRoutePath.privateLobby,
@@ -153,7 +133,6 @@ final GoRouter router = GoRouter(
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) => PrivateLobbyScreen(),
     ),
-
     // -- Public Lobby
     GoRoute(
       path: AppRoutePath.publicLobby,
@@ -161,7 +140,6 @@ final GoRouter router = GoRouter(
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) => PublicLobbyScreen(),
     ),
-
     // -- Settings
     GoRoute(
       name: AppRouteName.settings,
@@ -169,34 +147,30 @@ final GoRouter router = GoRouter(
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) => const SettingsScreen(),
       routes: <RouteBase>[
-        // --Notification
+        // -- Notification
         GoRoute(
           name: AppRouteName.notification,
           path: AppRoutePath.notification,
           builder: (context, state) => NotificationScreen(),
         ),
-
         // -- Music and Effects
         GoRoute(
           name: AppRouteName.musicEffect,
           path: AppRoutePath.musicEffect,
           builder: (context, state) => MusicEffectScreen(),
         ),
-
         // -- Security
         GoRoute(
           name: AppRouteName.security,
           path: AppRoutePath.security,
           builder: (context, state) => SecurityScreen(),
         ),
-
         // -- Help Center
         GoRoute(
           name: AppRouteName.helpCenter,
           path: AppRoutePath.helpCenter,
           builder: (context, state) => HelpCenterScreen(),
         ),
-
         // -- About
         GoRoute(
           name: AppRouteName.about,
@@ -205,7 +179,6 @@ final GoRouter router = GoRouter(
         ),
       ],
     ),
-
     // -- Main App Screen
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
@@ -225,7 +198,6 @@ final GoRouter router = GoRouter(
             ),
           ],
         ),
-
         // -- Library
         StatefulShellBranch(
           routes: <RouteBase>[
@@ -238,7 +210,6 @@ final GoRouter router = GoRouter(
             ),
           ],
         ),
-
         // -- Game-Mode
         StatefulShellBranch(
           routes: <RouteBase>[
@@ -246,12 +217,13 @@ final GoRouter router = GoRouter(
               name: AppRouteName.gameMode,
               path: AppRoutePath.gameMode,
               builder: (context, state) {
-                return GameModeScreen();
+                return GameModeScreen(
+                  toggleTheme: ThemeUtils.getThemeToggler(context),
+                );
               },
             ),
           ],
         ),
-
         // -- Quiz
         StatefulShellBranch(
           routes: <RouteBase>[
@@ -259,12 +231,13 @@ final GoRouter router = GoRouter(
               name: AppRouteName.quiz,
               path: AppRoutePath.quiz,
               builder: (context, state) {
-                return DailyQuizScreen();
+                return DailyQuizScreen(
+                  toggleTheme: ThemeUtils.getThemeToggler(context),
+                );
               },
             ),
           ],
         ),
-
         // -- Profile
         StatefulShellBranch(
           routes: <RouteBase>[

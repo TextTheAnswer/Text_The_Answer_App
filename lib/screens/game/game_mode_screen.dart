@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:text_the_answer/router/routes.dart';
 import '../../blocs/game/game_bloc.dart';
 import '../../blocs/game/game_event.dart';
+import '../../blocs/game/game_state.dart';
+import '../../utils/theme/theme_cubit.dart';
+import 'lobby_screen.dart';
 
 class GameModeScreen extends StatefulWidget {
   const GameModeScreen({super.key});
@@ -13,6 +16,22 @@ class GameModeScreen extends StatefulWidget {
 }
 
 class _GameModeScreenState extends State<GameModeScreen> {
+  void _toggleTheme() {
+    // Get the current ThemeCubit and its state
+    final ThemeCubit cubit = context.read<ThemeCubit>();
+    final currentState = cubit.state;
+    
+    // Toggle between light and dark modes
+    if (currentState.mode == AppThemeMode.dark) {
+      cubit.setTheme(AppThemeMode.light);
+    } else {
+      cubit.setTheme(AppThemeMode.dark);
+    }
+    
+    // Call the original toggleTheme callback
+    widget.toggleTheme();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -22,76 +41,88 @@ class _GameModeScreenState extends State<GameModeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Game Modes 🎮',
-                style: Theme.of(context).textTheme.headlineLarge,
+    return BlocBuilder<ThemeCubit, ThemeState>(
+      builder: (context, themeState) {
+        return Scaffold(
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Game Modes 🎮',
+                    style: Theme.of(context).textTheme.headlineLarge,
+                  ),
+                  const SizedBox(height: 40),
+                  
+                  // Public game option
+                  _buildGameModeCard(
+                    title: 'Public Game',
+                    description: 'Play with others in public lobbies',
+                    icon: Icons.public,
+                    color: Colors.blue,
+                    onTap: () {
+                      // Fetch public lobbies first
+                      context.read<GameBloc>().add(FetchPublicLobbies());
+                      
+                      // Then navigate to the lobby screen
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => LobbyScreen(
+                            isPublic: true,
+                            toggleTheme: _toggleTheme,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // Private game option
+                  _buildGameModeCard(
+                    title: 'Private Game',
+                    description: 'Create a private game for friends',
+                    icon: Icons.lock,
+                    color: Colors.green,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => LobbyScreen(
+                            isPublic: false,
+                            toggleTheme: _toggleTheme,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  const Divider(),
+                  
+                  const SizedBox(height: 20),
+                  Text(
+                    'How to Play',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    '1. Join a public lobby or create your own private game\n'
+                    '2. Wait for all players to join and mark themselves as ready\n'
+                    '3. The game host will start the match when everyone is ready\n'
+                    '4. Answer questions as quickly as possible to earn points!\n'
+                    '5. The player with the most points at the end wins',
+                  ),
+                ],
               ),
-              const SizedBox(height: 40),
-
-              // Public game option
-              _buildGameModeCard(
-                title: 'Public Game',
-                description: 'Play with others in public lobbies',
-                icon: Icons.public,
-                color: Colors.blue,
-                onTap: () {
-                  // Fetch public lobbies first
-                  context.read<GameBloc>().add(FetchPublicLobbies());
-
-                  // Then navigate to the lobby screen
-                  context.pushNamed(AppRouteName.publicLobby);
-                },
-              ),
-
-              const SizedBox(height: 20),
-
-              // Private game option
-              _buildGameModeCard(
-                title: 'Private Game',
-                description: 'Create a private game for friends',
-                icon: Icons.lock,
-                color: Colors.green,
-                onTap: () {
-                  context.pushNamed(AppRouteName.privateLobby);
-
-                  // Navigator.push(
-                  //   context,
-                  //   MaterialPageRoute(
-                  //     builder: (_) => PrivateLobbyScreen(),
-                  //      builder: (_) => LobbyScreen(isPublic: false),
-                  //   ),
-                  // );
-                },
-              ),
-
-              const SizedBox(height: 20),
-
-              const Divider(),
-
-              const SizedBox(height: 20),
-              Text(
-                'How to Play',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                '1. Join a public lobby or create your own private game\n'
-                '2. Wait for all players to join and mark themselves as ready\n'
-                '3. The game host will start the match when everyone is ready\n'
-                '4. Answer questions as quickly as possible to earn points!\n'
-                '5. The player with the most points at the end wins',
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 

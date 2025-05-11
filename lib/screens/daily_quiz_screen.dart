@@ -11,6 +11,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
 import '../router/routes.dart';
+import '../utils/theme/theme_cubit.dart';
 
 class DailyQuizScreen extends StatefulWidget {
   const DailyQuizScreen({super.key});
@@ -37,6 +38,22 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
   int _startTime = 0;
 
   late SharedPreferences prefs; // Declare the prefs variable
+
+  void _toggleTheme() {
+    // Get the current ThemeCubit and its state
+    final ThemeCubit cubit = context.read<ThemeCubit>();
+    final currentState = cubit.state;
+    
+    // Toggle between light and dark modes
+    if (currentState.mode == AppThemeMode.dark) {
+      cubit.setTheme(AppThemeMode.light);
+    } else {
+      cubit.setTheme(AppThemeMode.dark);
+    }
+    
+    // Call the original toggleTheme callback
+    widget.toggleTheme();
+  }
 
   @override
   void initState() {

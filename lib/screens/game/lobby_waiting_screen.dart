@@ -4,12 +4,19 @@ import '../../blocs/game/game_bloc.dart';
 import '../../blocs/game/game_event.dart';
 import '../../blocs/game/game_state.dart';
 import '../../models/lobby.dart';
+import '../../widgets/common/theme_aware_widget.dart';
 import 'game_screen.dart';
+import '../../utils/theme/theme_cubit.dart';
 
 class LobbyWaitingScreen extends StatefulWidget {
   final Lobby lobby;
+  final VoidCallback toggleTheme; // Added to align with LobbyScreen
 
-  const LobbyWaitingScreen({super.key, required this.lobby});
+  const LobbyWaitingScreen({
+    super.key,
+    required this.lobby,
+    required this.toggleTheme,
+  });
 
   @override
   State<LobbyWaitingScreen> createState() => _LobbyWaitingScreenState();
@@ -34,53 +41,71 @@ class _LobbyWaitingScreenState extends State<LobbyWaitingScreen> {
     super.dispose();
   }
 
+  void _toggleTheme() {
+    // Get the current ThemeCubit and its state
+    final ThemeCubit cubit = context.read<ThemeCubit>();
+    final currentState = cubit.state;
+    
+    // Toggle between light and dark modes
+    if (currentState.mode == AppThemeMode.dark) {
+      cubit.setTheme(AppThemeMode.light);
+    } else {
+      cubit.setTheme(AppThemeMode.dark);
+    }
+    
+    // Call the original toggleTheme callback
+    widget.toggleTheme();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Waiting Room'),
-        automaticallyImplyLeading: false, // Disable back button
-      ),
-      body: BlocConsumer<GameBloc, GameState>(
-        listener: (context, state) {
-          if (state is GameError) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
-          } else if (state is LobbyUpdated) {
-            setState(() {
-              _currentLobby = state.lobby;
-            });
-          } else if (state is LobbyLeft) {
-            Navigator.pop(context);
-          } else if (state is GameStarted) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder:
-                    (_) => GameScreen(
+    return ThemeAwareWidget(
+      builder: (context, themeState) {
+        return Scaffold(
+          appBar: AppBar(
+            title: Text('Waiting Room'),
+            automaticallyImplyLeading: false, // Disable back button
+          ),
+          body: BlocConsumer<GameBloc, GameState>(
+            listener: (context, state) {
+              if (state is GameError) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(state.message)),
+                );
+              } else if (state is LobbyUpdated) {
+                setState(() {
+                  _currentLobby = state.lobby;
+                });
+              } else if (state is LobbyLeft) {
+                Navigator.pop(context);
+              } else if (state is GameStarted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => GameScreen(
                       gameId: state.gameId,
                       questions: state.questions,
                       players: state.players,
+                      toggleTheme: _toggleTheme,
                     ),
-              ),
-            );
-          } else if (state is AllPlayersReady) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('All players are ready! Game will start soon.'),
-              ),
-            );
-          }
-        },
-        builder: (context, state) {
-          if (state is GameLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+                  ),
+                );
+              } else if (state is AllPlayersReady) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('All players are ready! Game will start soon.')),
+                );
+              }
+            },
+            builder: (context, state) {
+              if (state is GameLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-          return _buildWaitingRoom();
-        },
-      ),
+              return _buildWaitingRoom();
+            },
+          ),
+        );
+      },
     );
   }
 
@@ -113,7 +138,7 @@ class _LobbyWaitingScreenState extends State<LobbyWaitingScreen> {
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
+                   -children: [
                       const Text('Lobby Name:'),
                       Text(
                         lobby.name,

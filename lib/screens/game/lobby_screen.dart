@@ -4,13 +4,15 @@ import '../../blocs/game/game_bloc.dart';
 import '../../blocs/game/game_event.dart';
 import '../../blocs/game/game_state.dart';
 import '../../models/lobby.dart';
+import '../../utils/theme/theme_cubit.dart';
 import 'game_screen.dart';
 import 'lobby_waiting_screen.dart';
 
 class LobbyScreen extends StatefulWidget {
   final bool isPublic;
+  final VoidCallback toggleTheme;
 
-  const LobbyScreen({required this.isPublic, super.key});
+  const LobbyScreen({required this.isPublic,required this.toggleTheme, super.key});
 
   @override
   State<LobbyScreen> createState() => _LobbyScreenState();
@@ -22,6 +24,22 @@ class _LobbyScreenState extends State<LobbyScreen> {
   final _maxPlayersController = TextEditingController(text: '4');
   Lobby? _currentLobby;
   bool _isReady = false;
+
+  void _toggleTheme() {
+    // Get the current ThemeCubit and its state
+    final ThemeCubit cubit = context.read<ThemeCubit>();
+    final currentState = cubit.state;
+    
+    // Toggle between light and dark modes
+    if (currentState.mode == AppThemeMode.dark) {
+      cubit.setTheme(AppThemeMode.light);
+    } else {
+      cubit.setTheme(AppThemeMode.dark);
+    }
+    
+    // Call the original toggleTheme callback
+    widget.toggleTheme();
+  }
 
   @override
   void initState() {
@@ -46,91 +64,101 @@ class _LobbyScreenState extends State<LobbyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.isPublic ? 'Public Game Lobbies' : 'Private Game'),
-      ),
-      body: BlocConsumer<GameBloc, GameState>(
-        listener: (context, state) {
-          if (state is GameError) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
-          } else if (state is LobbyJoined) {
-            setState(() {
-              _currentLobby = state.lobby;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Joined lobby successfully')),
-            );
-            // Navigate to the waiting screen after joining
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => LobbyWaitingScreen(lobby: state.lobby),
-              ),
-            );
-          } else if (state is LobbyCreated) {
-            setState(() {
-              _currentLobby = state.lobby;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Created lobby successfully')),
-            );
-            // Navigate to the waiting screen after creating
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => LobbyWaitingScreen(lobby: state.lobby),
-              ),
-            );
-          } else if (state is LobbyUpdated) {
-            setState(() {
-              _currentLobby = state.lobby;
-            });
-          } else if (state is LobbyLeft) {
-            setState(() {
-              _currentLobby = null;
-              _isReady = false;
-            });
-            Navigator.pop(context);
-          } else if (state is GameStarted) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder:
-                    (_) => GameScreen(
+    return BlocBuilder<ThemeCubit, ThemeState>(
+      builder: (context, themeState) {
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(widget.isPublic ? 'Public Game Lobbies' : 'Private Game'),
+          ),
+          body: BlocConsumer<GameBloc, GameState>(
+            listener: (context, state) {
+              if (state is GameError) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(state.message)),
+                );
+              } else if (state is LobbyJoined) {
+                setState(() {
+                  _currentLobby = state.lobby;
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Joined lobby successfully')),
+                );
+                // Navigate to the waiting screen after joining
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => LobbyWaitingScreen(
+                      lobby: state.lobby,
+                      toggleTheme: _toggleTheme,
+                    ),
+                  ),
+                );
+              } else if (state is LobbyCreated) {
+                setState(() {
+                  _currentLobby = state.lobby;
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Created lobby successfully')),
+                );
+                // Navigate to the waiting screen after creating
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => LobbyWaitingScreen(
+                      lobby: state.lobby,
+                      toggleTheme: _toggleTheme,
+                    ),
+                  ),
+                );
+              } else if (state is LobbyUpdated) {
+                setState(() {
+                  _currentLobby = state.lobby;
+                });
+              } else if (state is LobbyLeft) {
+                setState(() {
+                  _currentLobby = null;
+                  _isReady = false;
+                });
+                Navigator.pop(context);
+              } else if (state is GameStarted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => GameScreen(
                       gameId: state.gameId,
                       questions: state.questions,
                       players: state.players,
+                      toggleTheme: _toggleTheme,
                     ),
-              ),
-            );
-          } else if (state is AllPlayersReady) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('All players are ready!')),
-            );
-          }
-        },
-        builder: (context, state) {
-          if (state is GameLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+                  ),
+                );
+              } else if (state is AllPlayersReady) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('All players are ready!')),
+                );
+              }
+            },
+            builder: (context, state) {
+              if (state is GameLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-          // If user is in a lobby, show the lobby screen
-          if (_currentLobby != null) {
-            return _buildLobbyView(_currentLobby!);
-          }
+              // If user is in a lobby, show the lobby screen
+              if (_currentLobby != null) {
+                return _buildLobbyView(_currentLobby!);
+              }
 
-          // If user is viewing public lobbies
-          if (widget.isPublic && state is PublicLobbiesLoaded) {
-            return _buildPublicLobbiesView(state.lobbies);
-          }
+              // If user is viewing public lobbies
+              if (widget.isPublic && state is PublicLobbiesLoaded) {
+                return _buildPublicLobbiesView(state.lobbies);
+              }
 
-          // Default view for entering a code or creating a lobby
-          return _buildLobbyEntryView();
-        },
-      ),
+              // Default view for entering a code or creating a lobby
+              return _buildLobbyEntryView();
+            },
+          ),
+        );
+      },
     );
   }
 
@@ -284,7 +312,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
           // Join by code
           TextField(
             controller: _codeController,
-            decoration: const InputDecoration(
+            decoration: const InputRadiation(
               labelText: 'Enter Lobby Code',
               border: OutlineInputBorder(),
               suffixIcon: Icon(Icons.login),
@@ -328,39 +356,35 @@ class _LobbyScreenState extends State<LobbyScreen> {
 
           // Lobby list
           Expanded(
-            child:
-                lobbies.isEmpty
-                    ? const Center(child: Text('No lobbies available'))
-                    : ListView.builder(
-                      itemCount: lobbies.length,
-                      itemBuilder: (context, index) {
-                        final lobby = lobbies[index];
-                        final bool isFull =
-                            (lobby['playerCount'] ?? 0) >=
-                            (lobby['maxPlayers'] ?? 4);
+            child: lobbies.isEmpty
+                ? const Center(child: Text('No lobbies available'))
+                : ListView.builder(
+                    itemCount: lobbies.length,
+                    itemBuilder: (context, index) {
+                      final lobby = lobbies[index];
+                      final bool isFull = (lobby['playerCount'] ?? 0) >= (lobby['maxPlayers'] ?? 4);
 
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          child: ListTile(
-                            title: Text(lobby['name'] ?? 'Game Lobby'),
-                            subtitle: Text(
-                              'Players: ${lobby['playerCount'] ?? 0}/${lobby['maxPlayers'] ?? 4}',
-                            ),
-                            trailing:
-                                isFull
-                                    ? const Chip(label: Text('Full'))
-                                    : ElevatedButton(
-                                      onPressed: () {
-                                        context.read<GameBloc>().add(
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          title: Text(lobby['name'] ?? 'Game Lobby'),
+                          subtitle: Text(
+                            'Players: ${lobby['playerCount'] ?? 0}/${lobby['maxPlayers'] ?? 4}',
+                          ),
+                          trailing: isFull
+                              ? const Chip(label: Text('Full'))
+                              : ElevatedButton(
+                                  onPressed: () {
+                                    context.read<GameBloc>().add(
                                           JoinLobby(code: lobby['code']),
                                         );
-                                      },
-                                      child: const Text('Join'),
-                                    ),
-                          ),
-                        );
-                      },
-                    ),
+                                  },
+                                  child: const Text('Join'),
+                                ),
+                        ),
+                      );
+                    },
+                  ),
           ),
 
           // Refresh button
@@ -449,57 +473,52 @@ class _LobbyScreenState extends State<LobbyScreen> {
 
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Create New Lobby'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Lobby Name',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: maxPlayersController,
-                  decoration: const InputDecoration(
-                    labelText: 'Max Players (2-8)',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
+      builder: (context) => AlertDialog(
+        title: const Text('Create New Lobby'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Lobby Name',
+                border: OutlineInputBorder(),
               ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  final name =
-                      nameController.text.isEmpty
-                          ? 'My Game Lobby'
-                          : nameController.text;
-                  final maxPlayers =
-                      int.tryParse(maxPlayersController.text) ?? 4;
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: maxPlayersController,
+              decoration: const InputDecoration(
+                labelText: 'Max Players (2-8)',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              final name = nameController.text.isEmpty ? 'My Game Lobby' : nameController.text;
+              final maxPlayers = int.tryParse(maxPlayersController.text) ?? 4;
 
-                  context.read<GameBloc>().add(
+              context.read<GameBloc>().add(
                     CreateLobby(
                       name: name,
                       isPublic: widget.isPublic,
                       maxPlayers: maxPlayers.clamp(2, 8),
                     ),
                   );
-                },
-                child: const Text('Create'),
-              ),
-            ],
+            },
+            child: const Text('Create'),
           ),
+        ],
+      ),
     );
   }
 }
