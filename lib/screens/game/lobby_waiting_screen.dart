@@ -138,7 +138,7 @@ class _LobbyWaitingScreenState extends State<LobbyWaitingScreen> {
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                   -children: [
+                    children: [
                       const Text('Lobby Name:'),
                       Text(
                         lobby.name,

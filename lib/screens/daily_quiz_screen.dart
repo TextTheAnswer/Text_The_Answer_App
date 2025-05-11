@@ -14,7 +14,9 @@ import '../router/routes.dart';
 import '../utils/theme/theme_cubit.dart';
 
 class DailyQuizScreen extends StatefulWidget {
-  const DailyQuizScreen({super.key});
+  final Function()? toggleTheme;
+  
+  const DailyQuizScreen({super.key, this.toggleTheme});
 
   @override
   State<DailyQuizScreen> createState() => _DailyQuizScreenState();
@@ -52,7 +54,7 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
     }
     
     // Call the original toggleTheme callback
-    widget.toggleTheme();
+    widget.toggleTheme?.call();
   }
 
   @override

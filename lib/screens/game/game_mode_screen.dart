@@ -9,7 +9,9 @@ import '../../utils/theme/theme_cubit.dart';
 import 'lobby_screen.dart';
 
 class GameModeScreen extends StatefulWidget {
-  const GameModeScreen({super.key});
+  final Function()? toggleTheme;
+  
+  const GameModeScreen({super.key, this.toggleTheme});
 
   @override
   State<GameModeScreen> createState() => _GameModeScreenState();
@@ -29,7 +31,7 @@ class _GameModeScreenState extends State<GameModeScreen> {
     }
     
     // Call the original toggleTheme callback
-    widget.toggleTheme();
+    widget.toggleTheme?.call();
   }
 
   @override

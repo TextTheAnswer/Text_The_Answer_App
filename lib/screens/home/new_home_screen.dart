@@ -1455,7 +1455,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Cells.black.withOpacity(0.03),
+            // color: Cells.black.withOpacity(0.03),
             blurRadius: 8.r,
             offset: Offset(0, 3.h),
           ),

@@ -10,9 +10,9 @@ import 'lobby_waiting_screen.dart';
 
 class LobbyScreen extends StatefulWidget {
   final bool isPublic;
-  final VoidCallback toggleTheme;
+  final Function()? toggleTheme;
 
-  const LobbyScreen({required this.isPublic,required this.toggleTheme, super.key});
+  const LobbyScreen({required this.isPublic, this.toggleTheme, super.key});
 
   @override
   State<LobbyScreen> createState() => _LobbyScreenState();
@@ -38,7 +38,9 @@ class _LobbyScreenState extends State<LobbyScreen> {
     }
     
     // Call the original toggleTheme callback
-    widget.toggleTheme();
+    if (widget.toggleTheme != null) {
+      widget.toggleTheme!();
+    }
   }
 
   @override
@@ -312,7 +314,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
           // Join by code
           TextField(
             controller: _codeController,
-            decoration: const InputRadiation(
+            decoration: const InputDecoration(
               labelText: 'Enter Lobby Code',
               border: OutlineInputBorder(),
               suffixIcon: Icon(Icons.login),
