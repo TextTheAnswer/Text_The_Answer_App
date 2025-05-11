@@ -27,8 +27,10 @@ import 'package:text_the_answer/screens/settings/security_screen.dart';
 import 'package:text_the_answer/screens/settings/settings_screen.dart';
 import 'package:text_the_answer/screens/profile/profile_screen.dart';
 import 'package:text_the_answer/screens/achievements/achievements_page.dart';
+import 'package:text_the_answer/screens/achievements/library_achievements_page.dart';
 import 'package:text_the_answer/utils/logger/debug_print.dart';
 import 'package:text_the_answer/utils/theme/theme_utils.dart';
+import 'package:text_the_answer/screens/daily_quiz/daily_quiz_realtime_screen.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(
   debugLabel: 'root',
@@ -206,7 +208,7 @@ final GoRouter router = GoRouter(
               name: AppRouteName.library,
               path: AppRoutePath.library,
               builder: (context, state) {
-                return Scaffold(appBar: AppBar(title: Text('Library')));
+                return const LibraryAchievementsPage();
               },
               routes: [
                 // -- Achievements page as a subroute of Library
@@ -262,6 +264,13 @@ final GoRouter router = GoRouter(
           ],
         ),
       ],
+    ),
+    // -- Real-Time Daily Quiz
+    GoRoute(
+      path: AppRoutePath.dailyQuizRealtime,
+      name: AppRouteName.dailyQuizRealtime,
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const DailyQuizRealtimeScreen(),
     ),
   ],
   errorBuilder: (context, state) {

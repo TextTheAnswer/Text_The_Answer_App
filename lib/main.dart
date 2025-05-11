@@ -23,6 +23,9 @@ import 'blocs/leaderboard/leaderboard_bloc.dart';
 import 'blocs/subscription/subscription_bloc.dart';
 import 'blocs/profile/profile_bloc.dart';
 import 'config/api_config.dart';
+import 'blocs/daily_quiz/daily_quiz_bloc.dart';
+import 'blocs/socket/socket_bloc.dart';
+import 'screens/daily_quiz/daily_quiz_realtime_screen.dart';
 
 // Create a global key for the navigator to access it from anywhere
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -43,7 +46,50 @@ void main() async {
   // Initialize authentication with priority flag to ensure it's checked before any navigation
   authBloc.add(CheckAuthStatusEvent(silentCheck: true, priority: true));
 
-  runApp(const MyApp());
+  runApp(
+    MultiRepositoryProvider(
+      providers: [
+        Provider<ApiService>.value(value: ApiService()),
+        Provider<AuthTokenService>.value(value: AuthTokenService()),
+        Provider<AchievementService>.value(value: AchievementService(
+          apiService: ApiService(), 
+          tokenService: AuthTokenService(),
+          baseUrl: ApiConfig.baseUrl,
+        )),
+      ],
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<AuthBloc>.value(value: authBloc),
+          BlocProvider(
+            create: (context) => QuizBloc(apiService: ApiService()),
+          ),
+          BlocProvider(create: (_) => GameBloc()),
+          BlocProvider(create: (_) => LeaderboardBloc()),
+          BlocProvider(
+            create: (context) => SubscriptionBloc(apiService: ApiService()),
+          ),
+          BlocProvider(create: (_) => ThemeCubit()),
+          BlocProvider(create: (_) => ProfileBloc()),
+          BlocProvider(
+            create: (context) => AchievementBloc(
+              achievementService: AchievementService(
+                apiService: ApiService(), 
+                tokenService: AuthTokenService(),
+                baseUrl: ApiConfig.baseUrl,
+              ),
+            ),
+          ),
+          BlocProvider<DailyQuizBloc>(
+            create: (context) => DailyQuizBloc(),
+          ),
+          BlocProvider<SocketBloc>(
+            create: (context) => SocketBloc(),
+          ),
+        ],
+        child: MyApp(),
+      ),
+    ),
+  );
 }
 
 // Enable detailed HTTP logging for debugging network requests
@@ -108,6 +154,12 @@ class _MyAppState extends State<MyApp> {
                 create: (context) => AchievementBloc(
                   achievementService: _achievementService,
                 ),
+              ),
+              BlocProvider<DailyQuizBloc>(
+                create: (context) => DailyQuizBloc(),
+              ),
+              BlocProvider<SocketBloc>(
+                create: (context) => SocketBloc(),
               ),
             ],
             child: BlocBuilder<ThemeCubit, ThemeState>(

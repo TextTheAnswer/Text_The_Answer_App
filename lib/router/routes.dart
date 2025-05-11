@@ -6,6 +6,8 @@ abstract class AppRouteName {
   static const String quiz = 'quiz';
   static const String profile = 'profile';
   static const String achievements = 'achievements';
+  static const String dailyQuiz = 'dailyQuiz';
+  static const String dailyQuizRealtime = 'dailyQuizRealtime';
 
   // -- Login and Onboarding
   static const String splash = 'splash';
@@ -68,6 +70,8 @@ abstract class AppRoutePath {
   // -- Lobby
   static const String publicLobby = '/publicLobby';
   static const String privateLobby = '/privateLobby';
+
+  static const String dailyQuizRealtime = '/daily-quiz-realtime';
 }
 
 class Routes {

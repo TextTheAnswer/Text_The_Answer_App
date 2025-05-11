@@ -16,6 +16,8 @@ import 'package:text_the_answer/blocs/profile/profile_event.dart';
 import 'package:text_the_answer/blocs/profile/profile_state.dart';
 import 'package:text_the_answer/widgets/quiz/daily_quiz_countdown.dart';
 import 'package:text_the_answer/models/profile.dart';
+import 'package:go_router/go_router.dart';
+import '../../router/routes.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -175,6 +177,28 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         _buildAchievementsSection(context),
                         SizedBox(height: 24.h),
                         _buildRecentActivitySection(context),
+                        SizedBox(height: 24.h),
+                        ElevatedButton(
+                          onPressed: () {
+                            context.go(AppRoutePath.dailyQuizRealtime);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).colorScheme.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.group),
+                              const SizedBox(width: 8),
+                              Text('Join Daily Multiplayer Quiz'),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -769,7 +793,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
             TextButton(
               onPressed: () {
-                // Navigate to all achievements
+                // Navigate to the achievements library page
+                context.go(AppRoutePath.library);
               },
               child: Text('View All'),
             ),
