@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../blocs/achievement/achievement_bloc.dart';
 import '../../blocs/achievement/achievement_event.dart';
 import '../../blocs/achievement/achievement_state.dart';
 import '../../models/achievement.dart';
-import '../../widgets/common/section_title.dart';
+import '../../config/colors.dart';
 
 class LibraryAchievementsPage extends StatefulWidget {
   const LibraryAchievementsPage({Key? key}) : super(key: key);
@@ -34,11 +35,27 @@ class _LibraryAchievementsPageState extends State<LibraryAchievementsPage> with 
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final appBarColor = isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
+    final tabTextColor = isDarkMode ? Colors.white : Colors.black;
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Achievement Library'),
+        backgroundColor: appBarColor,
+        title: Text(
+          'Achievement Library',
+          style: TextStyle(
+            color: isDarkMode ? Colors.white : Colors.red,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        elevation: 0,
         bottom: TabBar(
           controller: _tabController,
+          labelColor: isDarkMode ? Colors.white : Colors.red,
+          unselectedLabelColor: isDarkMode ? Colors.white70 : Colors.black54,
+          indicatorColor: isDarkMode ? Colors.white : Colors.red,
+          labelStyle: TextStyle(fontWeight: FontWeight.bold),
           tabs: const [
             Tab(text: 'All Achievements'),
             Tab(text: 'Completed'),
@@ -76,48 +93,12 @@ class _LibraryAchievementsPageState extends State<LibraryAchievementsPage> with 
           if (achievements.isEmpty) {
             return _buildEmptyState(
               'No achievements available',
-              'Check back later for achievements to earn.',
+              'Check back later to see achievements.',
               Icons.emoji_events_outlined,
             );
           }
           
-          // Filter out hidden achievements
-          final visibleAchievements = achievements.where((a) => !a.isHidden).toList();
-          
-          // Group achievements by tier
-          final Map<String, List<Achievement>> achievementsByTier = {};
-          for (var achievement in visibleAchievements) {
-            if (!achievementsByTier.containsKey(achievement.tier)) {
-              achievementsByTier[achievement.tier] = [];
-            }
-            achievementsByTier[achievement.tier]!.add(achievement);
-          }
-          
-          // Sort tiers by preset order
-          final tiers = ['platinum', 'gold', 'silver', 'bronze'];
-          tiers.retainWhere((tier) => achievementsByTier.containsKey(tier));
-          
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              // Summary card at the top with total achievement counts
-              _buildAllAchievementsSummary(visibleAchievements),
-              const SizedBox(height: 16),
-              ...tiers.map((tier) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SectionTitle(
-                      title: '${tier.substring(0, 1).toUpperCase()}${tier.substring(1)} Achievements',
-                    ),
-                    const SizedBox(height: 8),
-                    _buildAchievementGrid(achievementsByTier[tier]!),
-                    const SizedBox(height: 24),
-                  ],
-                );
-              }).toList(),
-            ],
-          );
+          return _buildAllAchievementsView(achievements);
         }
         
         return _buildEmptyState(
@@ -138,46 +119,13 @@ class _LibraryAchievementsPageState extends State<LibraryAchievementsPage> with 
           final achievements = state.achievements;
           if (achievements.isEmpty) {
             return _buildEmptyState(
-              'No achievements unlocked yet',
-              'Complete quizzes, maintain streaks, and participate in activities to earn achievements!',
+              'No achievements found',
+              'Check back later to see achievements.',
               Icons.emoji_events_outlined,
             );
           }
           
-          // Group achievements by tier
-          final Map<String, List<Achievement>> achievementsByTier = {};
-          for (var achievement in achievements) {
-            if (!achievementsByTier.containsKey(achievement.tier)) {
-              achievementsByTier[achievement.tier] = [];
-            }
-            achievementsByTier[achievement.tier]!.add(achievement);
-          }
-          
-          // Sort tiers by preset order
-          final tiers = ['platinum', 'gold', 'silver', 'bronze'];
-          tiers.retainWhere((tier) => achievementsByTier.containsKey(tier));
-          
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              // Summary card at the top with total achievements
-              _buildCompletedSummaryCard(achievements),
-              const SizedBox(height: 16),
-              ...tiers.map((tier) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SectionTitle(
-                      title: '${tier.substring(0, 1).toUpperCase()}${tier.substring(1)} Achievements',
-                    ),
-                    const SizedBox(height: 8),
-                    _buildAchievementGrid(achievementsByTier[tier]!),
-                    const SizedBox(height: 24),
-                  ],
-                );
-              }).toList(),
-            ],
-          );
+          return _buildCompletedAchievementsView(achievements);
         }
         
         return _buildEmptyState(
@@ -188,64 +136,85 @@ class _LibraryAchievementsPageState extends State<LibraryAchievementsPage> with 
       },
     );
   }
-  
-  Widget _buildAllAchievementsSummary(List<Achievement> achievements) {
-    // Count achievements by tier
-    int bronzeCount = 0;
-    int silverCount = 0;
-    int goldCount = 0;
-    int platinumCount = 0;
+
+  Widget _buildAllAchievementsView(List<Achievement> achievements) {
+    // Filter out hidden achievements for the public view
+    final visibleAchievements = achievements.where((a) => !a.isHidden).toList();
     
-    for (var achievement in achievements) {
-      switch (achievement.tier.toLowerCase()) {
-        case 'bronze':
-          bronzeCount++;
-          break;
-        case 'silver':
-          silverCount++;
-          break;
-        case 'gold':
-          goldCount++;
-          break;
-        case 'platinum':
-          platinumCount++;
-          break;
-      }
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: [
+        _buildEmptyStateIfNoAchievements(visibleAchievements),
+      ],
+    );
+  }
+
+  Widget _buildCompletedAchievementsView(List<Achievement> completedAchievements) {
+    if (completedAchievements.isEmpty) {
+      return _buildEmptyState(
+        'No achievements unlocked yet',
+        'Complete quizzes, maintain streaks, and participate in activities to earn achievements!',
+        Icons.emoji_events_outlined,
+      );
+    }
+
+    // Add stats card at the top
+    return ListView(
+      padding: EdgeInsets.all(16.r),
+      children: [
+        _buildCompletedSummaryCard(completedAchievements),
+        SizedBox(height: 24.h),
+        _buildAchievementsByTier(completedAchievements),
+      ],
+    );
+  }
+
+  Widget _buildEmptyStateIfNoAchievements(List<Achievement> achievements) {
+    if (achievements.isEmpty) {
+      return _buildEmptyState(
+        'No achievements available',
+        'Check back later to see achievements.',
+        Icons.emoji_events_outlined,
+      );
     }
     
-    final totalCount = achievements.length;
-    
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Available Achievements',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatItem('Total', totalCount.toString(), '🏆'),
-                _buildStatItem('Bronze', bronzeCount.toString(), '🥉'),
-                _buildStatItem('Silver', silverCount.toString(), '🥈'),
-                _buildStatItem('Gold', goldCount.toString(), '🥇'),
-                _buildStatItem('Platinum', platinumCount.toString(), '💎'),
-              ],
-            ),
-          ],
+    return Column(
+      children: [
+        Center(
+          child: Icon(
+            Icons.warning_rounded,
+            size: 80.r,
+            color: Colors.grey.shade400,
+          ),
         ),
-      ),
+        SizedBox(height: 16.h),
+        Text(
+          'No achievements found',
+          style: TextStyle(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.bold,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        SizedBox(height: 8.h),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 32.w),
+          child: Text(
+            'Check back later to see achievements.',
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: Colors.grey,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ],
     );
   }
   
   Widget _buildCompletedSummaryCard(List<Achievement> achievements) {
     // Count achievements by tier
+    int totalCount = achievements.length;
     int bronzeCount = 0;
     int silverCount = 0;
     int goldCount = 0;
@@ -268,29 +237,31 @@ class _LibraryAchievementsPageState extends State<LibraryAchievementsPage> with 
       }
     }
     
-    final totalAchievements = achievements.length;
-    
     return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16.r),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Completed Achievements',
-              style: Theme.of(context).textTheme.titleLarge,
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildStatItem('Total', totalAchievements.toString(), '🏆'),
-                _buildStatItem('Bronze', bronzeCount.toString(), '🥉'),
-                _buildStatItem('Silver', silverCount.toString(), '🥈'),
-                _buildStatItem('Gold', goldCount.toString(), '🥇'),
-                _buildStatItem('Platinum', platinumCount.toString(), '💎'),
+                _buildStatItem('Total', totalCount, '🏆'),
+                _buildStatItem('Bronze', bronzeCount, '🥉'),
+                _buildStatItem('Silver', silverCount, '🥈'),
+                _buildStatItem('Gold', goldCount, '🥇'),
+                _buildStatItem('Platinum', platinumCount, '💎'),
               ],
             ),
           ],
@@ -298,157 +269,207 @@ class _LibraryAchievementsPageState extends State<LibraryAchievementsPage> with 
       ),
     );
   }
-  
-  Widget _buildStatItem(String label, String value, String emoji) {
+
+  Widget _buildStatItem(String label, int value, String emoji) {
     return Column(
       children: [
         Text(
           emoji,
-          style: const TextStyle(fontSize: 24),
+          style: TextStyle(fontSize: 24.sp),
         ),
-        const SizedBox(height: 4),
+        SizedBox(height: 4.h),
         Text(
-          value,
-          style: Theme.of(context).textTheme.titleLarge,
+          value.toString(),
+          style: TextStyle(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall,
+          style: TextStyle(
+            fontSize: 12.sp,
+            color: Colors.grey,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildAchievementGrid(List<Achievement> achievements) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 1.2,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-      ),
-      itemCount: achievements.length,
-      itemBuilder: (context, index) {
-        final achievement = achievements[index];
-        final isUnlocked = achievement.unlockedAt != null;
-        
-        return GestureDetector(
-          onTap: () => _showAchievementDetailsDialog(context, achievement),
-          child: Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(
-                color: isUnlocked 
-                  ? Color(int.parse(achievement.tierColor.substring(1), radix: 16) | 0xFF000000)
-                  : Colors.grey.withOpacity(0.5),
-                width: 2,
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    achievement.emojiIcon,
-                    style: const TextStyle(fontSize: 32),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    achievement.name,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: isUnlocked ? null : Colors.grey,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (isUnlocked && !achievement.viewed)
-                    Container(
-                      margin: const EdgeInsets.only(top: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.amber,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Text(
-                        'NEW',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
+  Widget _buildAchievementsByTier(List<Achievement> achievements) {
+    // Group achievements by tier
+    final Map<String, List<Achievement>> achievementsByTier = {};
+    for (var achievement in achievements) {
+      if (!achievementsByTier.containsKey(achievement.tier)) {
+        achievementsByTier[achievement.tier] = [];
+      }
+      achievementsByTier[achievement.tier]!.add(achievement);
+    }
+    
+    // Sort tiers by preset order
+    final tiers = ['platinum', 'gold', 'silver', 'bronze'];
+    tiers.retainWhere((tier) => achievementsByTier.containsKey(tier));
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: tiers.map((tier) {
+        return _buildTierSection(
+          title: '${tier.substring(0, 1).toUpperCase()}${tier.substring(1)} Achievements',
+          achievements: achievementsByTier[tier]!,
         );
-      },
+      }).toList(),
+    );
+  }
+
+  Widget _buildTierSection({
+    required String title,
+    required List<Achievement> achievements,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 16.sp,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 12.h),
+        GridView.count(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          childAspectRatio: 1.0,
+          mainAxisSpacing: 12.h,
+          crossAxisSpacing: 12.w,
+          children: achievements.map((achievement) => 
+            _buildAchievementCard(achievement)
+          ).toList(),
+        ),
+        SizedBox(height: 24.h),
+      ],
+    );
+  }
+
+  Widget _buildAchievementCard(Achievement achievement) {
+    final bool isUnlocked = achievement.unlockedAt != null;
+    final bool isNew = isUnlocked && !achievement.viewed;
+    
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        side: BorderSide(
+          color: _getTierColor(achievement.tier),
+          width: 1.w,
+        ),
+      ),
+      child: InkWell(
+        onTap: () => _showAchievementDetailsDialog(context, achievement),
+        borderRadius: BorderRadius.circular(12.r),
+        child: Padding(
+          padding: EdgeInsets.all(12.r),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                achievement.emojiIcon,
+                style: TextStyle(fontSize: 32.sp),
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                achievement.name,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14.sp,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (isNew)
+                Container(
+                  margin: EdgeInsets.only(top: 8.h),
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                  decoration: BoxDecoration(
+                    color: Colors.amber,
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                  child: Text(
+                    'NEW',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10.sp,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
   void _showAchievementDetailsDialog(BuildContext context, Achievement achievement) {
-    final isUnlocked = achievement.unlockedAt != null;
+    final bool isUnlocked = achievement.unlockedAt != null;
     
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24.r),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               // Badge with tier color
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(16.r),
                 decoration: BoxDecoration(
-                  color: Color(int.parse(achievement.tierColor.substring(1), radix: 16) | 0xFF000000).withOpacity(0.1),
+                  color: _getTierColor(achievement.tier).withOpacity(0.1),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: Color(int.parse(achievement.tierColor.substring(1), radix: 16) | 0xFF000000),
-                    width: 2,
+                    color: _getTierColor(achievement.tier),
+                    width: 2.w,
                   ),
                 ),
                 child: Text(
                   achievement.emojiIcon,
-                  style: const TextStyle(fontSize: 40),
+                  style: TextStyle(fontSize: 40.sp),
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16.h),
               Text(
                 achievement.name,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                style: TextStyle(
+                  fontSize: 18.sp,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8.h),
               Text(
                 achievement.description,
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: TextStyle(fontSize: 14.sp),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16.h),
               if (isUnlocked) 
                 Text(
                   'Unlocked on ${_formatDate(achievement.unlockedAt!)}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  style: TextStyle(
+                    fontSize: 12.sp,
                     color: Colors.green,
                   ),
                 )
               else if (achievement.criteria != null)
                 Text(
                   'Criteria: ${_formatCriteria(achievement.criteria!)}',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: TextStyle(fontSize: 12.sp),
                 ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24.h),
               ElevatedButton(
                 onPressed: () {
                   // Mark as viewed if unlocked and not viewed
@@ -459,7 +480,7 @@ class _LibraryAchievementsPageState extends State<LibraryAchievementsPage> with 
                   }
                   Navigator.of(context).pop();
                 },
-                child: const Text('Close'),
+                child: Text('Close'),
               ),
             ],
           ),
@@ -472,52 +493,54 @@ class _LibraryAchievementsPageState extends State<LibraryAchievementsPage> with 
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(24.r),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 '🎉 Achievement Unlocked! 🎉',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                style: TextStyle(
+                  fontSize: 18.sp,
                   fontWeight: FontWeight.bold,
                   color: Colors.amber.shade700,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24.h),
               // Badge with tier color
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(16.r),
                 decoration: BoxDecoration(
-                  color: Color(int.parse(achievement.tierColor.substring(1), radix: 16) | 0xFF000000).withOpacity(0.1),
+                  color: _getTierColor(achievement.tier).withOpacity(0.1),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: Color(int.parse(achievement.tierColor.substring(1), radix: 16) | 0xFF000000),
-                    width: 2,
+                    color: _getTierColor(achievement.tier),
+                    width: 2.w,
                   ),
                 ),
                 child: Text(
                   achievement.emojiIcon,
-                  style: const TextStyle(fontSize: 50),
+                  style: TextStyle(fontSize: 50.sp),
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16.h),
               Text(
                 achievement.name,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                style: TextStyle(
+                  fontSize: 18.sp,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8.h),
               Text(
                 achievement.description,
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: TextStyle(fontSize: 14.sp),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24.h),
               ElevatedButton(
                 onPressed: () {
                   // Mark as viewed
@@ -526,13 +549,23 @@ class _LibraryAchievementsPageState extends State<LibraryAchievementsPage> with 
                   );
                   Navigator.of(context).pop();
                 },
-                child: const Text('Awesome!'),
+                child: Text('Awesome!'),
               ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Color _getTierColor(String tier) {
+    switch (tier.toLowerCase()) {
+      case 'bronze': return Color(0xFFCD7F32);
+      case 'silver': return Color(0xFFC0C0C0);
+      case 'gold': return Color(0xFFFFD700);
+      case 'platinum': return Color(0xFFE5E4E2);
+      default: return Color(0xFFCD7F32);
+    }
   }
 
   String _formatDate(DateTime date) {
@@ -561,25 +594,29 @@ class _LibraryAchievementsPageState extends State<LibraryAchievementsPage> with 
   Widget _buildEmptyState(String title, String message, IconData icon) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24.r),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               icon,
-              size: 80,
+              size: 80.r,
               color: Colors.grey,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             Text(
               title,
-              style: Theme.of(context).textTheme.titleLarge,
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+              ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8.h),
             Text(
               message,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              style: TextStyle(
+                fontSize: 14.sp,
                 color: Colors.grey,
               ),
               textAlign: TextAlign.center,

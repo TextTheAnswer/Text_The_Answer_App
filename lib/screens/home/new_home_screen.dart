@@ -73,13 +73,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             },
             title: Text('Text the Answer'),
             actions: [
-              IconButton(
-                icon: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
-                onPressed: () {
-                  // Toggle theme using context extension method
-                  context.toggleTheme();
-                },
-              ),
+              // IconButton(
+              //   icon: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
+              //   onPressed: () {
+              //     // Toggle theme using context extension method
+              //     context.toggleTheme();
+              //   },
+              // ),
             ],
           ),
           body: BlocBuilder<ProfileBloc, ProfileState>(
