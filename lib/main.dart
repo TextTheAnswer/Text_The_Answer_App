@@ -26,6 +26,7 @@ import 'config/api_config.dart';
 import 'blocs/daily_quiz/daily_quiz_bloc.dart';
 import 'blocs/socket/socket_bloc.dart';
 import 'screens/daily_quiz/daily_quiz_realtime_screen.dart';
+import 'package:text_the_answer/router/router_config.dart';
 
 // Create a global key for the navigator to access it from anywhere
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -169,7 +170,7 @@ class _MyAppState extends State<MyApp> {
                   debugShowCheckedModeBanner: false,
                   title: 'Text the Answer',
                   theme: state.themeData,
-                  routerConfig: router,
+                  routerConfig: AppRouter.getRouter(),
                   builder: (context, child) {
                     return BlocListener<AuthBloc, AuthState>(
                       listener: (context, state) {

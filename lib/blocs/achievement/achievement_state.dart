@@ -77,4 +77,32 @@ class AchievementUnlocked extends AchievementState {
 
   @override
   List<Object?> get props => [achievement];
+}
+
+class NewAchievementsUnlocked extends AchievementState {
+  final List<Achievement> achievements;
+
+  const NewAchievementsUnlocked(this.achievements);
+
+  @override
+  List<Object?> get props => [achievements];
+}
+
+class AchievementProgress extends AchievementState {
+  final String achievementId;
+  final double progress;
+
+  const AchievementProgress(this.achievementId, this.progress);
+
+  @override
+  List<Object?> get props => [achievementId, progress];
+}
+
+class AchievementViewed extends AchievementState {
+  final String achievementId;
+
+  const AchievementViewed(this.achievementId);
+
+  @override
+  List<Object?> get props => [achievementId];
 } 

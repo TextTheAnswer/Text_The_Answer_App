@@ -11,6 +11,16 @@ import '../../models/question.dart';
 import '../../widgets/quiz/quiz_countdown_timer.dart';
 import '../../widgets/quiz/participant_list.dart';
 import '../../utils/socket_test.dart';
+import '../../blocs/achievement/achievement_bloc.dart';
+import '../../blocs/achievement/achievement_event.dart';
+import '../../blocs/achievement/achievement_state.dart';
+import '../../models/achievement.dart';
+import 'package:go_router/go_router.dart';
+import '../../router/routes.dart';
+import '../../router/route_helper.dart';
+import '../../widgets/quiz/quiz_share_card.dart';
+import 'quiz_review_screen.dart';
+import 'package:share_plus/share_plus.dart';
 
 class DailyQuizRealtimeScreen extends StatefulWidget {
   const DailyQuizRealtimeScreen({Key? key}) : super(key: key);
@@ -24,6 +34,7 @@ class _DailyQuizRealtimeScreenState extends State<DailyQuizRealtimeScreen> {
   Timer? _countdownTimer;
   int _remainingSeconds = 15;
   bool _answerSubmitted = false;
+  List<Map<String, dynamic>> _quizResults = [];
 
   @override
   void initState() {
@@ -75,6 +86,88 @@ class _DailyQuizRealtimeScreenState extends State<DailyQuizRealtimeScreen> {
     _countdownTimer?.cancel();
   }
 
+  void _checkAndUnlockAchievements(DailyQuizCompleted state) {
+    // Only check if we have a valid achievement bloc
+    if (context.read<AchievementBloc>() == null) return;
+    
+    // Check for perfect score achievement
+    if (state.correctAnswers == state.totalQuestions && state.totalQuestions >= 5) {
+      _unlockAchievement(
+        id: 'perfect_quiz_achievement',
+        name: 'Perfect Quiz Master',
+        description: 'Complete a daily quiz with a perfect score',
+        icon: 'star',
+        tier: 'gold',
+      );
+    }
+    
+    // Check for high scorer achievement
+    if (state.totalPoints >= 1000) {
+      _unlockAchievement(
+        id: 'high_scorer_achievement',
+        name: 'High Scorer',
+        description: 'Score 1000+ points in a single daily quiz',
+        icon: 'trophy',
+        tier: 'silver',
+      );
+    }
+    
+    // Check for winner achievement
+    if (state.userRank == 1 && state.participants.length >= 3) {
+      _unlockAchievement(
+        id: 'quiz_winner_achievement',
+        name: 'Quiz Champion',
+        description: 'Win first place in a daily quiz with at least 3 participants',
+        icon: 'medal',
+        tier: 'platinum',
+      );
+    }
+    
+    // Check for participation achievement (always unlocked for completing a quiz)
+    _unlockAchievement(
+      id: 'quiz_participation_achievement',
+      name: 'Quiz Enthusiast',
+      description: 'Participate in the daily quiz',
+      icon: 'quiz',
+      tier: 'bronze',
+    );
+  }
+  
+  void _unlockAchievement({
+    required String id,
+    required String name,
+    required String description,
+    required String icon,
+    required String tier,
+  }) {
+    try {
+      final achievement = Achievement(
+        id: id,
+        name: name,
+        description: description,
+        icon: icon,
+        tier: tier,
+        unlockedAt: DateTime.now(),
+      );
+      
+      context.read<AchievementBloc>().add(UnlockAchievement(achievement));
+    } catch (e) {
+      print('Error unlocking achievement: $e');
+    }
+  }
+  
+  void _saveQuizResult(DailyQuizQuestionResult result) {
+    // Save each question result for later review
+    _quizResults.add({
+      'question': result.question,
+      'userAnswer': result.userAnswer,
+      'isCorrect': result.isCorrect,
+      'correctAnswer': result.correctAnswer,
+      'explanation': result.explanation,
+      'points': result.points,
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -110,6 +203,12 @@ class _DailyQuizRealtimeScreenState extends State<DailyQuizRealtimeScreen> {
                     backgroundColor: Colors.red,
                   ),
                 );
+              } else if (state is DailyQuizQuestionResult) {
+                // Save each question result for review later
+                _saveQuizResult(state);
+              } else if (state is DailyQuizCompleted) {
+                // Check for achievements when quiz is completed
+                _checkAndUnlockAchievements(state);
               }
             },
             builder: (context, state) {
@@ -514,6 +613,31 @@ class _DailyQuizRealtimeScreenState extends State<DailyQuizRealtimeScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                // Add reward indicator
+                const SizedBox(height: 12),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.shade100,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.amber.shade400),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.star, color: Colors.amber.shade700, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Earned 1 Day Premium',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.amber.shade800,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -556,9 +680,29 @@ class _DailyQuizRealtimeScreenState extends State<DailyQuizRealtimeScreen> {
                   ),
                 ],
               ),
+              // Add streak indicator if available
+              if (state.winner?['dailyStreak'] != null) ...[
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.local_fire_department, color: Colors.orange),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Daily Streak: ${state.winner!['dailyStreak']}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),
+        
+        // Achievement unlocked section (if any)
+        _buildNewAchievements(),
         
         // Leaderboard
         Expanded(
@@ -585,9 +729,45 @@ class _DailyQuizRealtimeScreenState extends State<DailyQuizRealtimeScreen> {
           ),
         ),
         
-        // Return button
+        // Action buttons row
         Padding(
           padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              // Share results button
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    _shareQuizResults(state);
+                  },
+                  icon: Icon(Icons.share),
+                  label: Text('Share Results'),
+                  style: OutlinedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Review questions button
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    _navigateToReviewScreen();
+                  },
+                  icon: Icon(Icons.question_answer),
+                  label: Text('Review Questions'),
+                  style: OutlinedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        
+        // Return button
+        Padding(
+          padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 16.0),
           child: ElevatedButton.icon(
             onPressed: () {
               Navigator.of(context).pop();
@@ -601,6 +781,129 @@ class _DailyQuizRealtimeScreenState extends State<DailyQuizRealtimeScreen> {
         ),
       ],
     );
+  }
+  
+  Widget _buildNewAchievements() {
+    return BlocBuilder<AchievementBloc, AchievementState>(
+      builder: (context, state) {
+        if (state is NewAchievementsUnlocked && state.achievements.isNotEmpty) {
+          return Container(
+            margin: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16.0),
+            decoration: BoxDecoration(
+              color: Colors.teal.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.teal.shade300),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.emoji_events, color: Colors.teal),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Achievements Unlocked!',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.teal.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ...state.achievements.map((achievement) => 
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: _getAchievementColor(achievement.tier),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            _getAchievementIcon(achievement.icon),
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                achievement.name,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                achievement.description,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ).toList(),
+                const SizedBox(height: 8),
+                ElevatedButton(
+                  onPressed: () {
+                    context.push(AppRoutePath.achievements);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    minimumSize: Size(200, 36),
+                  ),
+                  child: const Text('View All Achievements'),
+                ),
+              ],
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    );
+  }
+  
+  Color _getAchievementColor(String tier) {
+    switch (tier.toLowerCase()) {
+      case 'bronze':
+        return Colors.brown.shade300;
+      case 'silver':
+        return Colors.grey.shade400;
+      case 'gold':
+        return Colors.amber.shade500;
+      case 'platinum':
+        return Colors.blueGrey.shade400;
+      default:
+        return Colors.teal;
+    }
+  }
+  
+  IconData _getAchievementIcon(String icon) {
+    switch (icon.toLowerCase()) {
+      case 'star':
+        return Icons.star;
+      case 'trophy':
+        return Icons.emoji_events;
+      case 'medal':
+        return Icons.military_tech;
+      case 'quiz':
+        return Icons.quiz;
+      default:
+        return Icons.emoji_events;
+    }
   }
   
   Widget _buildResultItem(String label, String value, IconData icon) {
@@ -621,5 +924,60 @@ class _DailyQuizRealtimeScreenState extends State<DailyQuizRealtimeScreen> {
         ),
       ],
     );
+  }
+  
+  void _shareQuizResults(DailyQuizCompleted state) {
+    // Show a bottom sheet with the share card
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.8,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (_, controller) => Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Container(
+                height: 6,
+                width: 80,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: controller,
+                  child: Column(
+                    children: [
+                      QuizShareCard(
+                        score: state.correctAnswers,
+                        totalQuestions: state.totalQuestions,
+                        rank: state.userRank,
+                        totalParticipants: state.participants.length,
+                        points: state.totalPoints,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  void _navigateToReviewScreen() {
+    // Navigate to the review screen with quiz results using route helper
+    RouteHelper.navigateToQuizReview(context, _quizResults);
   }
 } 
