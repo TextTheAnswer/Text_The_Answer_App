@@ -104,6 +104,31 @@ class _DailyQuizCountdownState extends State<DailyQuizCountdown> {
     
     return false;
   }
+  
+  // Add new method to check if user missed yesterday's quiz
+  bool _hasMissedYesterdaysQuiz() {
+    if (widget.dailyQuizData == null) return false;
+    
+    if (widget.dailyQuizData!.containsKey('lastCompleted')) {
+      try {
+        final lastCompleted = DateTime.parse(widget.dailyQuizData!['lastCompleted']);
+        final now = DateTime.now();
+        final yesterday = now.subtract(const Duration(days: 1));
+        
+        // If last completed is before yesterday, they missed yesterday's quiz
+        if (lastCompleted.isBefore(yesterday) || 
+            (lastCompleted.year != yesterday.year || 
+             lastCompleted.month != yesterday.month || 
+             lastCompleted.day != yesterday.day)) {
+          return true;
+        }
+      } catch (e) {
+        return false;
+      }
+    }
+    
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -112,6 +137,7 @@ class _DailyQuizCountdownState extends State<DailyQuizCountdown> {
     final seconds = _timeRemaining['seconds'] ?? 0;
     
     final bool alreadyTakenToday = _hasTakenTodaysQuiz();
+    final bool missedYesterday = _hasMissedYesterdaysQuiz();
     
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -178,16 +204,18 @@ class _DailyQuizCountdownState extends State<DailyQuizCountdown> {
           Text(
             alreadyTakenToday 
                 ? 'You\'ve completed today\'s quiz!' 
-                : (_quizAvailable 
-                    ? 'Quiz is available now!'
-                    : 'Next quiz available in:'),
+                : (missedYesterday && !_quizAvailable
+                    ? 'You missed yesterday\'s quiz. Try again tomorrow!'
+                    : (_quizAvailable 
+                        ? 'Quiz is available now!'
+                        : 'Next quiz available in:')),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 16,
             ),
           ),
           
-          if (!alreadyTakenToday && !_quizAvailable) ...[
+          if (!alreadyTakenToday && !_quizAvailable && !missedYesterday) ...[
             const SizedBox(height: 16),
             // Countdown timer
             Row(
@@ -230,10 +258,12 @@ class _DailyQuizCountdownState extends State<DailyQuizCountdown> {
                       // Go to quiz results page
                       context.push(AppRoutePath.leaderboard);
                     }
-                  : (_quizAvailable ? () {
-                      // Go to take quiz page
-                      context.push(AppRoutePath.dailyQuiz);
-                    } : null),
+                  : (missedYesterday && !_quizAvailable
+                      ? null  // Disable button if missed yesterday's quiz and new one not available
+                      : (_quizAvailable ? () {
+                          // Go to take quiz page
+                          context.push(AppRoutePath.dailyQuiz);
+                        } : null)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.purple.shade700,
@@ -247,7 +277,9 @@ class _DailyQuizCountdownState extends State<DailyQuizCountdown> {
               child: Text(
                 alreadyTakenToday 
                     ? 'View Leaderboard' 
-                    : (_quizAvailable ? 'Take Quiz Now!' : 'Quiz Coming Soon'),
+                    : (missedYesterday && !_quizAvailable
+                        ? 'Quiz Coming Soon'
+                        : (_quizAvailable ? 'Take Quiz Now!' : 'Quiz Coming Soon')),
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                 ),

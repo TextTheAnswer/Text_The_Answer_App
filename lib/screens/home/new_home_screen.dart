@@ -57,167 +57,65 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     return ThemeAwareWidget(
       builder: (context, themeState) {
         final isDarkMode = themeState.themeData.brightness == Brightness.dark;
-        final secondaryTextColor =
-            isDarkMode ? AppColors.darkLabelText : AppColors.lightLabelText;
-        final cardColor =
-            isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
-        final accentColor =
-            isDarkMode ? AppColors.darkOutlineBg : AppColors.lightOutlineBg;
+        final primaryColor = isDarkMode ? AppColors.darkOutlineBg : AppColors.lightOutlineBg;
+        final bgColor = isDarkMode ? Color(0xFF121212) : Color(0xFFF5F7FA);
+        final cardColor = isDarkMode ? Color(0xFF1D1D1D) : Colors.white;
+        final textColor = isDarkMode ? Colors.white : Colors.black;
 
         return Scaffold(
-          appBar: CustomAppBar(
-            showBackArrow: false,
-            leadingIcon: Icons.menu,
-            onPressed: () {
-              AppScaffoldKeys.mainScaffoldKey.currentState?.openDrawer();
-            },
-            title: Text('Text the Answer'),
+          backgroundColor: bgColor,
+          appBar: AppBar(
+            backgroundColor: bgColor,
+            elevation: 0,
+            title: Row(
+              children: [
+                Text(
+                  'Text',
+                  style: TextStyle(
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                  ),
+                ),
+                Text(
+                  'TheAnswer',
+                  style: TextStyle(
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.w400,
+                    color: primaryColor,
+                  ),
+                ),
+                SizedBox(width: 4.w),
+                Icon(
+                  Icons.verified,
+                  color: Colors.amber,
+                  size: 16.sp,
+                ),
+              ],
+            ),
             actions: [
-              // IconButton(
-              //   icon: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
-              //   onPressed: () {
-              //     // Toggle theme using context extension method
-              //     context.toggleTheme();
-              //   },
-              // ),
+              IconButton(
+                icon: Icon(
+                  Icons.notifications_outlined,
+                  color: textColor,
+                ),
+                onPressed: () {
+                  // Show notifications
+                },
+              ),
             ],
           ),
           body: BlocBuilder<ProfileBloc, ProfileState>(
             builder: (context, state) {
               if (state is ProfileLoading) {
-                return Center(child: CircularProgressIndicator());
+                return _buildLoadingState();
               } else if (state is ProfileError) {
-                return Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(16.w),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.error, size: 64.sp, color: Colors.red),
-                        SizedBox(height: 16.h),
-                        Text(
-                          'Error loading profile data',
-                          style: Theme.of(context).textTheme.titleLarge,
-                          textAlign: TextAlign.center,
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          state.message,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                          textAlign: TextAlign.center,
-                        ),
-                        SizedBox(height: 24.h),
-                        ElevatedButton(
-                          onPressed: () {
-                            context.read<ProfileBloc>().add(FetchProfileEvent());
-                          },
-                          child: Text('Try Again'),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
+                return _buildErrorState(context, state.message);
               } else if (state is ProfileLoaded) {
                 final ProfileData profile = state.profile;
-                
-                // Extract real data from the profile
-                final String userName = profile.name;
-                final String userEmail = profile.email;
-                final bool isPremiumUser = profile.isPremium;
-                final String userAvatar = profile.profile.imageUrl.isNotEmpty
-                    ? profile.profile.imageUrl
-                    : 'https://i.pravatar.cc/150?img=12'; // Fallback avatar
-                
-                // Extract stats
-                final int currentStreak = profile.stats.streak;
-                final int totalCorrect = profile.stats.totalCorrect;
-                final int totalAnswered = profile.stats.totalAnswered;
-                final String accuracy = profile.stats.accuracy;
-                
-                // Create streakHistory (mock if not available)
-                final List<int> streakHistory = [
-                  math.max(1, currentStreak - 6),
-                  math.max(1, currentStreak - 5),
-                  math.max(1, currentStreak - 3),
-                  math.max(1, currentStreak - 2),
-                  math.max(1, currentStreak - 1),
-                  currentStreak,
-                  currentStreak,
-                ];
-                
-                return SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: Padding(
-                    padding: EdgeInsets.all(16.w),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Daily Quiz Countdown
-                        DailyQuizCountdown(
-                          dailyQuizData: profile.dailyQuiz,
-                        ),
-                        SizedBox(height: 24.h),
-                        
-                        _buildProfileCard(
-                          context, 
-                          userName: userName,
-                          userEmail: userEmail,
-                          userAvatar: userAvatar,
-                          isPremiumUser: isPremiumUser,
-                        ),
-                        SizedBox(height: 24.h),
-                        _buildStatsSection(
-                          context,
-                          streak: currentStreak,
-                          totalCorrect: totalCorrect,
-                          totalAnswered: totalAnswered,
-                          streakHistory: streakHistory,
-                        ),
-                        SizedBox(height: 24.h),
-                        _buildAchievementsSection(context),
-                        SizedBox(height: 24.h),
-                        _buildRecentActivitySection(context),
-                        SizedBox(height: 24.h),
-                        ElevatedButton(
-                          onPressed: () {
-                            context.go(AppRoutePath.dailyQuizRealtime);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.primary,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.group),
-                              const SizedBox(width: 8),
-                              Text('Join Daily Multiplayer Quiz'),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
+                return _buildLoadedState(context, profile, isDarkMode, primaryColor, cardColor);
               } else {
-                // Initial state or unknown state
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Welcome to Text the Answer',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      SizedBox(height: 16.h),
-                      CircularProgressIndicator(),
-                    ],
-                  ),
-                );
+                return _buildInitialState(context);
               }
             },
           ),
@@ -226,344 +124,413 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
   
-  Widget _buildProfileCard(
-    BuildContext context, {
-    required String userName,
-    required String userEmail,
-    required String userAvatar,
-    required bool isPremiumUser,
-  }) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final cardColor =
-        isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
-    final accentColor =
-        isDarkMode ? AppColors.darkOutlineBg : AppColors.lightOutlineBg;
-    final secondaryTextColor =
-        isDarkMode ? AppColors.darkLabelText : AppColors.lightLabelText;
-
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        // Banner Image
-        Container(
-          height: 100.h,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(16.r),
-              topRight: Radius.circular(16.r),
-            ),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                accentColor.withOpacity(0.7),
-                accentColor.withOpacity(0.3),
-              ],
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(height: 16.h),
+          Text(
+            'Loading your personalized experience...',
+            style: TextStyle(
+              fontSize: 16.sp,
+              color: Colors.grey,
             ),
           ),
-        ),
-        
-        // Profile Card
-        Container(
-          margin: EdgeInsets.only(top: 60.h),
-          padding: EdgeInsets.all(16.w),
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(16.r),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10.r,
-                offset: Offset(0, 5.h),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildErrorState(BuildContext context, String errorMessage) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(24.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 80.sp, color: Colors.red),
+            SizedBox(height: 16.h),
+            Text(
+              'Oops! Something went wrong',
+              style: TextStyle(
+                fontSize: 22.sp,
+                fontWeight: FontWeight.bold,
               ),
-            ],
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              errorMessage,
+              style: TextStyle(
+                fontSize: 16.sp,
+                color: Colors.grey,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 24.h),
+            ElevatedButton.icon(
+              onPressed: () {
+                context.read<ProfileBloc>().add(FetchProfileEvent());
+              },
+              icon: Icon(Icons.refresh),
+              label: Text('Try Again'),
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildInitialState(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'Welcome to Text the Answer',
+            style: TextStyle(
+              fontSize: 24.sp,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
           ),
+          SizedBox(height: 16.h),
+          CircularProgressIndicator(),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildLoadedState(BuildContext context, ProfileData profile, bool isDarkMode, Color primaryColor, Color cardColor) {
+    final String userName = profile.name;
+    final String userEmail = profile.email;
+    final bool isPremiumUser = profile.isPremium;
+    final String userAvatar = profile.profile.imageUrl.isNotEmpty
+        ? profile.profile.imageUrl
+        : 'https://i.pravatar.cc/150?img=12'; // Fallback avatar
+                
+    // Extract stats
+    final int currentStreak = profile.stats.streak;
+    final int totalCorrect = profile.stats.totalCorrect;
+    final int totalAnswered = profile.stats.totalAnswered;
+    final String accuracy = profile.stats.accuracy;
+    
+    // Create streakHistory (mock if not available)
+    final List<int> streakHistory = [
+      math.max(1, currentStreak - 6),
+      math.max(1, currentStreak - 5),
+      math.max(1, currentStreak - 3),
+      math.max(1, currentStreak - 2),
+      math.max(1, currentStreak - 1),
+      currentStreak,
+      currentStreak,
+    ];
+    
+    return RefreshIndicator(
+      onRefresh: () async {
+        context.read<ProfileBloc>().add(FetchProfileEvent());
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.w),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 40.h), // Space for the avatar
+              SizedBox(height: 16.h),
               
-              // Name and verification
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    userName,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+              // Welcome message
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'Hello, ',
+                      style: TextStyle(
+                        fontSize: 20.sp,
+                        color: isDarkMode ? Colors.white70 : Colors.black54,
+                      ),
                     ),
-                  ),
-                ],
+                    TextSpan(
+                      text: userName,
+                      style: TextStyle(
+                        fontSize: 20.sp,
+                        fontWeight: FontWeight.bold,
+                        color: isDarkMode ? Colors.white : Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               
               SizedBox(height: 4.h),
               
-              // Email
               Text(
-                userEmail,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: secondaryTextColor,
+                'Ready to master your knowledge today?',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: isDarkMode ? Colors.white60 : Colors.black54,
                 ),
               ),
               
-              SizedBox(height: 16.h),
+              SizedBox(height: 20.h),
               
-              // Profile completion progress
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Profile Completion',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 8.h),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4.r),
-                    child: LinearProgressIndicator(
-                      value: 0.75, // Placeholder for actual implementation
-                      backgroundColor: accentColor.withOpacity(0.1),
-                      valueColor: AlwaysStoppedAnimation<Color>(accentColor),
-                      minHeight: 8.h,
+              // Daily Quiz Countdown - Using the existing widget to maintain timer functionality
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: Offset(0, 4),
                     ),
-                  ),
-                ],
-              ),
-              
-              SizedBox(height: 16.h),
-              
-              // Social media links
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildSocialButton(
-                    icon: Icons.alternate_email,
-                    color: Colors.blue.shade400,
-                    onTap: () {
-                      // Open Twitter profile
-                    },
-                  ),
-                  _buildSocialButton(
-                    icon: Icons.link,
-                    color: Colors.blue.shade700,
-                    onTap: () {
-                      // Open LinkedIn profile
-                    },
-                  ),
-                  _buildSocialButton(
-                    icon: Icons.code,
-                    color: Colors.grey.shade800,
-                    onTap: () {
-                      // Open GitHub profile
-                    },
-                  ),
-                ],
-              ),
-              
-              // Premium badge
-              if (isPremiumUser)
-                Container(
-                  margin: EdgeInsets.only(top: 16.h),
-                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.amber.shade300, Colors.amber.shade700],
-                    ),
-                    borderRadius: BorderRadius.circular(20.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.amber.withOpacity(0.5),
-                        blurRadius: 8.r,
-                        offset: Offset(0, 2.h),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.workspace_premium,
-                        color: Colors.white,
-                        size: 18.sp,
-                      ),
-                      SizedBox(width: 4.w),
-                      Text(
-                        'PREMIUM',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12.sp,
-                        ),
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
+                child: DailyQuizCountdown(
+                  dailyQuizData: profile.dailyQuiz,
+                ),
+              ),
+              
+              SizedBox(height: 24.h),
+              
+              // Quick Actions Row
+              _buildQuickActionsRow(context, isDarkMode, primaryColor, cardColor),
+              
+              SizedBox(height: 24.h),
+              
+              // Category Section
+              _buildCategorySection(context, isDarkMode, cardColor),
+              
+              SizedBox(height: 24.h),
+              
+              // Stats Section
+              _buildStatsSection(
+                context,
+                streak: currentStreak,
+                totalCorrect: totalCorrect,
+                totalAnswered: totalAnswered,
+                streakHistory: streakHistory,
+                isDarkMode: isDarkMode,
+              ),
+              
+              SizedBox(height: 24.h),
+              
+              // Achievements Section
+              _buildAchievementsSection(context, isDarkMode, cardColor),
+              
+              SizedBox(height: 24.h),
+              
+              // Weekly Challenge Card
+              _buildWeeklyChallengeCard(context, isDarkMode, primaryColor),
+              
+              SizedBox(height: 24.h),
+              
+              // Multiplayer button
+              _buildMultiplayerButton(context, isDarkMode),
+              
+              SizedBox(height: 32.h),
             ],
-          ),
-        ),
-        
-        // Profile Avatar with progress ring
-        Positioned(
-          top: 40.h, // Center avatar between banner and card
-          left: 0,
-          right: 0,
-          child: Center(
-            child: SizedBox(
-              width: 80.w,
-              height: 80.w,
-              child: Stack(
-                children: [
-                  // Progress ring
-                  SizedBox(
-                    width: 80.w,
-                    height: 80.w,
-                    child: CircularProgressIndicator(
-                      value: 0.75, // Placeholder for actual implementation
-                      strokeWidth: 4.w,
-                      backgroundColor: Colors.grey.withOpacity(0.2),
-                      valueColor: AlwaysStoppedAnimation<Color>(accentColor),
-                    ),
-                  ),
-                  
-                  // Avatar
-                  Center(
-                    child: Container(
-                      width: 70.w,
-                      height: 70.w,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: cardColor,
-                          width: 3.w,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 8.r,
-                            offset: Offset(0, 2.h),
-                          ),
-                        ],
-                        image: DecorationImage(
-                          image: NetworkImage(userAvatar),
-                          fit: BoxFit.cover,
-                          onError: (exception, stackTrace) {
-                            // Handle error loading image
-                          },
-                        ),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(35.r),
-                          onTap: () {
-                            // Show profile picture options
-                          },
-                          child: Container(),
-                        ),
-                      ),
-                    ),
-                  ),
-                  
-                  // Edit button
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: accentColor,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: cardColor,
-                          width: 2.w,
-                        ),
-                      ),
-                      child: IconButton(
-                        iconSize: 16.sp,
-                        padding: EdgeInsets.all(4.w),
-                        constraints: BoxConstraints(),
-                        icon: Icon(Icons.camera_alt, color: Colors.white),
-                        onPressed: () {
-                          // Show profile picture edit options
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-  
-  Widget _buildSocialButton({
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 8.w),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20.r),
-        child: Container(
-          width: 40.w,
-          height: 40.w,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            icon,
-            color: color,
-            size: 20.sp,
           ),
         ),
       ),
     );
   }
-
+  
+  Widget _buildQuickActionsRow(BuildContext context, bool isDarkMode, Color primaryColor, Color cardColor) {
+    final List<Map<String, dynamic>> actions = [
+      {
+        'icon': Icons.menu_book_outlined,
+        'label': 'Library',
+        'color': Colors.blue,
+        'route': AppRoutePath.library,
+      },
+      {
+        'icon': Icons.emoji_events_outlined,
+        'label': 'Achievements',
+        'color': Colors.amber,
+        'route': AppRoutePath.achievements,
+      },
+      {
+        'icon': Icons.bar_chart_outlined,
+        'label': 'Leaderboard',
+        'color': Colors.green,
+        'route': AppRoutePath.leaderboard,
+      },
+      {
+        'icon': Icons.workspace_premium_outlined,
+        'label': 'Premium',
+        'color': Colors.deepPurple,
+        'route': null,
+      },
+    ];
+    
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: actions.map((action) {
+        return GestureDetector(
+          onTap: () {
+            if (action['route'] != null) {
+              context.go(action['route'] as String);
+            }
+          },
+          child: Column(
+            children: [
+              Container(
+                width: 56.w,
+                height: 56.w,
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Color(0xFF2D2D2D) : Colors.white,
+                  borderRadius: BorderRadius.circular(12.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  action['icon'] as IconData,
+                  color: action['color'] as Color,
+                  size: 28.w,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                action['label'] as String,
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: isDarkMode ? Colors.white70 : Colors.black87,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+  
+  Widget _buildCategorySection(BuildContext context, bool isDarkMode, Color cardColor) {
+    final categories = [
+      {'name': 'Science', 'icon': Icons.science_outlined, 'color': Colors.teal},
+      {'name': 'History', 'icon': Icons.history_edu_outlined, 'color': Colors.amber},
+      {'name': 'Math', 'icon': Icons.calculate_outlined, 'color': Colors.blue},
+      {'name': 'Geography', 'icon': Icons.public_outlined, 'color': Colors.green},
+    ];
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Categories',
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+                color: isDarkMode ? Colors.white : Colors.black,
+              ),
+            ),
+            Text(
+              'See All',
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: isDarkMode ? Colors.blue.shade300 : Colors.blue.shade700,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 16.h),
+        
+        // Categories grid
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 16.h,
+          crossAxisSpacing: 16.w,
+          childAspectRatio: 1.5,
+          children: categories.map((category) {
+            return Container(
+              decoration: BoxDecoration(
+                color: isDarkMode ? Color(0xFF2D2D2D) : Colors.white,
+                borderRadius: BorderRadius.circular(12.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(8.w),
+                    decoration: BoxDecoration(
+                      color: (category['color'] as Color).withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      category['icon'] as IconData,
+                      color: category['color'] as Color,
+                      size: 32.w,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    category['name'] as String,
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w500,
+                      color: isDarkMode ? Colors.white : Colors.black,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+  
   Widget _buildStatsSection(
     BuildContext context, {
     required int streak,
     required int totalCorrect,
     required int totalAnswered,
     required List<int> streakHistory,
+    required bool isDarkMode,
   }) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final cardColor =
-        isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
-    final accentColor =
-        isDarkMode ? AppColors.darkOutlineBg : AppColors.lightOutlineBg;
-    final secondaryTextColor =
-        isDarkMode ? AppColors.darkLabelText : AppColors.lightLabelText;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Your Stats',
-          style: Theme.of(context).textTheme.titleLarge,
+          style: TextStyle(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.bold,
+            color: isDarkMode ? Colors.white : Colors.black,
+          ),
         ),
         SizedBox(height: 16.h),
         
-        // Streak card with chart
+        // Streak card
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                accentColor.withOpacity(0.7),
-                accentColor.withOpacity(0.3),
-              ],
-            ),
+            color: Colors.deepPurple.shade600,
             borderRadius: BorderRadius.circular(16.r),
             boxShadow: [
               BoxShadow(
@@ -586,7 +553,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     child: Icon(
                       Icons.local_fire_department,
                       color: Colors.white,
-                      size: 30.sp,
+                      size: 24.sp,
                     ),
                   ),
                   SizedBox(width: 16.w),
@@ -613,52 +580,50 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                 ],
               ),
-              SizedBox(height: 20.h),
-              SizedBox(
-                height: 80.h,
-                child: _buildStreakChart(context, streakHistory),
-              ),
             ],
           ),
         ),
         SizedBox(height: 16.h),
         
-        // Stats grid
+        // Stats cards
         Row(
           children: [
             Expanded(
-              child: _buildStatCard(
+              child: _buildSimpleStatCard(
                 context,
                 title: 'Games Played',
                 value: totalAnswered.toString(),
-                icon: Icons.gamepad,
-                gradient: [Colors.purple.shade300, Colors.purple.shade600],
+                icon: Icons.gamepad_outlined,
+                color: Colors.blue,
+                isDarkMode: isDarkMode,
               ),
             ),
             SizedBox(width: 16.w),
             Expanded(
-              child: _buildStatCard(
+              child: _buildSimpleStatCard(
                 context,
-                title: 'Correct Answers',
+                title: 'Correct',
                 value: totalCorrect.toString(),
-                icon: Icons.check_circle,
-                gradient: [Colors.green.shade300, Colors.green.shade600],
+                icon: Icons.check_circle_outline,
+                color: Colors.green,
+                isDarkMode: isDarkMode,
               ),
             ),
           ],
         ),
-        SizedBox(height: 16.h),
+        SizedBox(height: 12.h),
         Row(
           children: [
             Expanded(
-              child: _buildStatCard(
+              child: _buildSimpleStatCard(
                 context,
                 title: 'Accuracy',
                 value: totalAnswered > 0 
                     ? '${(totalCorrect * 100 / totalAnswered).toInt()}%' 
                     : '0%',
-                icon: Icons.precision_manufacturing,
-                gradient: [Colors.amber.shade300, Colors.amber.shade600],
+                icon: Icons.analytics_outlined,
+                color: Colors.amber,
+                isDarkMode: isDarkMode,
               ),
             ),
             SizedBox(width: 16.w),
@@ -669,118 +634,65 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
   
-  Widget _buildStreakChart(BuildContext context, List<int> streakHistory) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: List.generate(
-        streakHistory.length,
-        (index) {
-          final int value = streakHistory[index];
-          final double normalizedHeight = (value / streakHistory.reduce(math.max)) * 60.h;
-          
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              AnimatedContainer(
-                duration: Duration(milliseconds: 300),
-                width: 20.w,
-                height: normalizedHeight,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.8),
-                  borderRadius: BorderRadius.circular(4.r),
-                ),
-              ),
-              SizedBox(height: 8.h),
-              Text(
-                'D${index + 1}',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
-                  fontSize: 12.sp,
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-  
-  Widget _buildStatCard(
+  Widget _buildSimpleStatCard(
     BuildContext context, {
     required String title,
     required String value,
     required IconData icon,
-    required List<Color> gradient,
+    required Color color,
+    required bool isDarkMode,
   }) {
     return Container(
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: gradient,
-        ),
-        borderRadius: BorderRadius.circular(16.r),
+        color: isDarkMode ? Color(0xFF2D2D2D) : Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: gradient[0].withOpacity(0.3),
-            blurRadius: 8.r,
-            offset: Offset(0, 4.h),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: Offset(0, 2),
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            // Show detailed stats
-          },
-          borderRadius: BorderRadius.circular(16.r),
-          child: Padding(
-            padding: EdgeInsets.all(16.w),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 30.sp,
-                ),
-                SizedBox(height: 12.h),
-                Text(
-                  value,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
-                    fontSize: 14.sp,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.all(8.w),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 20.sp,
             ),
           ),
-        ),
+          SizedBox(height: 12.h),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 20.sp,
+              fontWeight: FontWeight.bold,
+              color: isDarkMode ? Colors.white : Colors.black,
+            ),
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: isDarkMode ? Colors.white70 : Colors.black54,
+            ),
+          ),
+        ],
       ),
     );
   }
   
-  Widget _buildAchievementsSection(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final cardColor =
-        isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
-    final accentColor =
-        isDarkMode ? AppColors.darkOutlineBg : AppColors.lightOutlineBg;
-        
+  Widget _buildAchievementsSection(BuildContext context, bool isDarkMode, Color cardColor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -789,14 +701,23 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           children: [
             Text(
               'Achievements',
-              style: Theme.of(context).textTheme.titleLarge,
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+                color: isDarkMode ? Colors.white : Colors.black,
+              ),
             ),
             TextButton(
               onPressed: () {
-                // Navigate to the achievements library page
-                context.go(AppRoutePath.library);
+                context.go(AppRoutePath.achievements);
               },
-              child: Text('View All'),
+              child: Text(
+                'View All',
+                style: TextStyle(
+                  color: isDarkMode ? Colors.blue.shade300 : Colors.blue.shade700,
+                  fontSize: 14.sp,
+                ),
+              ),
             ),
           ],
         ),
@@ -807,16 +728,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             physics: BouncingScrollPhysics(),
-            itemCount: 5, // Placeholder for actual implementation
+            itemCount: 5,
             itemBuilder: (context, index) {
-              return _buildAchievementBadge(
+              return _buildAchievementItem(
                 context,
-                name: 'Achievement ${index + 1}',
-                description: 'Description for Achievement ${index + 1}',
-                icon: Icons.star,
-                color: Colors.amber,
-                earned: true,
-                date: '2023-11-${index + 5}',
+                index: index,
+                isDarkMode: isDarkMode,
               );
             },
           ),
@@ -825,339 +742,186 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
   
-  Widget _buildAchievementBadge(
-    BuildContext context, {
-    required String name,
-    required String description,
-    required IconData icon,
-    required Color color,
-    required bool earned,
-    String? date,
-  }) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final cardColor =
-        isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
+  Widget _buildAchievementItem(BuildContext context, {required int index, required bool isDarkMode}) {
+    final List<Color> colors = [
+      Colors.amber,
+      Colors.green,
+      Colors.blue,
+      Colors.purple,
+      Colors.orange,
+    ];
     
-    return GestureDetector(
-      onTap: () {
-        if (earned) {
-          _showAchievementDetails(
-            context,
-            name: name,
-            description: description,
-            icon: icon,
-            color: color,
-            date: date!,
-          );
-        }
-      },
-      child: Container(
-        width: 100.w,
-        margin: EdgeInsets.only(right: 16.w),
-        child: Column(
-          children: [
-            // Badge icon container
-            Container(
-              width: 70.w,
-              height: 70.w,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: earned ? color.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
-                border: Border.all(
-                  color: earned ? color : Colors.grey,
-                  width: 2.w,
+    final List<IconData> icons = [
+      Icons.emoji_events_outlined,
+      Icons.psychology_outlined,
+      Icons.directions_run_outlined,
+      Icons.military_tech_outlined,
+      Icons.lightbulb_outline,
+    ];
+    
+    return Container(
+      width: 100.w,
+      margin: EdgeInsets.only(right: 16.w),
+      child: Column(
+        children: [
+          Container(
+            width: 70.w,
+            height: 70.w,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: colors[index % colors.length].withOpacity(0.1),
+              border: Border.all(
+                color: colors[index % colors.length],
+                width: 2.w,
+              ),
+            ),
+            child: Icon(
+              icons[index % icons.length],
+              color: colors[index % colors.length],
+              size: 32.sp,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            'Achievement ${index + 1}',
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w500,
+              color: isDarkMode ? Colors.white70 : Colors.black87,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildMultiplayerButton(BuildContext context, bool isDarkMode) {
+    return Container(
+      width: double.infinity,
+      height: 56.h,
+      decoration: BoxDecoration(
+        color: Colors.deepPurple,
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.deepPurple.withOpacity(0.3),
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            context.go(AppRoutePath.dailyQuizRealtime);
+          },
+          borderRadius: BorderRadius.circular(12.r),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.groups_outlined,
+                  color: Colors.white,
+                  size: 24.sp,
                 ),
-                boxShadow: earned
-                    ? [
-                        BoxShadow(
-                          color: color.withOpacity(0.3),
-                          blurRadius: 8.r,
-                          offset: Offset(0, 2.h),
-                        ),
-                      ]
-                    : [],
-              ),
-              child: Icon(
-                icon,
-                color: earned ? color : Colors.grey,
-                size: 36.sp,
-              ),
+                SizedBox(width: 12.w),
+                Text(
+                  'Join Multiplayer Quiz',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
-            SizedBox(height: 8.h),
-            
-            // Badge name
-            Text(
-              name,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 12.sp,
-                fontWeight: FontWeight.bold,
-                color: earned 
-                    ? isDarkMode ? Colors.white : Colors.black 
-                    : Colors.grey,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
   
-  void _showAchievementDetails(
-    BuildContext context, {
-    required String name,
-    required String description,
-    required IconData icon,
-    required Color color,
-    required String date,
-  }) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final cardColor =
-        isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
-    
-    showDialog(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.r),
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(24.w),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 80.w,
-                  height: 80.w,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: color.withOpacity(0.1),
-                    border: Border.all(
-                      color: color,
-                      width: 3.w,
-                    ),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: color,
-                    size: 40.sp,
-                  ),
-                ),
-                SizedBox(height: 16.h),
-                Text(
-                  name,
-                  style: TextStyle(
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  description,
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 16.h),
-                Text(
-                  'Earned on ${_formatDate(date)}',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: Colors.grey,
-                  ),
-                ),
-                SizedBox(height: 24.h),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: color,
-                    minimumSize: Size(double.infinity, 50.h),
-                  ),
-                  child: Text('Awesome!'),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-  
-  String _formatDate(String date) {
-    final DateTime dateTime = DateTime.parse(date);
-    final List<String> months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
-    
-    return '${months[dateTime.month - 1]} ${dateTime.day}, ${dateTime.year}';
-  }
-  
-  Widget _buildRecentActivitySection(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final cardColor =
-        isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
-    final accentColor =
-        isDarkMode ? AppColors.darkOutlineBg : AppColors.lightOutlineBg;
-    final secondaryTextColor =
-        isDarkMode ? AppColors.darkLabelText : AppColors.lightLabelText;
-        
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Recent Activity',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            InkWell(
-              borderRadius: BorderRadius.circular(20.r),
-              onTap: () {
-                setState(() {
-                  _isActivityExpanded = !_isActivityExpanded;
-                });
-              },
-              child: Padding(
-                padding: EdgeInsets.all(4.w),
-                child: Row(
-                  children: [
-                    Text(
-                      _isActivityExpanded ? 'Collapse' : 'Expand',
-                      style: TextStyle(
-                        color: accentColor,
-                      ),
-                    ),
-                    Icon(
-                      _isActivityExpanded
-                          ? Icons.keyboard_arrow_up
-                          : Icons.keyboard_arrow_down,
-                      color: accentColor,
-                      size: 16.sp,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+  Widget _buildWeeklyChallengeCard(BuildContext context, bool isDarkMode, Color primaryColor) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        color: isDarkMode ? Color(0xFF1D1D1D) : Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(
+          color: Colors.white.withOpacity(isDarkMode ? 0.2 : 0),
+          width: 2.w,
         ),
-        SizedBox(height: 16.h),
-        
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.all(16.w),
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(16.r),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10.r,
-                offset: Offset(0, 5.h),
-              ),
-            ],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: Offset(0, 5),
           ),
-          child: Column(
-            children: List.generate(
-              _isActivityExpanded ? 5 : 2, // Placeholder for actual implementation
-              (index) {
-                return _buildActivityItem(
-                  context,
-                  title: 'Activity ${index + 1}',
-                  description: 'Description for Activity ${index + 1}',
-                  time: '${index + 1} hours ago',
-                  icon: Icons.star,
-                  color: Colors.amber,
-                  isLast: index == (_isActivityExpanded ? 4 : 1),
-                );
-              },
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-  
-  Widget _buildActivityItem(
-    BuildContext context, {
-    required String title,
-    required String description,
-    required String time,
-    required IconData icon,
-    required Color color,
-    required bool isLast,
-  }) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final secondaryTextColor =
-        isDarkMode ? AppColors.darkLabelText : AppColors.lightLabelText;
-        
-    return IntrinsicHeight(
-      child: Row(
+        ],
+      ),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
+          Row(
             children: [
               Container(
                 width: 40.w,
                 height: 40.w,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: Colors.purple.withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 20.sp,
+                child: Center(
+                  child: Icon(
+                    Icons.star_border_rounded,
+                    size: 24.sp,
+                    color: Colors.purple,
+                  ),
                 ),
               ),
-              if (!isLast)
-                Expanded(
-                  child: Container(
-                    width: 2.w,
-                    color: Colors.grey.withOpacity(0.3),
-                  ),
+              SizedBox(width: 16.w),
+              Text(
+                'Weekly Challenge',
+                style: TextStyle(
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.bold,
+                  color: isDarkMode ? Colors.white : Colors.black,
                 ),
+              ),
             ],
           ),
-          SizedBox(width: 16.w),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: isLast ? 0 : 16.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    description,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      color: secondaryTextColor,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    time,
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: secondaryTextColor.withOpacity(0.7),
-                    ),
-                  ),
-                ],
+          SizedBox(height: 16.h),
+          Text(
+            'Test your knowledge in our special weekly themed quizzes! Complete challenges to earn exclusive badges and climb the leaderboard.',
+            style: TextStyle(
+              fontSize: 16.sp,
+              color: isDarkMode ? Colors.white70 : Colors.black54,
+              height: 1.4,
+            ),
+          ),
+          SizedBox(height: 20.h),
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(vertical: 14.h),
+            decoration: BoxDecoration(
+              color: Colors.deepPurple,
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Center(
+              child: Text(
+                'Join This Week\'s Challenge',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
@@ -1165,4 +929,33 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
   }
+}
+
+class DotPatternPainter extends CustomPainter {
+  final bool isDarkMode;
+  final Color dotColor;
+  
+  DotPatternPainter({
+    required this.isDarkMode,
+    required this.dotColor,
+  });
+  
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double dotSize = 2;
+    final double spacing = 25;
+    
+    final Paint paint = Paint()
+      ..color = dotColor
+      ..style = PaintingStyle.fill;
+    
+    for (double x = 0; x < size.width; x += spacing) {
+      for (double y = 0; y < size.height; y += spacing) {
+        canvas.drawCircle(Offset(x, y), dotSize, paint);
+      }
+    }
+  }
+  
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
