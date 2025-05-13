@@ -152,8 +152,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Daily Quiz Countdown
-                        DailyQuizCountdown(
+                        // -- Daily Quiz Countdown
+                        DailyQuizCountdownContent(
                           dailyQuizData: profile.dailyQuiz,
                         ),
                         SizedBox(height: 24.h),
