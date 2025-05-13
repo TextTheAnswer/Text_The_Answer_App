@@ -4,13 +4,11 @@ import '../../utils/quiz/time_utility.dart';
 import 'package:go_router/go_router.dart';
 import '../../router/routes.dart';
 
+@Deprecated("Depreated in favour of DailyQuizCountdownContent")
 class DailyQuizCountdown extends StatefulWidget {
   final Map<String, dynamic>? dailyQuizData;
-  
-  const DailyQuizCountdown({
-    super.key,
-    this.dailyQuizData,
-  });
+
+  const DailyQuizCountdown({super.key, this.dailyQuizData});
 
   @override
   State<DailyQuizCountdown> createState() => _DailyQuizCountdownState();
@@ -38,12 +36,13 @@ class _DailyQuizCountdownState extends State<DailyQuizCountdown> {
 
   void _updateNextQuizTime() {
     // Check if we have quiz data from the profile
-    if (widget.dailyQuizData != null && 
+    if (widget.dailyQuizData != null &&
         widget.dailyQuizData!.containsKey('nextAvailable')) {
-      
       try {
         // Convert the nextAvailable timestamp to DateTime
-        final nextAvailable = DateTime.parse(widget.dailyQuizData!['nextAvailable']);
+        final nextAvailable = DateTime.parse(
+          widget.dailyQuizData!['nextAvailable'],
+        );
         _nextQuizTime = nextAvailable;
       } catch (e) {
         // If there's an error parsing the date, fallback to utility method
@@ -62,13 +61,9 @@ class _DailyQuizCountdownState extends State<DailyQuizCountdown> {
   }
 
   void _updateTimeRemaining() {
-    if (_nextQuizTime == null) {
-      _updateNextQuizTime();
-    }
-    
     final now = DateTime.now();
     final diff = _nextQuizTime!.difference(now);
-    
+
     setState(() {
       if (diff.isNegative) {
         // Quiz is available now
@@ -87,21 +82,23 @@ class _DailyQuizCountdownState extends State<DailyQuizCountdown> {
 
   bool _hasTakenTodaysQuiz() {
     if (widget.dailyQuizData == null) return false;
-    
+
     // Check if lastCompleted exists and is today
     if (widget.dailyQuizData!.containsKey('lastCompleted')) {
       try {
-        final lastCompleted = DateTime.parse(widget.dailyQuizData!['lastCompleted']);
+        final lastCompleted = DateTime.parse(
+          widget.dailyQuizData!['lastCompleted'],
+        );
         final now = DateTime.now();
-        
-        return lastCompleted.year == now.year && 
-               lastCompleted.month == now.month && 
-               lastCompleted.day == now.day;
+
+        return lastCompleted.year == now.year &&
+            lastCompleted.month == now.month &&
+            lastCompleted.day == now.day;
       } catch (e) {
         return false;
       }
     }
-    
+
     return false;
   }
 
@@ -110,151 +107,157 @@ class _DailyQuizCountdownState extends State<DailyQuizCountdown> {
     final hours = _timeRemaining['hours'] ?? 0;
     final minutes = _timeRemaining['minutes'] ?? 0;
     final seconds = _timeRemaining['seconds'] ?? 0;
-    
+
     final bool alreadyTakenToday = _hasTakenTodaysQuiz();
-    
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.purple.shade700, Colors.purple.shade500],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.purple.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: 400),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.purple.shade700, Colors.purple.shade500],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  const Icon(
-                    Icons.quiz,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Daily Quiz Challenge',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              if (_nextQuizTime != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    QuizTimeUtility.formatEventTime(_nextQuizTime!),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          
-          // Status message
-          Text(
-            alreadyTakenToday 
-                ? 'You\'ve completed today\'s quiz!' 
-                : (_quizAvailable 
-                    ? 'Quiz is available now!'
-                    : 'Next quiz available in:'),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-            ),
-          ),
-          
-          if (!alreadyTakenToday && !_quizAvailable) ...[
-            const SizedBox(height: 16),
-            // Countdown timer
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildTimeBox(context, hours, 'hrs'),
-                const SizedBox(width: 8),
-                const Text(
-                  ':',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                _buildTimeBox(context, minutes, 'min'),
-                const SizedBox(width: 8),
-                const Text(
-                  ':',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                _buildTimeBox(context, seconds, 'sec'),
-              ],
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.purple.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
           ],
-          
-          const SizedBox(height: 16),
-          
-          // Take quiz or view results button
-          Center(
-            child: ElevatedButton(
-              onPressed: alreadyTakenToday 
-                  ? () {
-                      // Go to quiz results page
-                      context.push(AppRoutePath.leaderboard);
-                    }
-                  : (_quizAvailable ? () {
-                      // Go to take quiz page
-                      context.push(AppRoutePath.dailyQuiz);
-                    } : null),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.purple.shade700,
-                disabledBackgroundColor: Colors.white.withOpacity(0.3),
-                disabledForegroundColor: Colors.white.withOpacity(0.5),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // -- Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.quiz, color: Colors.white, size: 24),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Daily Quiz Challenge',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
+                if (_nextQuizTime != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      QuizTimeUtility.formatEventTime(_nextQuizTime!),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+
+            // Status message
+            Text(
+              alreadyTakenToday
+                  ? 'You\'ve completed today\'s quiz!'
+                  : (_quizAvailable
+                      ? 'Quiz is available now!'
+                      : 'Next quiz available in:'),
+              style: const TextStyle(color: Colors.white, fontSize: 16),
+            ),
+
+            if (!alreadyTakenToday && !_quizAvailable) ...[
+              const SizedBox(height: 16),
+              // Countdown timer
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildTimeBox(context, hours, 'hrs'),
+                  const SizedBox(width: 8),
+                  const Text(
+                    ':',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildTimeBox(context, minutes, 'min'),
+                  const SizedBox(width: 8),
+                  const Text(
+                    ':',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildTimeBox(context, seconds, 'sec'),
+                ],
               ),
-              child: Text(
-                alreadyTakenToday 
-                    ? 'View Leaderboard' 
-                    : (_quizAvailable ? 'Take Quiz Now!' : 'Quiz Coming Soon'),
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
+            ],
+
+            const SizedBox(height: 16),
+
+            // Take quiz or view results button
+            Center(
+              child: ElevatedButton(
+                onPressed:
+                    alreadyTakenToday
+                        ? () {
+                          // Go to quiz results page
+                          context.push(AppRoutePath.leaderboard);
+                        }
+                        : (_quizAvailable
+                            ? () {
+                              // Go to take quiz page
+                              context.push(AppRoutePath.dailyQuiz);
+                            }
+                            : null),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.purple.shade700,
+                  disabledBackgroundColor: Colors.white.withOpacity(0.3),
+                  disabledForegroundColor: Colors.white.withOpacity(0.5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  alreadyTakenToday
+                      ? 'View Leaderboard'
+                      : (_quizAvailable
+                          ? 'Take Quiz Now!'
+                          : 'Quiz Coming Soon'),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -279,13 +282,10 @@ class _DailyQuizCountdownState extends State<DailyQuizCountdown> {
           const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-            ),
+            style: const TextStyle(color: Colors.white, fontSize: 12),
           ),
         ],
       ),
     );
   }
-} 
+}

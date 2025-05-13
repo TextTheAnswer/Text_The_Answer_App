@@ -2,21 +2,18 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:iconly/iconly.dart';
 import 'package:text_the_answer/config/colors.dart';
 import 'package:text_the_answer/screens/main_app_screen.dart';
-import 'package:text_the_answer/utils/theme/theme_cubit.dart';
 import 'package:text_the_answer/widgets/app_bar/custom_app_bar.dart';
 import 'package:text_the_answer/widgets/common/theme_aware_widget.dart';
-import 'package:text_the_answer/widgets/quiz/event_countdown.dart';
-import 'package:text_the_answer/widgets/quiz/waiting_room.dart';
-import 'package:text_the_answer/utils/quiz/time_utility.dart';
-import 'package:text_the_answer/screens/daily_quiz_screen.dart';
 import 'package:text_the_answer/blocs/profile/profile_bloc.dart';
 import 'package:text_the_answer/blocs/profile/profile_event.dart';
 import 'package:text_the_answer/blocs/profile/profile_state.dart';
-import 'package:text_the_answer/widgets/quiz/daily_quiz_countdown.dart';
 import 'package:text_the_answer/models/profile.dart';
 import 'package:go_router/go_router.dart';
+import 'package:text_the_answer/widgets/quiz/daily_quiz_countdown_content.dart';
+import 'package:text_the_answer/widgets/quiz/profile_header.dart';
 import '../../router/routes.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -26,14 +23,15 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   // Animation controller for microinteractions
   late AnimationController _animationController;
-  
+
   // Expanded section states
   bool _isPremiumBenefitsExpanded = false;
   bool _isActivityExpanded = false;
-  
+
   @override
   void initState() {
     super.initState();
@@ -41,11 +39,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    
+
     // Fetch profile data when the screen loads
     context.read<ProfileBloc>().add(FetchProfileEvent());
   }
-  
+
   @override
   void dispose() {
     _animationController.dispose();
@@ -56,14 +54,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     return ThemeAwareWidget(
       builder: (context, themeState) {
-        final isDarkMode = themeState.themeData.brightness == Brightness.dark;
-        final secondaryTextColor =
-            isDarkMode ? AppColors.darkLabelText : AppColors.lightLabelText;
-        final cardColor =
-            isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
-        final accentColor =
-            isDarkMode ? AppColors.darkOutlineBg : AppColors.lightOutlineBg;
-
         return Scaffold(
           appBar: CustomAppBar(
             showBackArrow: false,
@@ -71,15 +61,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             onPressed: () {
               AppScaffoldKeys.mainScaffoldKey.currentState?.openDrawer();
             },
-            title: Text('Text the Answer'),
+            title: Text(
+              'Text the Answer',
+              style: TextStyle(fontWeight: FontWeight.w400, fontSize: 24),
+            ),
             actions: [
-              // IconButton(
-              //   icon: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
-              //   onPressed: () {
-              //     // Toggle theme using context extension method
-              //     context.toggleTheme();
-              //   },
-              // ),
+              IconButton(icon: Icon(IconlyLight.search), onPressed: () {}),
+              IconButton(
+                icon: Icon(IconlyLight.notification),
+                onPressed: () {},
+              ),
             ],
           ),
           body: BlocBuilder<ProfileBloc, ProfileState>(
@@ -109,7 +100,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         SizedBox(height: 24.h),
                         ElevatedButton(
                           onPressed: () {
-                            context.read<ProfileBloc>().add(FetchProfileEvent());
+                            context.read<ProfileBloc>().add(
+                              FetchProfileEvent(),
+                            );
                           },
                           child: Text('Try Again'),
                         ),
@@ -119,21 +112,22 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 );
               } else if (state is ProfileLoaded) {
                 final ProfileData profile = state.profile;
-                
+
                 // Extract real data from the profile
                 final String userName = profile.name;
                 final String userEmail = profile.email;
                 final bool isPremiumUser = profile.isPremium;
-                final String userAvatar = profile.profile.imageUrl.isNotEmpty
-                    ? profile.profile.imageUrl
-                    : 'https://i.pravatar.cc/150?img=12'; // Fallback avatar
-                
+                final String userAvatar =
+                    profile.profile.imageUrl.isNotEmpty
+                        ? profile.profile.imageUrl
+                        : 'https://i.pravatar.cc/150?img=12'; // Fallback avatar
+
                 // Extract stats
                 final int currentStreak = profile.stats.streak;
                 final int totalCorrect = profile.stats.totalCorrect;
                 final int totalAnswered = profile.stats.totalAnswered;
                 final String accuracy = profile.stats.accuracy;
-                
+
                 // Create streakHistory (mock if not available)
                 final List<int> streakHistory = [
                   math.max(1, currentStreak - 6),
@@ -144,27 +138,27 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   currentStreak,
                   currentStreak,
                 ];
-                
+
                 return SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
                   child: Padding(
                     padding: EdgeInsets.all(16.w),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Daily Quiz Countdown
-                        DailyQuizCountdown(
+                        // -- Daily Quiz Countdown
+                        DailyQuizCountdownContent(
                           dailyQuizData: profile.dailyQuiz,
                         ),
                         SizedBox(height: 24.h),
-                        
-                        _buildProfileCard(
-                          context, 
+
+                        // -- Profile Header
+                        ProfileHeader(
                           userName: userName,
-                          userEmail: userEmail,
-                          userAvatar: userAvatar,
-                          isPremiumUser: isPremiumUser,
+                          email: userEmail,
+                          avaterUrl: userAvatar,
+                          isPremium: isPremiumUser,
                         ),
+
                         SizedBox(height: 24.h),
                         _buildStatsSection(
                           context,
@@ -183,9 +177,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             context.go(AppRoutePath.dailyQuizRealtime);
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.primary,
+                            backgroundColor:
+                                Theme.of(context).colorScheme.primary,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 12,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -225,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       },
     );
   }
-  
+
   Widget _buildProfileCard(
     BuildContext context, {
     required String userName,
@@ -263,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
           ),
         ),
-        
+
         // Profile Card
         Container(
           margin: EdgeInsets.only(top: 60.h),
@@ -282,7 +280,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           child: Column(
             children: [
               SizedBox(height: 40.h), // Space for the avatar
-              
               // Name and verification
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -295,19 +292,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                 ],
               ),
-              
+
               SizedBox(height: 4.h),
-              
+
               // Email
               Text(
                 userEmail,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: secondaryTextColor,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: secondaryTextColor),
               ),
-              
+
               SizedBox(height: 16.h),
-              
+
               // Profile completion progress
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -333,9 +330,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                 ],
               ),
-              
+
               SizedBox(height: 16.h),
-              
+
               // Social media links
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -363,12 +360,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                 ],
               ),
-              
+
               // Premium badge
               if (isPremiumUser)
                 Container(
                   margin: EdgeInsets.only(top: 16.h),
-                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 4.h,
+                  ),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [Colors.amber.shade300, Colors.amber.shade700],
@@ -405,7 +405,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ],
           ),
         ),
-        
+
         // Profile Avatar with progress ring
         Positioned(
           top: 40.h, // Center avatar between banner and card
@@ -428,7 +428,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       valueColor: AlwaysStoppedAnimation<Color>(accentColor),
                     ),
                   ),
-                  
+
                   // Avatar
                   Center(
                     child: Container(
@@ -436,10 +436,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       height: 70.w,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: cardColor,
-                          width: 3.w,
-                        ),
+                        border: Border.all(color: cardColor, width: 3.w),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.1),
@@ -467,7 +464,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ),
                     ),
                   ),
-                  
+
                   // Edit button
                   Positioned(
                     bottom: 0,
@@ -476,10 +473,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       decoration: BoxDecoration(
                         color: accentColor,
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: cardColor,
-                          width: 2.w,
-                        ),
+                        border: Border.all(color: cardColor, width: 2.w),
                       ),
                       child: IconButton(
                         iconSize: 16.sp,
@@ -500,7 +494,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ],
     );
   }
-  
+
   Widget _buildSocialButton({
     required IconData icon,
     required Color color,
@@ -518,11 +512,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             color: color.withOpacity(0.1),
             shape: BoxShape.circle,
           ),
-          child: Icon(
-            icon,
-            color: color,
-            size: 20.sp,
-          ),
+          child: Icon(icon, color: color, size: 20.sp),
         ),
       ),
     );
@@ -546,12 +536,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Your Stats',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
+        Text('Your Stats', style: Theme.of(context).textTheme.titleLarge),
         SizedBox(height: 16.h),
-        
+
         // Streak card with chart
         Container(
           padding: EdgeInsets.all(16.w),
@@ -622,7 +609,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ),
         ),
         SizedBox(height: 16.h),
-        
+
         // Stats grid
         Row(
           children: [
@@ -654,9 +641,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               child: _buildStatCard(
                 context,
                 title: 'Accuracy',
-                value: totalAnswered > 0 
-                    ? '${(totalCorrect * 100 / totalAnswered).toInt()}%' 
-                    : '0%',
+                value:
+                    totalAnswered > 0
+                        ? '${(totalCorrect * 100 / totalAnswered).toInt()}%'
+                        : '0%',
                 icon: Icons.precision_manufacturing,
                 gradient: [Colors.amber.shade300, Colors.amber.shade600],
               ),
@@ -668,46 +656,44 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ],
     );
   }
-  
+
   Widget _buildStreakChart(BuildContext context, List<int> streakHistory) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.end,
-      children: List.generate(
-        streakHistory.length,
-        (index) {
-          final int value = streakHistory[index];
-          final double normalizedHeight = (value / streakHistory.reduce(math.max)) * 60.h;
-          
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              AnimatedContainer(
-                duration: Duration(milliseconds: 300),
-                width: 20.w,
-                height: normalizedHeight,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.8),
-                  borderRadius: BorderRadius.circular(4.r),
-                ),
+      children: List.generate(streakHistory.length, (index) {
+        final int value = streakHistory[index];
+        final double normalizedHeight =
+            (value / streakHistory.reduce(math.max)) * 60.h;
+
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            AnimatedContainer(
+              duration: Duration(milliseconds: 300),
+              width: 20.w,
+              height: normalizedHeight,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(4.r),
               ),
-              SizedBox(height: 8.h),
-              Text(
-                'D${index + 1}',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
-                  fontSize: 12.sp,
-                ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'D${index + 1}',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.8),
+                fontSize: 12.sp,
               ),
-            ],
-          );
-        },
-      ),
+            ),
+          ],
+        );
+      }),
     );
   }
-  
+
   Widget _buildStatCard(
     BuildContext context, {
     required String title,
@@ -743,11 +729,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 30.sp,
-                ),
+                Icon(icon, color: Colors.white, size: 30.sp),
                 SizedBox(height: 12.h),
                 Text(
                   value,
@@ -773,24 +755,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
   }
-  
+
   Widget _buildAchievementsSection(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final cardColor =
         isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
     final accentColor =
         isDarkMode ? AppColors.darkOutlineBg : AppColors.lightOutlineBg;
-        
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Achievements',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
+            Text('Achievements', style: Theme.of(context).textTheme.titleLarge),
             TextButton(
               onPressed: () {
                 // Navigate to the achievements library page
@@ -801,7 +780,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ],
         ),
         SizedBox(height: 16.h),
-        
+
         SizedBox(
           height: 120.h,
           child: ListView.builder(
@@ -824,7 +803,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ],
     );
   }
-  
+
   Widget _buildAchievementBadge(
     BuildContext context, {
     required String name,
@@ -837,7 +816,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final cardColor =
         isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
-    
+
     return GestureDetector(
       onTap: () {
         if (earned) {
@@ -862,20 +841,24 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               height: 70.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: earned ? color.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                color:
+                    earned
+                        ? color.withOpacity(0.1)
+                        : Colors.grey.withOpacity(0.1),
                 border: Border.all(
                   color: earned ? color : Colors.grey,
                   width: 2.w,
                 ),
-                boxShadow: earned
-                    ? [
-                        BoxShadow(
-                          color: color.withOpacity(0.3),
-                          blurRadius: 8.r,
-                          offset: Offset(0, 2.h),
-                        ),
-                      ]
-                    : [],
+                boxShadow:
+                    earned
+                        ? [
+                          BoxShadow(
+                            color: color.withOpacity(0.3),
+                            blurRadius: 8.r,
+                            offset: Offset(0, 2.h),
+                          ),
+                        ]
+                        : [],
               ),
               child: Icon(
                 icon,
@@ -884,7 +867,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               ),
             ),
             SizedBox(height: 8.h),
-            
+
             // Badge name
             Text(
               name,
@@ -894,9 +877,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               style: TextStyle(
                 fontSize: 12.sp,
                 fontWeight: FontWeight.bold,
-                color: earned 
-                    ? isDarkMode ? Colors.white : Colors.black 
-                    : Colors.grey,
+                color:
+                    earned
+                        ? isDarkMode
+                            ? Colors.white
+                            : Colors.black
+                        : Colors.grey,
               ),
             ),
           ],
@@ -904,7 +890,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
   }
-  
+
   void _showAchievementDetails(
     BuildContext context, {
     required String name,
@@ -916,7 +902,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final cardColor =
         isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
-    
+
     showDialog(
       context: context,
       builder: (context) {
@@ -935,16 +921,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: color.withOpacity(0.1),
-                    border: Border.all(
-                      color: color,
-                      width: 3.w,
-                    ),
+                    border: Border.all(color: color, width: 3.w),
                   ),
-                  child: Icon(
-                    icon,
-                    color: color,
-                    size: 40.sp,
-                  ),
+                  child: Icon(icon, color: color, size: 40.sp),
                 ),
                 SizedBox(height: 16.h),
                 Text(
@@ -958,18 +937,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 SizedBox(height: 8.h),
                 Text(
                   description,
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                  ),
+                  style: TextStyle(fontSize: 16.sp),
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 16.h),
                 Text(
                   'Earned on ${_formatDate(date)}',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: Colors.grey,
-                  ),
+                  style: TextStyle(fontSize: 14.sp, color: Colors.grey),
                 ),
                 SizedBox(height: 24.h),
                 ElevatedButton(
@@ -989,17 +963,27 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       },
     );
   }
-  
+
   String _formatDate(String date) {
     final DateTime dateTime = DateTime.parse(date);
     final List<String> months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
-    
+
     return '${months[dateTime.month - 1]} ${dateTime.day}, ${dateTime.year}';
   }
-  
+
   Widget _buildRecentActivitySection(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final cardColor =
@@ -1008,7 +992,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         isDarkMode ? AppColors.darkOutlineBg : AppColors.lightOutlineBg;
     final secondaryTextColor =
         isDarkMode ? AppColors.darkLabelText : AppColors.lightLabelText;
-        
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1032,9 +1016,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   children: [
                     Text(
                       _isActivityExpanded ? 'Collapse' : 'Expand',
-                      style: TextStyle(
-                        color: accentColor,
-                      ),
+                      style: TextStyle(color: accentColor),
                     ),
                     Icon(
                       _isActivityExpanded
@@ -1050,7 +1032,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ],
         ),
         SizedBox(height: 16.h),
-        
+
         Container(
           width: double.infinity,
           padding: EdgeInsets.all(16.w),
@@ -1067,7 +1049,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ),
           child: Column(
             children: List.generate(
-              _isActivityExpanded ? 5 : 2, // Placeholder for actual implementation
+              _isActivityExpanded
+                  ? 5
+                  : 2, // Placeholder for actual implementation
               (index) {
                 return _buildActivityItem(
                   context,
@@ -1085,7 +1069,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ],
     );
   }
-  
+
   Widget _buildActivityItem(
     BuildContext context, {
     required String title,
@@ -1098,7 +1082,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final secondaryTextColor =
         isDarkMode ? AppColors.darkLabelText : AppColors.lightLabelText;
-        
+
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1112,11 +1096,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   color: color.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 20.sp,
-                ),
+                child: Icon(icon, color: color, size: 20.sp),
               ),
               if (!isLast)
                 Expanded(
