@@ -10,14 +10,14 @@ class AchievementBadge extends StatelessWidget {
   final bool isNew;
 
   const AchievementBadge({
-    Key? key,
+    super.key,
     required this.achievement,
     this.size = 60.0,
     this.showTooltip = true,
     this.onTap,
     this.isUnlocked = true,
     this.isNew = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,22 +26,36 @@ class AchievementBadge extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: isUnlocked 
-            ? Color(int.parse(achievement.tierColor.substring(1), radix: 16) | 0xFF000000).withOpacity(0.1)
-            : Colors.grey.withOpacity(0.1),
+        color:
+            isUnlocked
+                ? Color(
+                  int.parse(achievement.tierColor.substring(1), radix: 16) |
+                      0xFF000000,
+                ).withValues(alpha: 0.1)
+                : Colors.grey.withValues(alpha: 0.1),
         border: Border.all(
-          color: isUnlocked 
-              ? Color(int.parse(achievement.tierColor.substring(1), radix: 16) | 0xFF000000)
-              : Colors.grey,
+          color:
+              isUnlocked
+                  ? Color(
+                    int.parse(achievement.tierColor.substring(1), radix: 16) |
+                        0xFF000000,
+                  )
+                  : Colors.grey,
           width: 2,
         ),
-        boxShadow: isUnlocked ? [
-          BoxShadow(
-            color: Color(int.parse(achievement.tierColor.substring(1), radix: 16) | 0xFF000000).withOpacity(0.3),
-            blurRadius: 4,
-            spreadRadius: 1,
-          )
-        ] : null,
+        boxShadow:
+            isUnlocked
+                ? [
+                  BoxShadow(
+                    color: Color(
+                      int.parse(achievement.tierColor.substring(1), radix: 16) |
+                          0xFF000000,
+                    ).withValues(alpha: 0.3),
+                    blurRadius: 4,
+                    spreadRadius: 1,
+                  ),
+                ]
+                : null,
       ),
       child: Center(
         child: Text(
@@ -78,20 +92,12 @@ class AchievementBadge extends StatelessWidget {
     );
 
     if (!showTooltip) {
-      return GestureDetector(
-        onTap: onTap,
-        child: badgeWithNewIndicator,
-      );
+      return GestureDetector(onTap: onTap, child: badgeWithNewIndicator);
     }
 
     return Tooltip(
-      message: isUnlocked 
-          ? achievement.name
-          : 'Locked Achievement',
-      child: GestureDetector(
-        onTap: onTap,
-        child: badgeWithNewIndicator,
-      ),
+      message: isUnlocked ? achievement.name : 'Locked Achievement',
+      child: GestureDetector(onTap: onTap, child: badgeWithNewIndicator),
     );
   }
 }
@@ -102,21 +108,22 @@ class AchievementBadgeRow extends StatelessWidget {
   final VoidCallback? onViewAll;
 
   const AchievementBadgeRow({
-    Key? key,
+    super.key,
     required this.achievements,
     this.badgeSize = 40.0,
     this.onViewAll,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     const int maxDisplayCount = 5;
-    
+
     // Show a limited number of badges
-    final displayedAchievements = achievements.length > maxDisplayCount
-        ? achievements.sublist(0, maxDisplayCount)
-        : achievements;
-    
+    final displayedAchievements =
+        achievements.length > maxDisplayCount
+            ? achievements.sublist(0, maxDisplayCount)
+            : achievements;
+
     return Row(
       children: [
         ...displayedAchievements.map((achievement) {
@@ -129,8 +136,8 @@ class AchievementBadgeRow extends StatelessWidget {
               isNew: achievement.unlockedAt != null && !achievement.viewed,
             ),
           );
-        }).toList(),
-        
+        }),
+
         // Show a "+X more" button if there are more achievements
         if (achievements.length > maxDisplayCount)
           GestureDetector(
@@ -140,7 +147,7 @@ class AchievementBadgeRow extends StatelessWidget {
               height: badgeSize,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                 border: Border.all(
                   color: Theme.of(context).primaryColor,
                   width: 2,
@@ -161,4 +168,4 @@ class AchievementBadgeRow extends StatelessWidget {
       ],
     );
   }
-} 
+}

@@ -1,157 +1,154 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:iconly/iconly.dart';
 import 'package:text_the_answer/config/colors.dart';
 import 'package:text_the_answer/models/profile.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
 
 class StatsCard extends StatelessWidget {
   final UserStats stats;
-  final bool isDarkMode;
 
-  const StatsCard({
-    Key? key,
-    required this.stats,
-    required this.isDarkMode,
-  }) : super(key: key);
+  const StatsCard({super.key, required this.stats});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(16.r),
-      decoration: BoxDecoration(
-        color: isDarkMode ? AppColors.darkPrimaryBg : AppColors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: isDarkMode
-            ? []
-            : [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Your Stats',
-            style: FontUtility.montserratBold(
-              fontSize: 18.sp,
-              color: isDarkMode ? Colors.white : AppColors.darkGray,
-            ),
-          ),
-          SizedBox(height: 16.h),
-          Row(
-            children: [
-              _buildStatItem(
-                Icons.local_fire_department,
-                'Streak',
-                stats.streak.toString(),
-                Colors.orange,
-                flex: 1,
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // -- Header
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // -- Title
+            Text('Your Stats', style: TextStyle(fontSize: 24)),
+
+            // -- Show More
+            TextButton(
+              onPressed: () {},
+              style: TextButton.styleFrom(foregroundColor: colorScheme.primary),
+              child: Row(
+                children: [
+                  Text('View All'),
+                  const SizedBox(width: 4),
+                  Icon(IconlyLight.arrow_right_2),
+                ],
               ),
-              SizedBox(width: 12.w),
-              _buildStatItem(
-                Icons.check_circle_outline,
-                'Accuracy',
-                stats.accuracy,
-                Colors.green,
-                flex: 1,
-              ),
-            ],
-          ),
-          SizedBox(height: 16.h),
-          Row(
-            children: [
-              _buildStatItem(
-                Icons.check,
-                'Correct',
-                stats.totalCorrect.toString(),
-                Colors.blue,
-                flex: 1,
-              ),
-              SizedBox(width: 12.w),
-              _buildStatItem(
-                Icons.question_answer_outlined,
-                'Answered',
-                stats.totalAnswered.toString(),
-                Colors.purple,
-                flex: 1,
-              ),
-            ],
-          ),
-          if (stats.lastPlayed.isNotEmpty) ...[
-            SizedBox(height: 16.h),
-            Row(
-              children: [
-                Icon(
-                  Icons.calendar_today,
-                  size: 16.sp,
-                  color: isDarkMode ? Colors.white70 : Colors.black54,
-                ),
-                SizedBox(width: 8.w),
-                Text(
-                  'Last played: ${stats.lastPlayed}',
-                  style: FontUtility.interRegular(
-                    fontSize: 14.sp,
-                    color: isDarkMode ? Colors.white70 : Colors.black54,
-                  ),
-                ),
-              ],
             ),
           ],
+        ),
+        SizedBox(height: 16),
+
+        // -- Content
+        Row(
+          children: [
+            // -- Streak
+            _StartCardItem(
+              icon: Icons.local_fire_department,
+              label: 'Streak',
+              value: stats.streak.toString(),
+              color: Colors.orange,
+            ),
+            SizedBox(width: 12),
+
+            // -- Accuracy
+            _StartCardItem(
+              icon: Icons.check_circle_outline,
+              label: 'Accuracy',
+              value: stats.accuracy,
+              color: Colors.green,
+            ),
+          ],
+        ),
+        SizedBox(height: 16),
+
+        Row(
+          children: [
+            // -- Correct
+            _StartCardItem(
+              icon: Icons.check,
+              label: 'Correct',
+              value: stats.totalCorrect.toString(),
+              color: Colors.blue,
+            ),
+            SizedBox(width: 12),
+
+            // -- Answered
+            _StartCardItem(
+              icon: Icons.question_answer_outlined,
+              label: 'Answered',
+              value: stats.totalAnswered.toString(),
+              color: Colors.purple,
+            ),
+          ],
+        ),
+
+        if (stats.lastPlayed.isNotEmpty) ...[
+          SizedBox(height: 16),
+          Row(
+            children: [
+              Icon(
+                IconlyLight.calendar,
+                size: 16,
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Last played: ${stats.lastPlayed}',
+                style: FontUtility.interRegular(
+                  fontSize: 14,
+                  color: isDarkMode ? Colors.white70 : Colors.black54,
+                ),
+              ),
+            ],
+          ),
         ],
-      ),
+      ],
     );
   }
+}
 
-  Widget _buildStatItem(
-    IconData icon,
-    String label,
-    String value,
-    Color color, {
-    int flex = 1,
-  }) {
+class _StartCardItem extends StatelessWidget {
+  const _StartCardItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+    this.flex = 1,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+  final int flex;
+
+  @override
+  Widget build(BuildContext context) {
     return Expanded(
       flex: flex,
       child: Container(
-        padding: EdgeInsets.all(12.r),
+        padding: EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12.r),
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(
-                  icon,
-                  size: 18.sp,
-                  color: color,
-                ),
-                SizedBox(width: 8.w),
-                Text(
-                  label,
-                  style: FontUtility.interMedium(
-                    fontSize: 14.sp,
-                    color: isDarkMode ? Colors.white70 : Colors.black54,
-                  ),
-                ),
+                Icon(icon, size: 18, color: color),
+                SizedBox(width: 8),
+                Text(label, style: FontUtility.interMedium(fontSize: 14)),
               ],
             ),
-            SizedBox(height: 8.h),
-            Text(
-              value,
-              style: FontUtility.montserratBold(
-                fontSize: 20.sp,
-                color: isDarkMode ? Colors.white : color.withOpacity(0.8),
-              ),
-            ),
+            SizedBox(height: 8),
+            Text(value, style: FontUtility.montserratBold(fontSize: 20)),
           ],
         ),
       ),
     );
   }
-} 
+}
