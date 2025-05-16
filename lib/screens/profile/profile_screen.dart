@@ -200,77 +200,99 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       kTabletBreakingPoint;
 
                                   return isWide
-                                      ? Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 24,
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Flexible(
-                                              child: SingleChildScrollView(
-                                                child: Column(
-                                                  children: [
-                                                    if (isUpdating)
-                                                      UploadingProfileLoader(),
-                                                    const SizedBox(height: 8),
-                                                    // -- Profile Header
-                                                    LandscapeProfileHeader(
-                                                      profile: profile,
-                                                    ),
-                                                    const SizedBox(height: 8),
-                                                    Divider(
-                                                      color:
-                                                          !isDarkMode
-                                                              ? Colors.black
-                                                                  .withValues(
-                                                                    alpha: 0.2,
-                                                                  )
-                                                              : Colors.white
-                                                                  .withValues(
-                                                                    alpha: 0.2,
-                                                                  ),
-                                                    ),
-                                                    const SizedBox(height: 8),
-
-                                                    // -- Subscription card
-                                                    SubscriptionInfoCard(
-                                                      subscription:
-                                                          profile.subscription,
-                                                      isPremium:
-                                                          profile.isPremium,
-                                                      isDarkMode: isDarkMode,
-                                                      onManageSubscription: () {
-                                                        context.pushNamed(
-                                                          AppRouteName.settings,
-                                                        );
-                                                      },
-                                                    ),
-                                                    const SizedBox(height: 20),
-                                                  ],
-                                                ),
-                                              ),
+                                      ? Align(
+                                        alignment: Alignment.topCenter,
+                                        child: ConstrainedBox(
+                                          constraints: BoxConstraints(
+                                            maxWidth: kMaxContentWidth,
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 24,
                                             ),
-                                            const SizedBox(width: 16),
+                                            child: Row(
+                                              children: [
+                                                Flexible(
+                                                  child: SingleChildScrollView(
+                                                    child: Column(
+                                                      children: [
+                                                        if (isUpdating)
+                                                          UploadingProfileLoader(),
+                                                        const SizedBox(
+                                                          height: 8,
+                                                        ),
+                                                        // -- Profile Header
+                                                        LandscapeProfileHeader(
+                                                          profile: profile,
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 8,
+                                                        ),
+                                                        Divider(
+                                                          color:
+                                                              !isDarkMode
+                                                                  ? Colors.black
+                                                                      .withValues(
+                                                                        alpha:
+                                                                            0.2,
+                                                                      )
+                                                                  : Colors.white
+                                                                      .withValues(
+                                                                        alpha:
+                                                                            0.2,
+                                                                      ),
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 8,
+                                                        ),
 
-                                            Expanded(
-                                              flex: 2,
-                                              child: SingleChildScrollView(
-                                                child: Column(
-                                                  children: [
-                                                    // -- Achievements
-                                                    _buildAchievementsSection(),
-                                                    SizedBox(height: 24),
-
-                                                    // -- Stats Card
-                                                    StatsCard(
-                                                      stats: profile.stats,
+                                                        // -- Subscription card
+                                                        SubscriptionInfoCard(
+                                                          subscription:
+                                                              profile
+                                                                  .subscription,
+                                                          isPremium:
+                                                              profile.isPremium,
+                                                          isDarkMode:
+                                                              isDarkMode,
+                                                          onManageSubscription:
+                                                              () {
+                                                                context.pushNamed(
+                                                                  AppRouteName
+                                                                      .settings,
+                                                                );
+                                                              },
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 20,
+                                                        ),
+                                                      ],
                                                     ),
-                                                    SizedBox(height: 40),
-                                                  ],
+                                                  ),
                                                 ),
-                                              ),
+                                                const SizedBox(width: 16),
+
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: SingleChildScrollView(
+                                                    child: Column(
+                                                      children: [
+                                                        // -- Achievements
+                                                        _buildAchievementsSection(),
+                                                        SizedBox(height: 24),
+
+                                                        // -- Stats Card
+                                                        StatsCard(
+                                                          stats: profile.stats,
+                                                        ),
+                                                        SizedBox(height: 40),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                          ],
+                                          ),
                                         ),
                                       )
                                       : SingleChildScrollView(
