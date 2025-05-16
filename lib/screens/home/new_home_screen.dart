@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconly/iconly.dart';
 import 'package:text_the_answer/config/colors.dart';
 import 'package:text_the_answer/screens/main_app_screen.dart';
+import 'package:text_the_answer/utils/constants/breakpoint.dart';
 import 'package:text_the_answer/widgets/app_bar/custom_app_bar.dart';
-import 'package:text_the_answer/widgets/common/theme_aware_widget.dart';
 import 'package:text_the_answer/blocs/profile/profile_bloc.dart';
 import 'package:text_the_answer/blocs/profile/profile_event.dart';
 import 'package:text_the_answer/blocs/profile/profile_state.dart';
@@ -52,467 +51,266 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    return ThemeAwareWidget(
-      builder: (context, themeState) {
-        return Scaffold(
-          appBar: CustomAppBar(
-            showBackArrow: false,
-            leadingIcon: Icons.menu,
-            onPressed: () {
-              AppScaffoldKeys.mainScaffoldKey.currentState?.openDrawer();
-            },
-            title: Text(
-              'Text the Answer',
-              style: TextStyle(fontWeight: FontWeight.w400, fontSize: 24),
-            ),
-            actions: [
-              IconButton(icon: Icon(IconlyLight.search), onPressed: () {}),
-              IconButton(
-                icon: Icon(IconlyLight.notification),
-                onPressed: () {},
-              ),
-            ],
-          ),
-          body: BlocBuilder<ProfileBloc, ProfileState>(
-            builder: (context, state) {
-              if (state is ProfileLoading) {
-                return Center(child: CircularProgressIndicator());
-              } else if (state is ProfileError) {
-                return Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(16.w),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.error, size: 64.sp, color: Colors.red),
-                        SizedBox(height: 16.h),
-                        Text(
-                          'Error loading profile data',
-                          style: Theme.of(context).textTheme.titleLarge,
-                          textAlign: TextAlign.center,
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          state.message,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                          textAlign: TextAlign.center,
-                        ),
-                        SizedBox(height: 24.h),
-                        ElevatedButton(
-                          onPressed: () {
-                            context.read<ProfileBloc>().add(
-                              FetchProfileEvent(),
-                            );
-                          },
-                          child: Text('Try Again'),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              } else if (state is ProfileLoaded) {
-                final ProfileData profile = state.profile;
-
-                // Extract real data from the profile
-                final String userName = profile.name;
-                final String userEmail = profile.email;
-                final bool isPremiumUser = profile.isPremium;
-                final String userAvatar =
-                    profile.profile.imageUrl.isNotEmpty
-                        ? profile.profile.imageUrl
-                        : 'https://i.pravatar.cc/150?img=12'; // Fallback avatar
-
-                // Extract stats
-                final int currentStreak = profile.stats.streak;
-                final int totalCorrect = profile.stats.totalCorrect;
-                final int totalAnswered = profile.stats.totalAnswered;
-                final String accuracy = profile.stats.accuracy;
-
-                // Create streakHistory (mock if not available)
-                final List<int> streakHistory = [
-                  math.max(1, currentStreak - 6),
-                  math.max(1, currentStreak - 5),
-                  math.max(1, currentStreak - 3),
-                  math.max(1, currentStreak - 2),
-                  math.max(1, currentStreak - 1),
-                  currentStreak,
-                  currentStreak,
-                ];
-
-                return SingleChildScrollView(
-                  child: Padding(
-                    padding: EdgeInsets.all(16.w),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // -- Daily Quiz Countdown
-                        DailyQuizCountdownContent(
-                          dailyQuizData: profile.dailyQuiz,
-                        ),
-                        SizedBox(height: 24.h),
-
-                        // -- Profile Header
-                        ProfileHeader(
-                          userName: userName,
-                          email: userEmail,
-                          avaterUrl: userAvatar,
-                          isPremium: isPremiumUser,
-                        ),
-
-                        SizedBox(height: 24.h),
-                        _buildStatsSection(
-                          context,
-                          streak: currentStreak,
-                          totalCorrect: totalCorrect,
-                          totalAnswered: totalAnswered,
-                          streakHistory: streakHistory,
-                        ),
-                        SizedBox(height: 24.h),
-                        _buildAchievementsSection(context),
-                        SizedBox(height: 24.h),
-                        _buildRecentActivitySection(context),
-                        SizedBox(height: 24.h),
-                        ElevatedButton(
-                          onPressed: () {
-                            context.go(AppRoutePath.dailyQuizRealtime);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                Theme.of(context).colorScheme.primary,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.group),
-                              const SizedBox(width: 8),
-                              Text('Join Daily Multiplayer Quiz'),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              } else {
-                // Initial state or unknown state
-                return Center(
+    return Scaffold(
+      appBar: CustomAppBar(
+        showBackArrow: false,
+        leadingIcon: Icons.menu,
+        onPressed: () {
+          AppScaffoldKeys.mainScaffoldKey.currentState?.openDrawer();
+        },
+        title: Text(
+          'Text the Answer',
+          style: TextStyle(fontWeight: FontWeight.w400, fontSize: 20),
+        ),
+        actions: [
+          IconButton(icon: Icon(IconlyLight.search), onPressed: () {}),
+          IconButton(icon: Icon(IconlyLight.notification), onPressed: () {}),
+        ],
+      ),
+      body: SafeArea(
+        child: BlocBuilder<ProfileBloc, ProfileState>(
+          builder: (context, state) {
+            if (state is ProfileLoading) {
+              return Center(child: CircularProgressIndicator());
+            } else if (state is ProfileError) {
+              return Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      Icon(Icons.error, size: 64, color: Colors.red),
+                      SizedBox(height: 16),
                       Text(
-                        'Welcome to Text the Answer',
-                        style: Theme.of(context).textTheme.headlineSmall,
+                        'Error loading profile data',
+                        style: Theme.of(context).textTheme.titleLarge,
+                        textAlign: TextAlign.center,
                       ),
-                      SizedBox(height: 16.h),
-                      CircularProgressIndicator(),
-                    ],
-                  ),
-                );
-              }
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildProfileCard(
-    BuildContext context, {
-    required String userName,
-    required String userEmail,
-    required String userAvatar,
-    required bool isPremiumUser,
-  }) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final cardColor =
-        isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
-    final accentColor =
-        isDarkMode ? AppColors.darkOutlineBg : AppColors.lightOutlineBg;
-    final secondaryTextColor =
-        isDarkMode ? AppColors.darkLabelText : AppColors.lightLabelText;
-
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        // Banner Image
-        Container(
-          height: 100.h,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(16.r),
-              topRight: Radius.circular(16.r),
-            ),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                accentColor.withOpacity(0.7),
-                accentColor.withOpacity(0.3),
-              ],
-            ),
-          ),
-        ),
-
-        // Profile Card
-        Container(
-          margin: EdgeInsets.only(top: 60.h),
-          padding: EdgeInsets.all(16.w),
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(16.r),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10.r,
-                offset: Offset(0, 5.h),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              SizedBox(height: 40.h), // Space for the avatar
-              // Name and verification
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    userName,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 4.h),
-
-              // Email
-              Text(
-                userEmail,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: secondaryTextColor),
-              ),
-
-              SizedBox(height: 16.h),
-
-              // Profile completion progress
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
+                      SizedBox(height: 8),
                       Text(
-                        'Profile Completion',
+                        state.message,
                         style: Theme.of(context).textTheme.bodyMedium,
+                        textAlign: TextAlign.center,
                       ),
-                    ],
-                  ),
-                  SizedBox(height: 8.h),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4.r),
-                    child: LinearProgressIndicator(
-                      value: 0.75, // Placeholder for actual implementation
-                      backgroundColor: accentColor.withOpacity(0.1),
-                      valueColor: AlwaysStoppedAnimation<Color>(accentColor),
-                      minHeight: 8.h,
-                    ),
-                  ),
-                ],
-              ),
-
-              SizedBox(height: 16.h),
-
-              // Social media links
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildSocialButton(
-                    icon: Icons.alternate_email,
-                    color: Colors.blue.shade400,
-                    onTap: () {
-                      // Open Twitter profile
-                    },
-                  ),
-                  _buildSocialButton(
-                    icon: Icons.link,
-                    color: Colors.blue.shade700,
-                    onTap: () {
-                      // Open LinkedIn profile
-                    },
-                  ),
-                  _buildSocialButton(
-                    icon: Icons.code,
-                    color: Colors.grey.shade800,
-                    onTap: () {
-                      // Open GitHub profile
-                    },
-                  ),
-                ],
-              ),
-
-              // Premium badge
-              if (isPremiumUser)
-                Container(
-                  margin: EdgeInsets.only(top: 16.h),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 12.w,
-                    vertical: 4.h,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.amber.shade300, Colors.amber.shade700],
-                    ),
-                    borderRadius: BorderRadius.circular(20.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.amber.withOpacity(0.5),
-                        blurRadius: 8.r,
-                        offset: Offset(0, 2.h),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.workspace_premium,
-                        color: Colors.white,
-                        size: 18.sp,
-                      ),
-                      SizedBox(width: 4.w),
-                      Text(
-                        'PREMIUM',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12.sp,
-                        ),
+                      SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: () {
+                          context.read<ProfileBloc>().add(FetchProfileEvent());
+                        },
+                        child: Text('Try Again'),
                       ),
                     ],
                   ),
                 ),
-            ],
-          ),
-        ),
+              );
+            } else if (state is ProfileLoaded) {
+              final ProfileData profile = state.profile;
 
-        // Profile Avatar with progress ring
-        Positioned(
-          top: 40.h, // Center avatar between banner and card
-          left: 0,
-          right: 0,
-          child: Center(
-            child: SizedBox(
-              width: 80.w,
-              height: 80.w,
-              child: Stack(
-                children: [
-                  // Progress ring
-                  SizedBox(
-                    width: 80.w,
-                    height: 80.w,
-                    child: CircularProgressIndicator(
-                      value: 0.75, // Placeholder for actual implementation
-                      strokeWidth: 4.w,
-                      backgroundColor: Colors.grey.withOpacity(0.2),
-                      valueColor: AlwaysStoppedAnimation<Color>(accentColor),
-                    ),
-                  ),
+              // Extract real data from the profile
+              final String userName = profile.name;
+              final String userEmail = profile.email;
+              final bool isPremiumUser = profile.isPremium;
+              final String userAvatar =
+                  profile.profile.imageUrl.isNotEmpty
+                      ? profile.profile.imageUrl
+                      : 'https://i.pravatar.cc/150?img=12'; // Fallback avatar
 
-                  // Avatar
-                  Center(
-                    child: Container(
-                      width: 70.w,
-                      height: 70.w,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: cardColor, width: 3.w),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 8.r,
-                            offset: Offset(0, 2.h),
+              // Extract stats
+              final int currentStreak = profile.stats.streak;
+              final int totalCorrect = profile.stats.totalCorrect;
+              final int totalAnswered = profile.stats.totalAnswered;
+              final String accuracy = profile.stats.accuracy;
+
+              // Create streakHistory (mock if not available)
+              final List<int> streakHistory = [
+                math.max(1, currentStreak - 6),
+                math.max(1, currentStreak - 5),
+                math.max(1, currentStreak - 3),
+                math.max(1, currentStreak - 2),
+                math.max(1, currentStreak - 1),
+                currentStreak,
+                currentStreak,
+              ];
+
+              return LayoutBuilder(
+                builder: (BuildContext context, BoxConstraints constraints) {
+                  final bool isWide =
+                      constraints.maxWidth > kTabletBreakingPoint;
+
+                  return isWide
+                      ? Align(
+                        alignment: Alignment.topCenter,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: kMaxContentWidth,
                           ),
-                        ],
-                        image: DecorationImage(
-                          image: NetworkImage(userAvatar),
-                          fit: BoxFit.cover,
-                          onError: (exception, stackTrace) {
-                            // Handle error loading image
-                          },
-                        ),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(35.r),
-                          onTap: () {
-                            // Show profile picture options
-                          },
-                          child: Container(),
-                        ),
-                      ),
-                    ),
-                  ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: SingleChildScrollView(
+                                    child: Column(
+                                      children: <Widget>[
+                                        // -- Daily Quiz Countdown
+                                        DailyQuizCountdownContent(
+                                          dailyQuizData: profile.dailyQuiz,
+                                        ),
+                                        SizedBox(height: 24),
 
-                  // Edit button
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: accentColor,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: cardColor, width: 2.w),
-                      ),
-                      child: IconButton(
-                        iconSize: 16.sp,
-                        padding: EdgeInsets.all(4.w),
-                        constraints: BoxConstraints(),
-                        icon: Icon(Icons.camera_alt, color: Colors.white),
-                        onPressed: () {
-                          // Show profile picture edit options
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+                                        // -- Profile Header
+                                        ProfileHeader(
+                                          userName: userName,
+                                          email: userEmail,
+                                          avaterUrl: userAvatar,
+                                          isPremium: isPremiumUser,
+                                        ),
+                                        SizedBox(height: 24),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 20),
 
-  Widget _buildSocialButton({
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 8.w),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20.r),
-        child: Container(
-          width: 40.w,
-          height: 40.w,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: color, size: 20.sp),
+                                Expanded(
+                                  child: SingleChildScrollView(
+                                    child: Column(
+                                      children: <Widget>[
+                                        _buildStatsSection(
+                                          context,
+                                          streak: currentStreak,
+                                          totalCorrect: totalCorrect,
+                                          totalAnswered: totalAnswered,
+                                          streakHistory: streakHistory,
+                                        ),
+                                        SizedBox(height: 24),
+                                        _buildAchievementsSection(context),
+                                        SizedBox(height: 24),
+                                        _buildRecentActivitySection(context),
+                                        SizedBox(height: 24),
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            context.go(
+                                              AppRoutePath.dailyQuizRealtime,
+                                            );
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                Theme.of(
+                                                  context,
+                                                ).colorScheme.primary,
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 24,
+                                              vertical: 12,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(Icons.group),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                'Join Daily Multiplayer Quiz',
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      )
+                      : SingleChildScrollView(
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // -- Daily Quiz Countdown
+                              DailyQuizCountdownContent(
+                                dailyQuizData: profile.dailyQuiz,
+                              ),
+                              SizedBox(height: 24),
+
+                              // -- Profile Header
+                              ProfileHeader(
+                                userName: userName,
+                                email: userEmail,
+                                avaterUrl: userAvatar,
+                                isPremium: isPremiumUser,
+                              ),
+
+                              SizedBox(height: 24),
+                              _buildStatsSection(
+                                context,
+                                streak: currentStreak,
+                                totalCorrect: totalCorrect,
+                                totalAnswered: totalAnswered,
+                                streakHistory: streakHistory,
+                              ),
+                              SizedBox(height: 24),
+                              _buildAchievementsSection(context),
+                              SizedBox(height: 24),
+                              _buildRecentActivitySection(context),
+                              SizedBox(height: 24),
+                              ElevatedButton(
+                                onPressed: () {
+                                  context.go(AppRoutePath.dailyQuizRealtime);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      Theme.of(context).colorScheme.primary,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 12,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.group),
+                                    const SizedBox(width: 8),
+                                    Text('Join Daily Multiplayer Quiz'),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                },
+              );
+            } else {
+              // Initial state or unknown state
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Welcome to Text the Answer',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    SizedBox(height: 16),
+                    CircularProgressIndicator(),
+                  ],
+                ),
+              );
+            }
+          },
         ),
       ),
     );
@@ -526,37 +324,33 @@ class _HomeScreenState extends State<HomeScreen>
     required List<int> streakHistory,
   }) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final cardColor =
-        isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
     final accentColor =
         isDarkMode ? AppColors.darkOutlineBg : AppColors.lightOutlineBg;
-    final secondaryTextColor =
-        isDarkMode ? AppColors.darkLabelText : AppColors.lightLabelText;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Your Stats', style: Theme.of(context).textTheme.titleLarge),
-        SizedBox(height: 16.h),
+        SizedBox(height: 16),
 
         // Streak card with chart
         Container(
-          padding: EdgeInsets.all(16.w),
+          padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                accentColor.withOpacity(0.7),
-                accentColor.withOpacity(0.3),
+                accentColor.withValues(alpha: 0.7),
+                accentColor.withValues(alpha: 0.3),
               ],
             ),
-            borderRadius: BorderRadius.circular(16.r),
+            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 8.r,
-                offset: Offset(0, 4.h),
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 8,
+                offset: Offset(0, 4),
               ),
             ],
           ),
@@ -565,18 +359,18 @@ class _HomeScreenState extends State<HomeScreen>
               Row(
                 children: [
                   Container(
-                    padding: EdgeInsets.all(12.w),
+                    padding: EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Icons.local_fire_department,
                       color: Colors.white,
-                      size: 30.sp,
+                      size: 30,
                     ),
                   ),
-                  SizedBox(width: 16.w),
+                  SizedBox(width: 16),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -584,31 +378,31 @@ class _HomeScreenState extends State<HomeScreen>
                         '$streak Day Streak',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 18.sp,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 4.h),
+                      SizedBox(height: 4),
                       Text(
                         'Keep it up!',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
-                          fontSize: 14.sp,
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 14,
                         ),
                       ),
                     ],
                   ),
                 ],
               ),
-              SizedBox(height: 20.h),
+              SizedBox(height: 20),
               SizedBox(
-                height: 80.h,
+                height: 80,
                 child: _buildStreakChart(context, streakHistory),
               ),
             ],
           ),
         ),
-        SizedBox(height: 16.h),
+        SizedBox(height: 16),
 
         // Stats grid
         Row(
@@ -622,7 +416,7 @@ class _HomeScreenState extends State<HomeScreen>
                 gradient: [Colors.purple.shade300, Colors.purple.shade600],
               ),
             ),
-            SizedBox(width: 16.w),
+            SizedBox(width: 16),
             Expanded(
               child: _buildStatCard(
                 context,
@@ -634,7 +428,7 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ],
         ),
-        SizedBox(height: 16.h),
+        SizedBox(height: 16),
         Row(
           children: [
             Expanded(
@@ -649,7 +443,7 @@ class _HomeScreenState extends State<HomeScreen>
                 gradient: [Colors.amber.shade300, Colors.amber.shade600],
               ),
             ),
-            SizedBox(width: 16.w),
+            SizedBox(width: 16),
             Expanded(child: Container()), // Empty space for balance
           ],
         ),
@@ -658,34 +452,32 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildStreakChart(BuildContext context, List<int> streakHistory) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: List.generate(streakHistory.length, (index) {
         final int value = streakHistory[index];
         final double normalizedHeight =
-            (value / streakHistory.reduce(math.max)) * 60.h;
+            (value / streakHistory.reduce(math.max)) * 60;
 
         return Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             AnimatedContainer(
               duration: Duration(milliseconds: 300),
-              width: 20.w,
+              width: 20,
               height: normalizedHeight,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.8),
-                borderRadius: BorderRadius.circular(4.r),
+                color: Colors.white.withValues(alpha: 0.8),
+                borderRadius: BorderRadius.circular(4),
               ),
             ),
-            SizedBox(height: 8.h),
+            SizedBox(height: 8),
             Text(
               'D${index + 1}',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
-                fontSize: 12.sp,
+                color: Colors.white.withValues(alpha: 0.8),
+                fontSize: 12,
               ),
             ),
           ],
@@ -708,12 +500,12 @@ class _HomeScreenState extends State<HomeScreen>
           end: Alignment.bottomRight,
           colors: gradient,
         ),
-        borderRadius: BorderRadius.circular(16.r),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: gradient[0].withOpacity(0.3),
-            blurRadius: 8.r,
-            offset: Offset(0, 4.h),
+            color: gradient[0].withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: Offset(0, 4),
           ),
         ],
       ),
@@ -723,28 +515,28 @@ class _HomeScreenState extends State<HomeScreen>
           onTap: () {
             // Show detailed stats
           },
-          borderRadius: BorderRadius.circular(16.r),
+          borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: EdgeInsets.all(16.w),
+            padding: EdgeInsets.all(16),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, color: Colors.white, size: 30.sp),
-                SizedBox(height: 12.h),
+                Icon(icon, color: Colors.white, size: 30),
+                SizedBox(height: 12),
                 Text(
                   value,
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 24.sp,
+                    fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 4.h),
+                SizedBox(height: 4),
                 Text(
                   title,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
-                    fontSize: 14.sp,
+                    color: Colors.white.withValues(alpha: 0.8),
+                    fontSize: 14,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -779,13 +571,12 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ],
         ),
-        SizedBox(height: 16.h),
+        SizedBox(height: 16),
 
         SizedBox(
-          height: 120.h,
+          height: 120,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            physics: BouncingScrollPhysics(),
             itemCount: 5, // Placeholder for actual implementation
             itemBuilder: (context, index) {
               return _buildAchievementBadge(
@@ -831,42 +622,38 @@ class _HomeScreenState extends State<HomeScreen>
         }
       },
       child: Container(
-        width: 100.w,
-        margin: EdgeInsets.only(right: 16.w),
+        width: 100,
+        margin: EdgeInsets.only(right: 16),
         child: Column(
           children: [
             // Badge icon container
             Container(
-              width: 70.w,
-              height: 70.w,
+              width: 70,
+              height: 70,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color:
                     earned
-                        ? color.withOpacity(0.1)
-                        : Colors.grey.withOpacity(0.1),
+                        ? color.withValues(alpha: 0.1)
+                        : Colors.grey.withValues(alpha: 0.1),
                 border: Border.all(
                   color: earned ? color : Colors.grey,
-                  width: 2.w,
+                  width: 2,
                 ),
                 boxShadow:
                     earned
                         ? [
                           BoxShadow(
-                            color: color.withOpacity(0.3),
-                            blurRadius: 8.r,
-                            offset: Offset(0, 2.h),
+                            color: color.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
                           ),
                         ]
                         : [],
               ),
-              child: Icon(
-                icon,
-                color: earned ? color : Colors.grey,
-                size: 36.sp,
-              ),
+              child: Icon(icon, color: earned ? color : Colors.grey, size: 36),
             ),
-            SizedBox(height: 8.h),
+            SizedBox(height: 8),
 
             // Badge name
             Text(
@@ -875,7 +662,7 @@ class _HomeScreenState extends State<HomeScreen>
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 12.sp,
+                fontSize: 12,
                 fontWeight: FontWeight.bold,
                 color:
                     earned
@@ -908,51 +695,48 @@ class _HomeScreenState extends State<HomeScreen>
       builder: (context) {
         return Dialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.r),
+            borderRadius: BorderRadius.circular(16),
           ),
           child: Padding(
-            padding: EdgeInsets.all(24.w),
+            padding: EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 80.w,
-                  height: 80.w,
+                  width: 80,
+                  height: 80,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: color.withOpacity(0.1),
-                    border: Border.all(color: color, width: 3.w),
+                    color: color.withValues(alpha: 0.1),
+                    border: Border.all(color: color, width: 3),
                   ),
-                  child: Icon(icon, color: color, size: 40.sp),
+                  child: Icon(icon, color: color, size: 40),
                 ),
-                SizedBox(height: 16.h),
+                SizedBox(height: 16),
                 Text(
                   name,
-                  style: TextStyle(
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 8.h),
+                SizedBox(height: 8),
                 Text(
                   description,
-                  style: TextStyle(fontSize: 16.sp),
+                  style: TextStyle(fontSize: 16),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 16.h),
+                SizedBox(height: 16),
                 Text(
                   'Earned on ${_formatDate(date)}',
-                  style: TextStyle(fontSize: 14.sp, color: Colors.grey),
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
                 ),
-                SizedBox(height: 24.h),
+                SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: color,
-                    minimumSize: Size(double.infinity, 50.h),
+                    minimumSize: Size(double.infinity, 50),
                   ),
                   child: Text('Awesome!'),
                 ),
@@ -1004,14 +788,14 @@ class _HomeScreenState extends State<HomeScreen>
               style: Theme.of(context).textTheme.titleLarge,
             ),
             InkWell(
-              borderRadius: BorderRadius.circular(20.r),
+              borderRadius: BorderRadius.circular(20),
               onTap: () {
                 setState(() {
                   _isActivityExpanded = !_isActivityExpanded;
                 });
               },
               child: Padding(
-                padding: EdgeInsets.all(4.w),
+                padding: EdgeInsets.all(4),
                 child: Row(
                   children: [
                     Text(
@@ -1023,7 +807,7 @@ class _HomeScreenState extends State<HomeScreen>
                           ? Icons.keyboard_arrow_up
                           : Icons.keyboard_arrow_down,
                       color: accentColor,
-                      size: 16.sp,
+                      size: 16,
                     ),
                   ],
                 ),
@@ -1031,19 +815,19 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ],
         ),
-        SizedBox(height: 16.h),
+        SizedBox(height: 16),
 
         Container(
           width: double.infinity,
-          padding: EdgeInsets.all(16.w),
+          padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: cardColor,
-            borderRadius: BorderRadius.circular(16.r),
+            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10.r,
-                offset: Offset(0, 5.h),
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: Offset(0, 5),
               ),
             ],
           ),
@@ -1090,51 +874,45 @@ class _HomeScreenState extends State<HomeScreen>
           Column(
             children: [
               Container(
-                width: 40.w,
-                height: 40.w,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, color: color, size: 20.sp),
+                child: Icon(icon, color: color, size: 20),
               ),
               if (!isLast)
                 Expanded(
                   child: Container(
-                    width: 2.w,
-                    color: Colors.grey.withOpacity(0.3),
+                    width: 2,
+                    color: Colors.grey.withValues(alpha: 0.3),
                   ),
                 ),
             ],
           ),
-          SizedBox(width: 16.w),
+          SizedBox(width: 16),
           Expanded(
             child: Padding(
-              padding: EdgeInsets.only(bottom: isLast ? 0 : 16.h),
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 4.h),
+                  SizedBox(height: 4),
                   Text(
                     description,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      color: secondaryTextColor,
-                    ),
+                    style: TextStyle(fontSize: 14, color: secondaryTextColor),
                   ),
-                  SizedBox(height: 4.h),
+                  SizedBox(height: 4),
                   Text(
                     time,
                     style: TextStyle(
-                      fontSize: 12.sp,
-                      color: secondaryTextColor.withOpacity(0.7),
+                      fontSize: 12,
+                      color: secondaryTextColor.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
