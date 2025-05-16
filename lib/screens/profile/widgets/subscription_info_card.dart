@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:text_the_answer/config/colors.dart';
 import 'package:text_the_answer/models/profile.dart';
 import 'package:text_the_answer/utils/font_utility.dart';
@@ -11,36 +10,46 @@ class SubscriptionInfoCard extends StatelessWidget {
   final VoidCallback? onManageSubscription;
 
   const SubscriptionInfoCard({
-    Key? key,
+    super.key,
     required this.subscription,
     required this.isPremium,
     required this.isDarkMode,
     this.onManageSubscription,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
-    Color cardColor = isPremium 
-        ? Colors.amber.withOpacity(isDarkMode ? 0.15 : 0.1)
-        : isDarkMode ? AppColors.darkPrimaryBg : AppColors.white;
-    
+    Color cardColor =
+        isPremium
+            ? Colors.amber.withValues(alpha: isDarkMode ? 0.15 : 0.1)
+            : isDarkMode
+            ? AppColors.darkPrimaryBg
+            : AppColors.white;
+
     return Container(
-      padding: EdgeInsets.all(16.r),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(16.r),
-        border: isPremium 
-            ? Border.all(color: Colors.amber.withOpacity(0.5), width: 1) 
-            : isDarkMode ? null : Border.all(color: Colors.grey.withOpacity(0.1)),
-        boxShadow: isDarkMode
-            ? []
-            : [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
+        borderRadius: BorderRadius.circular(16),
+        border:
+            isPremium
+                ? Border.all(
+                  color: Colors.amber.withValues(alpha: 0.5),
+                  width: 1,
+                )
+                : isDarkMode
+                ? null
+                : Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+        boxShadow:
+            isDarkMode
+                ? []
+                : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,36 +58,41 @@ class SubscriptionInfoCard extends StatelessWidget {
             children: [
               Icon(
                 isPremium ? Icons.diamond : Icons.person_outline,
-                color: isPremium ? Colors.amber : isDarkMode ? Colors.white70 : Colors.grey,
-                size: 20.sp,
+                color:
+                    isPremium
+                        ? Colors.amber
+                        : isDarkMode
+                        ? Colors.white70
+                        : Colors.grey,
+                size: 20,
               ),
-              SizedBox(width: 8.w),
+              SizedBox(width: 8),
               Text(
                 'Subscription',
                 style: FontUtility.montserratBold(
-                  fontSize: 18.sp,
+                  fontSize: 18,
                   color: isDarkMode ? Colors.white : AppColors.darkGray,
                 ),
               ),
               Spacer(),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _getStatusColor().withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12.r),
+                  color: _getStatusColor().withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   _formatStatus(subscription.status),
                   style: FontUtility.interMedium(
-                    fontSize: 12.sp,
+                    fontSize: 12,
                     color: _getStatusColor(),
                   ),
                 ),
               ),
             ],
           ),
-          SizedBox(height: 16.h),
-          
+          SizedBox(height: 16),
+
           // Subscription details
           if (subscription.currentPeriodEnd.isNotEmpty && isPremium) ...[
             _buildInfoRow(
@@ -86,25 +100,27 @@ class SubscriptionInfoCard extends StatelessWidget {
               subscription.currentPeriodEnd,
               Icons.calendar_today_outlined,
             ),
-            SizedBox(height: 8.h),
+            SizedBox(height: 8),
             _buildInfoRow(
               'Auto Renew',
               subscription.cancelAtPeriodEnd ? 'Off' : 'On',
-              subscription.cancelAtPeriodEnd ? Icons.cancel_outlined : Icons.autorenew,
+              subscription.cancelAtPeriodEnd
+                  ? Icons.cancel_outlined
+                  : Icons.autorenew,
             ),
           ],
-          
+
           if (!isPremium) ...[
             Text(
               'Upgrade to Premium for exclusive content and features.',
               style: FontUtility.interRegular(
-                fontSize: 14.sp,
+                fontSize: 14,
                 color: isDarkMode ? Colors.white70 : Colors.black54,
               ),
             ),
           ],
-          
-          SizedBox(height: 16.h),
+
+          SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -112,15 +128,15 @@ class SubscriptionInfoCard extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: isPremium ? Colors.amber : AppColors.primary,
                 foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 12.h),
+                padding: EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r),
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
               child: Text(
                 isPremium ? 'Manage Subscription' : 'Upgrade to Premium',
                 style: FontUtility.montserratBold(
-                  fontSize: 14.sp,
+                  fontSize: 14,
                   color: Colors.white,
                 ),
               ),
@@ -136,22 +152,22 @@ class SubscriptionInfoCard extends StatelessWidget {
       children: [
         Icon(
           icon,
-          size: 16.sp,
+          size: 16,
           color: isDarkMode ? Colors.white70 : Colors.black54,
         ),
-        SizedBox(width: 8.w),
+        SizedBox(width: 8),
         Text(
           '$label:',
           style: FontUtility.interRegular(
-            fontSize: 14.sp,
+            fontSize: 14,
             color: isDarkMode ? Colors.white70 : Colors.black54,
           ),
         ),
-        SizedBox(width: 4.w),
+        SizedBox(width: 4),
         Text(
           value,
           style: FontUtility.interMedium(
-            fontSize: 14.sp,
+            fontSize: 14,
             color: isDarkMode ? Colors.white : Colors.black87,
           ),
         ),
@@ -178,8 +194,8 @@ class SubscriptionInfoCard extends StatelessWidget {
 
   String _formatStatus(String status) {
     if (status.isEmpty) return 'Free';
-    
+
     // Capitalize first letter
     return status.substring(0, 1).toUpperCase() + status.substring(1);
   }
-} 
+}

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:text_the_answer/blocs/auth/auth_bloc.dart';
 import 'package:text_the_answer/blocs/auth/auth_event.dart';
@@ -13,10 +12,10 @@ class AppDrawer extends StatelessWidget {
   final bool isDarkMode;
 
   const AppDrawer({
-    Key? key,
+    super.key,
     required this.toggleTheme,
     required this.isDarkMode,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -34,15 +33,15 @@ class AppDrawer extends StatelessWidget {
           children: [
             // Drawer header
             Container(
-              padding: EdgeInsets.all(20.w),
+              padding: EdgeInsets.all(20),
               child: Row(
                 children: [
                   CircleAvatar(
-                    radius: 30.r,
-                    backgroundColor: accentColor.withOpacity(0.2),
-                    child: Icon(Icons.person, color: accentColor, size: 30.sp),
+                    radius: 30,
+                    backgroundColor: accentColor.withValues(alpha: 0.2),
+                    child: Icon(Icons.person, color: accentColor, size: 30),
                   ),
-                  SizedBox(width: 16.w),
+                  SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,12 +53,12 @@ class AppDrawer extends StatelessWidget {
                             color: textColor,
                           ),
                         ),
-                        SizedBox(height: 4.h),
+                        SizedBox(height: 4),
                         Text(
                           'Welcome!',
                           style: FontUtility.interRegular(
                             fontSize: 14,
-                            color: textColor.withOpacity(0.7),
+                            color: textColor.withValues(alpha: 0.7),
                           ),
                         ),
                       ],
@@ -69,7 +68,7 @@ class AppDrawer extends StatelessWidget {
               ),
             ),
 
-            Divider(thickness: 1, color: textColor.withOpacity(0.1)),
+            Divider(thickness: 1, color: textColor.withValues(alpha: 0.1)),
 
             // Drawer items
             _buildDrawerItem(
@@ -154,8 +153,8 @@ class AppDrawer extends StatelessWidget {
               accentColor: accentColor,
             ),
 
-            SizedBox(height: 16.h),
-            Divider(thickness: 1, color: textColor.withOpacity(0.1)),
+            SizedBox(height: 16),
+            Divider(thickness: 1, color: textColor.withValues(alpha: 0.1)),
 
             // Theme toggle
             _buildDrawerItem(
@@ -186,7 +185,7 @@ class AppDrawer extends StatelessWidget {
 
             const Spacer(),
 
-            Divider(thickness: 1, color: textColor.withOpacity(0.1)),
+            Divider(thickness: 1, color: textColor.withValues(alpha: 0.1)),
 
             // Logout button at the bottom
             _buildDrawerItem(
@@ -200,7 +199,7 @@ class AppDrawer extends StatelessWidget {
               accentColor: Colors.red.shade400,
             ),
 
-            SizedBox(height: 20.h),
+            SizedBox(height: 20),
           ],
         ),
       ),
@@ -216,13 +215,13 @@ class AppDrawer extends StatelessWidget {
     required Color accentColor,
   }) {
     return ListTile(
-      leading: Icon(icon, color: accentColor, size: 24.sp),
+      leading: Icon(icon, color: accentColor, size: 24),
       title: Text(
         title,
         style: FontUtility.montserratMedium(fontSize: 16, color: textColor),
       ),
       onTap: onTap,
-      contentPadding: EdgeInsets.symmetric(horizontal: 24.w),
+      contentPadding: EdgeInsets.symmetric(horizontal: 24),
     );
   }
 

@@ -30,12 +30,12 @@ class ThemeCubit extends Cubit<ThemeState> {
   );
 
   static final ThemeState _lightTheme = ThemeState(
-    themeData: ThemeData.light(useMaterial3: true),
+    themeData: AppTheme.lightTheme(),
     mode: AppThemeMode.light,
   );
 
   static final ThemeState _darkTheme = ThemeState(
-    themeData: ThemeData.dark(useMaterial3: true),
+    themeData: AppTheme.darkTheme(),
     mode: AppThemeMode.dark,
   );
 

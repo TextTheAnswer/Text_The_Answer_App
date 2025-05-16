@@ -184,6 +184,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _showLogoutModal() async {
     await showCustomBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (context) {
         return SafeArea(
           minimum: const EdgeInsets.only(bottom: 4),
@@ -197,6 +198,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _showThemeSwitcher() async {
     await showCustomBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (context) {
         return SafeArea(
           minimum: const EdgeInsets.only(bottom: 4),
