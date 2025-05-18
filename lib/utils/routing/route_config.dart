@@ -244,9 +244,7 @@ final GoRouter router = GoRouter(
               name: AppRouteName.quiz,
               path: AppRoutePath.quiz,
               builder: (context, state) {
-                return DailyQuizScreen(
-                  toggleTheme: ThemeUtils.getThemeToggler(context),
-                );
+                return DailyQuizScreen();
               },
             ),
           ],

@@ -30,14 +30,14 @@ class _HomeScreenState extends State<HomeScreen> {
     // Get the current ThemeCubit and its state
     final ThemeCubit cubit = context.read<ThemeCubit>();
     final currentState = cubit.state;
-    
+
     // Toggle between light and dark modes
     if (currentState.mode == AppThemeMode.dark) {
       cubit.setTheme(AppThemeMode.light);
     } else {
       cubit.setTheme(AppThemeMode.dark);
     }
-    
+
     // Call the original toggleTheme callback
     widget.toggleTheme();
   }
@@ -64,12 +64,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
         return Scaffold(
           backgroundColor: backgroundColor,
-          appBar: _currentIndex == 0
-              ? CustomAppBar(
-                  showBackArrow: false,
-                  title: Text('Text the Answer'),
-                )
-              : null,
+          appBar:
+              _currentIndex == 0
+                  ? CustomAppBar(
+                    showBackArrow: false,
+                    title: Text('Text the Answer'),
+                  )
+                  : null,
           drawer: CommonUI.buildDrawer(
             context: context,
             toggleTheme: _toggleTheme,
@@ -94,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 2:
         return GameModeScreen(toggleTheme: _toggleTheme);
       case 3:
-        return DailyQuizScreen(toggleTheme: _toggleTheme);
+        return DailyQuizScreen();
       // Profile is now a separate page with its own route
       default:
         return _buildHomeTabContent();
@@ -146,8 +147,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       'Player Name',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: secondaryTextColor,
-                          ),
+                        color: secondaryTextColor,
+                      ),
                     ),
                   ],
                 ),
@@ -344,7 +345,9 @@ class _HomeScreenState extends State<HomeScreen> {
         SizedBox(height: 4.h),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: secondaryTextColor),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: secondaryTextColor),
         ),
       ],
     );
@@ -395,7 +398,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 SizedBox(height: 4.h),
                 Text(
                   subtitle,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: secondaryTextColor),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: secondaryTextColor),
                 ),
               ],
             ),

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:text_the_answer/utils/logger/debug_print.dart';
 import 'package:text_the_answer/utils/quiz/time_utility.dart';
 import '../blocs/quiz/quiz_bloc.dart';
 import '../blocs/quiz/quiz_event.dart';
@@ -11,15 +12,12 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
 import '../router/routes.dart';
-import '../utils/theme/theme_cubit.dart';
 import '../blocs/achievement/achievement_bloc.dart';
 import '../blocs/achievement/achievement_event.dart';
 import '../models/achievement.dart';
 
 class DailyQuizScreen extends StatefulWidget {
-  final Function()? toggleTheme;
-  
-  const DailyQuizScreen({super.key, this.toggleTheme});
+  const DailyQuizScreen({super.key});
 
   @override
   State<DailyQuizScreen> createState() => _DailyQuizScreenState();
@@ -43,22 +41,6 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
   int _startTime = 0;
 
   late SharedPreferences prefs; // Declare the prefs variable
-
-  void _toggleTheme() {
-    // Get the current ThemeCubit and its state
-    final ThemeCubit cubit = context.read<ThemeCubit>();
-    final currentState = cubit.state;
-    
-    // Toggle between light and dark modes
-    if (currentState.mode == AppThemeMode.dark) {
-      cubit.setTheme(AppThemeMode.light);
-    } else {
-      cubit.setTheme(AppThemeMode.dark);
-    }
-    
-    // Call the original toggleTheme callback
-    widget.toggleTheme?.call();
-  }
 
   @override
   void initState() {
@@ -280,7 +262,6 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
   }
 
   void checkDailyResetStatus() async {
-    await initPrefs(); // Ensure prefs is initialized
     // Get today's date in the format YYYY-MM-DD
     final today = DateTime.now().toIso8601String().split('T')[0];
 
@@ -303,7 +284,7 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
         child: BlocConsumer<QuizBloc, QuizState>(
           listener: (context, state) {
             if (state is QuizError) {
-              print('DailyQuizScreen Error: ${state.message}');
+              printDebug('DailyQuizScreen Error: ${state.message}');
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.message),
@@ -887,7 +868,7 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
     if (percentage >= 80) {
       remarks = 'Excellent!';
       remarksColor = Colors.green;
-      
+
       // Check for perfect quiz achievement
       if (percentage == 100 && questionsAnswered >= 5) {
         _checkForAchievement('perfect_quiz');
@@ -899,14 +880,14 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
       remarks = 'Not bad!';
       remarksColor = Colors.orange;
     }
-    
+
     // Check for streak achievement
     if (streak >= 3) {
       _checkForAchievement('streak_master');
     }
-    
+
     // Check for questions answered achievement
-    if (summary['totalQuestionsAnswered'] != null && 
+    if (summary['totalQuestionsAnswered'] != null &&
         summary['totalQuestionsAnswered'] >= 50) {
       _checkForAchievement('question_milestone');
     }
@@ -1234,7 +1215,7 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
         // These would normally come from the backend, but we're simulating for demo
         // In a real implementation, achievements would be unlocked by the backend
         // and we would just display them
-        
+
         switch (achievementType) {
           case 'perfect_quiz':
             final achievement = Achievement(
@@ -1247,7 +1228,7 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
             );
             context.read<AchievementBloc>().add(UnlockAchievement(achievement));
             break;
-            
+
           case 'streak_master':
             final achievement = Achievement(
               id: 'streak_master_achievement',
@@ -1259,7 +1240,7 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
             );
             context.read<AchievementBloc>().add(UnlockAchievement(achievement));
             break;
-            
+
           case 'question_milestone':
             final achievement = Achievement(
               id: 'question_milestone_achievement',
