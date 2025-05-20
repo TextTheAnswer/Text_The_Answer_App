@@ -1,6 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:text_the_answer/screens/daily_quiz/widgets/daily_quiz_bulk_submission_results.dart';
+import 'package:text_the_answer/screens/daily_quiz/widgets/daily_quiz_default_content.dart';
+import 'package:text_the_answer/screens/daily_quiz/widgets/daily_quiz_processing.dart';
+import 'package:text_the_answer/screens/daily_quiz/widgets/daily_quiz_quiz_completed.dart';
+import 'package:text_the_answer/screens/daily_quiz/widgets/daily_quiz_result_with_awards.dart';
+import 'package:text_the_answer/screens/daily_quiz/widgets/daily_quiz_total_quiz_time_remaining.dart';
 import 'package:text_the_answer/utils/logger/debug_print.dart';
 import 'package:text_the_answer/utils/quiz/time_utility.dart';
 import '../blocs/quiz/quiz_bloc.dart';
@@ -10,8 +16,6 @@ import '../models/question.dart';
 import '../widgets/quiz/typing_indicator.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:go_router/go_router.dart';
-import '../router/routes.dart';
 import '../blocs/achievement/achievement_bloc.dart';
 import '../blocs/achievement/achievement_event.dart';
 import '../models/achievement.dart';
@@ -400,8 +404,11 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
                     ),
                     const SizedBox(height: 12),
                     // Total quiz time remaining
-                    _buildTotalQuizTimeRemaining(),
+                    DailyQuizTotalQuizTimeRemaining(
+                      totalTimeRemaining: _totalTimeRemaining,
+                    ),
                     const SizedBox(height: 8),
+
                     Text(
                       'Questions: ${state.questionsAnswered}/${questions.length}',
                       style: Theme.of(context).textTheme.bodyMedium,
@@ -424,216 +431,34 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
                       )
                     else if (_bulkSubmissionMode &&
                         _collectedAnswers.isNotEmpty)
-                      _buildQuizProcessing()
+                      DailyQuizProcessing()
                     else
-                      _buildQuizCompleted(context, state),
+                      DailyQuizQuizCompleted(
+                        questions: questions,
+                        correctAnswers: state.correctAnswers,
+                        totalPoints: state.totalPoints,
+                        clearCollectedAnswers: _collectedAnswers.clear,
+                      ),
                   ],
                 ),
               );
             } else if (state is QuizBulkAnswersSubmitted) {
-              return _buildBulkSubmissionResults(context, state);
+              return DailyQuizBulkSubmissionResults(
+                summary: state.summary,
+                checkForAchievement: _checkForAchievement,
+                newAchievements: state.newAchievements,
+                results: state.results,
+                clearCollectedAnswer: _collectedAnswers.clear,
+              );
             } else if (state is QuizResultsState) {
-              return _buildQuizResultsWithAwards(context, state);
+              return DailyQuizResultWithAwards(isWinner: state.isWinner);
             }
 
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.quiz,
-                      size: 64,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'Daily Quiz 🧠',
-                      style: Theme.of(context).textTheme.headlineLarge,
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'Test your knowledge with our daily quiz challenge!',
-                      style: Theme.of(context).textTheme.bodyLarge,
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 8),
-                    // Note about the 10-minute time limit
-                    Container(
-                      padding: EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.amber),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            'Today\'s winner gets 1 month FREE premium!',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Complete quiz with highest score in less time to win.',
-                            style: TextStyle(fontSize: 14),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Total time limit: 10 minutes',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 32),
-                    ElevatedButton(
-                      onPressed: () {
-                        // Clear any previous answers when starting a new quiz
-                        _collectedAnswers.clear();
-                        context.read<QuizBloc>().add(FetchDailyQuiz());
-                      },
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: Size(200, 48),
-                      ),
-                      child: const Text('Start Daily Quiz'),
-                    ),
-                  ],
-                ),
-              ),
+            return DailyQuizDefaultContent(
+              clearCollectedAnswers: _collectedAnswers.clear,
             );
           },
         ),
-      ),
-    );
-  }
-
-  // Add a widget to display total quiz time remaining
-  Widget _buildTotalQuizTimeRemaining() {
-    final minutes = _totalTimeRemaining.inMinutes;
-    final seconds = (_totalTimeRemaining.inSeconds % 60);
-    final milliseconds =
-        (_totalTimeRemaining.inMilliseconds % 1000) ~/
-        10; // Show only tens of milliseconds
-
-    // Format as MM:SS:mm
-    final secondsStr = seconds.toString().padLeft(2, '0');
-    final millisecondsStr = milliseconds.toString().padLeft(2, '0');
-
-    // Determine color based on time remaining
-    Color timerColor;
-    if (minutes < 1) {
-      timerColor = Colors.red;
-    } else if (minutes < 3) {
-      timerColor = Colors.orange;
-    } else {
-      timerColor = Colors.blue;
-    }
-
-    return Container(
-      margin: EdgeInsets.only(bottom: 8),
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: timerColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: timerColor),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.timelapse, size: 16, color: timerColor),
-          SizedBox(width: 4),
-          Text(
-            'Quiz Time: $minutes:$secondsStr:$millisecondsStr',
-            style: TextStyle(fontWeight: FontWeight.bold, color: timerColor),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // New method to build results with premium award information
-  Widget _buildQuizResultsWithAwards(
-    BuildContext context,
-    QuizResultsState state,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          Text(
-            'Quiz Results',
-            style: Theme.of(context).textTheme.headlineLarge,
-          ),
-          SizedBox(height: 24),
-
-          // Premium award notice if user is the winner
-          if (state.isWinner)
-            Container(
-              margin: EdgeInsets.only(bottom: 24),
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.amber.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.amber, width: 2),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.emoji_events, color: Colors.amber, size: 32),
-                      SizedBox(width: 8),
-                      Text(
-                        'CONGRATULATIONS!',
-                        style: TextStyle(
-                          color: Colors.amber.shade800,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 12),
-                  Text(
-                    'You\'ve won 1 month of FREE premium access!',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Your premium features have been activated.',
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-
-          // Regular results display (use existing methods)
-          // Implementation depends on available data in QuizResultsState
-
-          // Button to return to home
-          ElevatedButton.icon(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            icon: Icon(Icons.home),
-            label: Text('Return to Home'),
-            style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -744,426 +569,6 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildQuizProcessing() {
-    return Expanded(
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 24),
-            Text(
-              'Processing your answers...',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 12),
-            Text(
-              'Please wait while we check your responses.',
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuizCompleted(BuildContext context, QuizLoaded state) {
-    final percentage =
-        state.questions.isEmpty
-            ? 0.0
-            : (state.correctAnswers / state.questions.length) * 100;
-
-    String remarks = 'Try again!';
-    Color remarksColor = Colors.red;
-
-    if (percentage >= 80) {
-      remarks = 'Excellent!';
-      remarksColor = Colors.green;
-    } else if (percentage >= 60) {
-      remarks = 'Good job!';
-      remarksColor = Colors.blue;
-    } else if (percentage >= 40) {
-      remarks = 'Not bad!';
-      remarksColor = Colors.orange;
-    }
-
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            percentage >= 60 ? Icons.emoji_events : Icons.school,
-            size: 80,
-            color: remarksColor,
-          ),
-          SizedBox(height: 24),
-          Text(
-            remarks,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: remarksColor,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 16),
-          Text(
-            'Quiz Completed',
-            style: Theme.of(context).textTheme.headlineSmall,
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 16),
-          Text(
-            'Score: ${state.correctAnswers}/${state.questions.length}',
-            style: Theme.of(context).textTheme.titleLarge,
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Total Points: ${state.totalPoints}',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: () {
-              // Clear any previous answers when restarting
-              _collectedAnswers.clear();
-              context.read<QuizBloc>().add(FetchDailyQuiz());
-            },
-            icon: Icon(Icons.refresh),
-            label: Text('Try Again'),
-            style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBulkSubmissionResults(
-    BuildContext context,
-    QuizBulkAnswersSubmitted state,
-  ) {
-    final summary = state.summary;
-    final correctAnswers = summary['correctAnswers'] ?? 0;
-    final questionsAnswered = summary['questionsAnswered'] ?? 0;
-    final totalScore = summary['totalScore'] ?? 0;
-    final streak = summary['streak'] ?? 0;
-
-    final percentage =
-        questionsAnswered > 0
-            ? (correctAnswers / questionsAnswered) * 100
-            : 0.0;
-
-    String remarks = 'Try again!';
-    Color remarksColor = Colors.red;
-
-    if (percentage >= 80) {
-      remarks = 'Excellent!';
-      remarksColor = Colors.green;
-
-      // Check for perfect quiz achievement
-      if (percentage == 100 && questionsAnswered >= 5) {
-        _checkForAchievement('perfect_quiz');
-      }
-    } else if (percentage >= 60) {
-      remarks = 'Good job!';
-      remarksColor = Colors.blue;
-    } else if (percentage >= 40) {
-      remarks = 'Not bad!';
-      remarksColor = Colors.orange;
-    }
-
-    // Check for streak achievement
-    if (streak >= 3) {
-      _checkForAchievement('streak_master');
-    }
-
-    // Check for questions answered achievement
-    if (summary['totalQuestionsAnswered'] != null &&
-        summary['totalQuestionsAnswered'] >= 50) {
-      _checkForAchievement('question_milestone');
-    }
-
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        children: [
-          Text(
-            'Quiz Results',
-            style: Theme.of(context).textTheme.headlineLarge,
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 24),
-          Icon(
-            percentage >= 60 ? Icons.emoji_events : Icons.school,
-            size: 80,
-            color: remarksColor,
-          ),
-          Text(
-            remarks,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: remarksColor,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 24),
-          _buildSummaryCard(
-            context,
-            correctAnswers,
-            questionsAnswered,
-            totalScore,
-            streak,
-          ),
-          SizedBox(height: 24),
-          if (state.newAchievements.isNotEmpty)
-            _buildAchievementsSection(context, state.newAchievements),
-          SizedBox(height: 24),
-          _buildAnswerResultsList(context, state.results),
-          SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton.icon(
-                onPressed: () {
-                  // Clear any previous answers when restarting
-                  _collectedAnswers.clear();
-                  context.read<QuizBloc>().add(FetchDailyQuiz());
-                },
-                icon: Icon(Icons.refresh),
-                label: Text('Try Again'),
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                ),
-              ),
-              ElevatedButton.icon(
-                onPressed: () {
-                  // Navigate back to the home page
-                  context.go(AppRoutePath.home);
-                },
-                icon: Icon(Icons.home),
-                label: Text('Back to Home'),
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  backgroundColor: Theme.of(context).primaryColor,
-                  foregroundColor: Colors.white,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryCard(
-    BuildContext context,
-    int correctAnswers,
-    int questionsAnswered,
-    int totalScore,
-    int streak,
-  ) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Text('Summary', style: Theme.of(context).textTheme.headlineSmall),
-            SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildSummaryItem(
-                  context,
-                  'Score',
-                  '$correctAnswers/$questionsAnswered',
-                  Icons.check_circle,
-                ),
-                _buildSummaryItem(
-                  context,
-                  'Points',
-                  '$totalScore',
-                  Icons.stars,
-                ),
-                _buildSummaryItem(
-                  context,
-                  'Streak',
-                  '$streak',
-                  Icons.local_fire_department,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSummaryItem(
-    BuildContext context,
-    String label,
-    String value,
-    IconData icon,
-  ) {
-    return Column(
-      children: [
-        Icon(icon, size: 32, color: Theme.of(context).primaryColor),
-        SizedBox(height: 8),
-        Text(label, style: Theme.of(context).textTheme.bodyMedium),
-        Text(
-          value,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAchievementsSection(
-    BuildContext context,
-    List<Map<String, dynamic>> achievements,
-  ) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Text(
-              'New Achievements',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            SizedBox(height: 16),
-            Column(
-              children:
-                  achievements
-                      .map(
-                        (achievement) =>
-                            _buildAchievementItem(context, achievement),
-                      )
-                      .toList(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAchievementItem(
-    BuildContext context,
-    Map<String, dynamic> achievement,
-  ) {
-    IconData iconData = Icons.emoji_events;
-    if (achievement['icon'] == 'bolt')
-      iconData = Icons.bolt;
-    else if (achievement['icon'] == 'star')
-      iconData = Icons.star;
-
-    Color tierColor = Colors.brown;
-    if (achievement['tier'] == 'silver')
-      tierColor = Colors.grey;
-    else if (achievement['tier'] == 'gold')
-      tierColor = Colors.amber;
-
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: tierColor,
-        child: Icon(iconData, color: Colors.white),
-      ),
-      title: Text(achievement['name'] ?? 'Achievement'),
-      subtitle: Text(achievement['description'] ?? ''),
-    );
-  }
-
-  Widget _buildAnswerResultsList(
-    BuildContext context,
-    List<Map<String, dynamic>> results,
-  ) {
-    return Expanded(
-      child: Card(
-        elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Question Details',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              SizedBox(height: 16),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: results.length,
-                  itemBuilder: (context, index) {
-                    final result = results[index];
-                    return Card(
-                      color:
-                          result['isCorrect'] == true
-                              ? Colors.green.withOpacity(0.1)
-                              : Colors.red.withOpacity(0.1),
-                      margin: EdgeInsets.only(bottom: 8),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Question ${index + 1}',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                Text(
-                                  result['isCorrect'] == true
-                                      ? '+${result['points']} points'
-                                      : '0 points',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color:
-                                        result['isCorrect'] == true
-                                            ? Colors.green
-                                            : Colors.red,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 8),
-                            Text('${result['explanation']}'),
-                            SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Text(
-                                  'Correct answer: ',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                Text('${result['correctAnswer']}'),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
