@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:text_the_answer/blocs/auth/auth_bloc.dart';
 import 'package:text_the_answer/blocs/auth/auth_state.dart';
 import 'package:text_the_answer/main.dart';
 import 'package:text_the_answer/router/routes.dart';
@@ -17,7 +16,6 @@ import 'package:text_the_answer/screens/game/private_lobby_screen.dart';
 import 'package:text_the_answer/screens/game/public_lobby_screen.dart';
 import 'package:text_the_answer/screens/home/new_home_screen.dart';
 import 'package:text_the_answer/screens/main_app_screen.dart';
-import 'package:text_the_answer/screens/placeholder_profile_screen.dart';
 import 'package:text_the_answer/screens/profile/profile_creation_screen.dart';
 import 'package:text_the_answer/screens/settings/about_screen.dart';
 import 'package:text_the_answer/screens/settings/help_center_screen.dart';
@@ -28,6 +26,7 @@ import 'package:text_the_answer/screens/settings/settings_screen.dart';
 import 'package:text_the_answer/screens/profile/profile_screen.dart';
 import 'package:text_the_answer/screens/achievements/achievements_page.dart';
 import 'package:text_the_answer/screens/achievements/library_achievements_page.dart';
+import 'package:text_the_answer/shared/screens/coming_soon_screen.dart';
 import 'package:text_the_answer/utils/logger/debug_print.dart';
 import 'package:text_the_answer/utils/theme/theme_utils.dart';
 import 'package:text_the_answer/screens/daily_quiz/daily_quiz_realtime_screen.dart';
@@ -272,6 +271,6 @@ final GoRouter router = GoRouter(
     ),
   ],
   errorBuilder: (context, state) {
-    return Scaffold(body: Center(child: Text('No route defined')));
+    return ComingSoonScreen();
   },
 );
