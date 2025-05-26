@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:text_the_answer/screens/achievements/models/game_history_card_model.dart';
 import 'package:text_the_answer/screens/achievements/widgets/library_game_history.dart';
 import 'package:text_the_answer/shared/widgets/empty_state_container.dart';
+import 'package:text_the_answer/shared/widgets/responsive_widget/max_width_responsive_container.dart';
 import '../../blocs/achievement/achievement_bloc.dart';
 import '../../blocs/achievement/achievement_event.dart';
 import '../../blocs/achievement/achievement_state.dart';
@@ -42,7 +43,6 @@ class _LibraryAchievementsPageState extends State<LibraryAchievementsPage>
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final appBarColor =
         isDarkMode ? AppColors.darkPrimaryBg : AppColors.lightPrimaryBg;
-    final tabTextColor = isDarkMode ? Colors.white : Colors.black;
 
     return Scaffold(
       appBar: AppBar(
@@ -150,7 +150,7 @@ class _LibraryAchievementsPageState extends State<LibraryAchievementsPage>
 
     return ListView(
       padding: EdgeInsets.zero,
-      children: [EmptyStateContainerIfNoAchievements(visibleAchievements)],
+      children: [_emptyStateContainerIfNoAchievements(visibleAchievements)],
     );
   }
 
@@ -167,17 +167,21 @@ class _LibraryAchievementsPageState extends State<LibraryAchievementsPage>
     }
 
     // Add stats card at the top
-    return ListView(
-      padding: EdgeInsets.all(16),
-      children: [
-        _buildCompletedSummaryCard(completedAchievements),
-        SizedBox(height: 24),
-        _buildAchievementsByTier(completedAchievements),
-      ],
+    return MaxWidthResponsiveContainer(
+      child: Scrollbar(
+        child: ListView(
+          padding: EdgeInsets.all(16),
+          children: [
+            _buildCompletedSummaryCard(completedAchievements),
+            SizedBox(height: 24),
+            _buildAchievementsByTier(completedAchievements),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget EmptyStateContainerIfNoAchievements(List<Achievement> achievements) {
+  Widget _emptyStateContainerIfNoAchievements(List<Achievement> achievements) {
     if (achievements.isEmpty) {
       return EmptyStateContainer(
         title: 'No achievements available',
@@ -239,33 +243,42 @@ class _LibraryAchievementsPageState extends State<LibraryAchievementsPage>
       }
     }
 
-    return Card(
-      elevation: 0,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Completed Achievements',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 10,
+      children: [
+        Text(
+          'Completed Achievements',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+
+        Card(
+          elevation: 0,
+          margin: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildStatItem('Total', totalCount, '🏆'),
-                _buildStatItem('Bronze', bronzeCount, '🥉'),
-                _buildStatItem('Silver', silverCount, '🥈'),
-                _buildStatItem('Gold', goldCount, '🥇'),
-                _buildStatItem('Platinum', platinumCount, '💎'),
+                SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildStatItem('Total', totalCount, '🏆'),
+                    _buildStatItem('Bronze', bronzeCount, '🥉'),
+                    _buildStatItem('Silver', silverCount, '🥈'),
+                    _buildStatItem('Gold', goldCount, '🥇'),
+                    _buildStatItem('Platinum', platinumCount, '💎'),
+                  ],
+                ),
               ],
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -322,17 +335,19 @@ class _LibraryAchievementsPageState extends State<LibraryAchievementsPage>
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         SizedBox(height: 12),
-        GridView.count(
+        GridView.builder(
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          childAspectRatio: 1.0,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          children:
-              achievements
-                  .map((achievement) => _buildAchievementCard(achievement))
-                  .toList(),
+          itemCount: achievements.length,
+          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 180,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 1,
+          ),
+          itemBuilder: (context, index) {
+            return _buildAchievementCard(achievements[index]);
+          },
         ),
         SizedBox(height: 24),
       ],
@@ -355,6 +370,7 @@ class _LibraryAchievementsPageState extends State<LibraryAchievementsPage>
         child: Padding(
           padding: EdgeInsets.all(12),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(achievement.emojiIcon, style: TextStyle(fontSize: 32)),
