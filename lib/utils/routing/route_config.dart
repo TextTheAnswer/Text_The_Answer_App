@@ -26,6 +26,7 @@ import 'package:text_the_answer/screens/settings/settings_screen.dart';
 import 'package:text_the_answer/screens/profile/profile_screen.dart';
 import 'package:text_the_answer/screens/achievements/achievements_page.dart';
 import 'package:text_the_answer/screens/achievements/library_achievements_page.dart';
+import 'package:text_the_answer/screens/subscription/premium_subscription_screen.dart';
 import 'package:text_the_answer/shared/screens/coming_soon_screen.dart';
 import 'package:text_the_answer/utils/logger/debug_print.dart';
 import 'package:text_the_answer/utils/theme/theme_utils.dart';
@@ -268,6 +269,16 @@ final GoRouter router = GoRouter(
       name: AppRouteName.dailyQuizRealtime,
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) => const DailyQuizRealtimeScreen(),
+    ),
+
+    // --Premium screen
+    GoRoute(
+      path: AppRoutePath.premiumSubscription,
+      name: AppRouteName.premiumSubscription,
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) {
+        return PremiumSubscriptionScreen();
+      },
     ),
   ],
   errorBuilder: (context, state) {

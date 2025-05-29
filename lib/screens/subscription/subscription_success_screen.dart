@@ -8,15 +8,11 @@ import '../../models/subscription.dart';
 import '../../router/routes.dart';
 
 class SubscriptionSuccessScreen extends StatefulWidget {
-  final VoidCallback toggleTheme;
-  
-  const SubscriptionSuccessScreen({
-    Key? key,
-    required this.toggleTheme,
-  }) : super(key: key);
+  const SubscriptionSuccessScreen({super.key});
 
   @override
-  State<SubscriptionSuccessScreen> createState() => _SubscriptionSuccessScreenState();
+  State<SubscriptionSuccessScreen> createState() =>
+      _SubscriptionSuccessScreenState();
 }
 
 class _SubscriptionSuccessScreenState extends State<SubscriptionSuccessScreen> {
@@ -33,9 +29,9 @@ class _SubscriptionSuccessScreenState extends State<SubscriptionSuccessScreen> {
       body: BlocConsumer<SubscriptionBloc, SubscriptionState>(
         listener: (context, state) {
           if (state is SubscriptionError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message)));
           }
         },
         builder: (context, state) {
@@ -44,7 +40,7 @@ class _SubscriptionSuccessScreenState extends State<SubscriptionSuccessScreen> {
           } else if (state is SubscriptionDetailsLoaded) {
             return _buildSuccessContent(context, state.subscription);
           }
-          
+
           // Fallback UI while waiting
           return Center(
             child: Column(
@@ -60,7 +56,7 @@ class _SubscriptionSuccessScreenState extends State<SubscriptionSuccessScreen> {
       ),
     );
   }
-  
+
   Widget _buildSuccessContent(BuildContext context, Subscription subscription) {
     return Stack(
       children: [
@@ -70,14 +66,11 @@ class _SubscriptionSuccessScreenState extends State<SubscriptionSuccessScreen> {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                AppColors.primary,
-                AppColors.primary.withOpacity(0.8),
-              ],
+              colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
             ),
           ),
         ),
-        
+
         // Content
         SafeArea(
           child: Column(
@@ -90,7 +83,7 @@ class _SubscriptionSuccessScreenState extends State<SubscriptionSuccessScreen> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         const SizedBox(height: 40),
-                        
+
                         // Success icon
                         Container(
                           padding: const EdgeInsets.all(20),
@@ -111,9 +104,9 @@ class _SubscriptionSuccessScreenState extends State<SubscriptionSuccessScreen> {
                             size: 60,
                           ),
                         ),
-                        
+
                         const SizedBox(height: 30),
-                        
+
                         // Success message
                         const Text(
                           'Subscription Successful!',
@@ -124,9 +117,9 @@ class _SubscriptionSuccessScreenState extends State<SubscriptionSuccessScreen> {
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        
+
                         const SizedBox(height: 16),
-                        
+
                         Text(
                           'Thank you for subscribing to ${_getPlanName(subscription.planId)}.',
                           style: const TextStyle(
@@ -136,9 +129,9 @@ class _SubscriptionSuccessScreenState extends State<SubscriptionSuccessScreen> {
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        
+
                         const SizedBox(height: 40),
-                        
+
                         // Subscription details card
                         Container(
                           width: double.infinity,
@@ -164,35 +157,35 @@ class _SubscriptionSuccessScreenState extends State<SubscriptionSuccessScreen> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              
+
                               const SizedBox(height: 20),
-                              
+
                               _buildDetailRow(
-                                'Plan', 
+                                'Plan',
                                 _getPlanName(subscription.planId),
                                 Icons.card_membership,
                               ),
-                              
+
                               const SizedBox(height: 12),
-                              
+
                               _buildDetailRow(
                                 'Status',
                                 subscription.status.toUpperCase(),
                                 Icons.verified,
                                 valueColor: Colors.green,
                               ),
-                              
+
                               const SizedBox(height: 12),
-                              
+
                               if (subscription.currentPeriodEnd != null)
                                 _buildDetailRow(
                                   'Next Billing Date',
                                   _formatDate(subscription.currentPeriodEnd!),
                                   Icons.calendar_today,
                                 ),
-                              
+
                               const SizedBox(height: 12),
-                              
+
                               _buildDetailRow(
                                 'Billing Cycle',
                                 subscription.interval?.toUpperCase() ?? 'N/A',
@@ -201,9 +194,9 @@ class _SubscriptionSuccessScreenState extends State<SubscriptionSuccessScreen> {
                             ],
                           ),
                         ),
-                        
+
                         const SizedBox(height: 40),
-                        
+
                         // What's included section
                         Container(
                           width: double.infinity,
@@ -227,9 +220,9 @@ class _SubscriptionSuccessScreenState extends State<SubscriptionSuccessScreen> {
                                   color: Colors.white,
                                 ),
                               ),
-                              
+
                               const SizedBox(height: 16),
-                              
+
                               ..._getPlanFeatures(subscription.planId).map(
                                 (feature) => Padding(
                                   padding: const EdgeInsets.only(bottom: 12),
@@ -262,7 +255,7 @@ class _SubscriptionSuccessScreenState extends State<SubscriptionSuccessScreen> {
                   ),
                 ),
               ),
-              
+
               // Bottom action buttons
               Padding(
                 padding: const EdgeInsets.all(24),
@@ -295,19 +288,16 @@ class _SubscriptionSuccessScreenState extends State<SubscriptionSuccessScreen> {
                         ),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 12),
-                    
+
                     TextButton(
                       onPressed: () {
                         Navigator.pushNamed(context, Routes.manageSubscription);
                       },
                       child: const Text(
                         'Manage Subscription',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
+                        style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
                     ),
                   ],
@@ -319,8 +309,13 @@ class _SubscriptionSuccessScreenState extends State<SubscriptionSuccessScreen> {
       ],
     );
   }
-  
-  Widget _buildDetailRow(String label, String value, IconData icon, {Color? valueColor}) {
+
+  Widget _buildDetailRow(
+    String label,
+    String value,
+    IconData icon, {
+    Color? valueColor,
+  }) {
     return Row(
       children: [
         Container(
@@ -329,11 +324,7 @@ class _SubscriptionSuccessScreenState extends State<SubscriptionSuccessScreen> {
             color: AppColors.primary.withOpacity(0.1),
             shape: BoxShape.circle,
           ),
-          child: Icon(
-            icon,
-            color: AppColors.primary,
-            size: 20,
-          ),
+          child: Icon(icon, color: AppColors.primary, size: 20),
         ),
         const SizedBox(width: 12),
         Column(
@@ -341,10 +332,7 @@ class _SubscriptionSuccessScreenState extends State<SubscriptionSuccessScreen> {
           children: [
             Text(
               label,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
             Text(
               value,
@@ -359,10 +347,10 @@ class _SubscriptionSuccessScreenState extends State<SubscriptionSuccessScreen> {
       ],
     );
   }
-  
+
   String _getPlanName(String? planId) {
     if (planId == null) return 'Free Plan';
-    
+
     switch (planId) {
       case 'premium_monthly':
         return 'Premium Monthly';
@@ -376,10 +364,10 @@ class _SubscriptionSuccessScreenState extends State<SubscriptionSuccessScreen> {
         return planId.replaceAll('_', ' ').toUpperCase();
     }
   }
-  
+
   List<String> _getPlanFeatures(String? planId) {
     if (planId == null) return [];
-    
+
     if (planId.contains('premium')) {
       return [
         'Unlimited quizzes',
@@ -398,12 +386,12 @@ class _SubscriptionSuccessScreenState extends State<SubscriptionSuccessScreen> {
         if (planId.contains('yearly')) 'Basic analytics',
       ];
     }
-    
+
     return [];
   }
-  
+
   String _formatDate(int timestamp) {
     final date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
-} 
+}

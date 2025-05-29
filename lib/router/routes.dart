@@ -32,11 +32,13 @@ abstract class AppRouteName {
   static const String privateLobby = 'privateLobby';
 
   // -- Add other route
+
+  static const String premiumSubscription = 'premium_subscription';
 }
 
 abstract class AppRoutePath {
   // -- Main App Screen
-  static const String home = '/home';
+  static const String home = '/';
   static const String library = '/library';
   static const String gameMode = '/game-mode';
   static const String quiz = '/quiz';
@@ -72,6 +74,9 @@ abstract class AppRoutePath {
   static const String privateLobby = '/privateLobby';
 
   static const String dailyQuizRealtime = '/daily-quiz-realtime';
+
+  // -- Premium
+  static const String premiumSubscription = '/premium_subscription';
 }
 
 class Routes {
