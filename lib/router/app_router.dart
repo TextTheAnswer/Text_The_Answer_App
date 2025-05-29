@@ -10,8 +10,6 @@ import 'package:text_the_answer/screens/auth/reset_password_screen.dart';
 import 'package:text_the_answer/screens/home/home_screen.dart';
 import 'package:text_the_answer/screens/auth/onboarding_screen.dart';
 import 'package:text_the_answer/screens/auth/splash_screen.dart';
-
-import 'package:text_the_answer/screens/profile/profile_screen.dart';
 import 'package:text_the_answer/screens/settings/manage_subscription_screen.dart';
 import 'package:text_the_answer/screens/settings/settings_screen.dart';
 import 'package:text_the_answer/screens/subscription/subscription_plans_screen.dart';
@@ -142,12 +140,7 @@ class AppRouter {
         );
 
       case Routes.subscriptionSuccess:
-        return MaterialPageRoute(
-          builder:
-              (_) => SubscriptionSuccessScreen(
-                toggleTheme: toggleTheme as VoidCallback,
-              ),
-        );
+        return MaterialPageRoute(builder: (_) => SubscriptionSuccessScreen());
 
       case Routes.cancellationConfirmation:
         final args = settings.arguments as Map<String, dynamic>?;

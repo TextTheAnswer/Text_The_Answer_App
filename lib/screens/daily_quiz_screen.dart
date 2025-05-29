@@ -1,19 +1,19 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:iconly/iconly.dart';
 import 'package:text_the_answer/screens/daily_quiz/widgets/daily_quiz_bulk_submission_results.dart';
 import 'package:text_the_answer/screens/daily_quiz/widgets/daily_quiz_default_content.dart';
 import 'package:text_the_answer/screens/daily_quiz/widgets/daily_quiz_processing.dart';
 import 'package:text_the_answer/screens/daily_quiz/widgets/daily_quiz_quiz_completed.dart';
 import 'package:text_the_answer/screens/daily_quiz/widgets/daily_quiz_result_with_awards.dart';
-import 'package:text_the_answer/screens/daily_quiz/widgets/daily_quiz_total_quiz_time_remaining.dart';
+import 'package:text_the_answer/shared/styles/input_decoration/input_decoration.dart';
 import 'package:text_the_answer/utils/logger/debug_print.dart';
 import 'package:text_the_answer/utils/quiz/time_utility.dart';
 import '../blocs/quiz/quiz_bloc.dart';
 import '../blocs/quiz/quiz_event.dart';
 import '../blocs/quiz/quiz_state.dart';
 import '../models/question.dart';
-import '../widgets/quiz/typing_indicator.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../blocs/achievement/achievement_bloc.dart';
@@ -370,60 +370,59 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
 
               final questions = state.questions;
               return Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.only(left: 20, right: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const SizedBox(height: 20),
+                    // -- Top Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // -- Question count
+                        Text(
+                          ' ${(state.questionsAnswered + 1)}/${questions.length}',
+                          style: TextStyle(fontSize: 24),
+                        ),
+
+                        // -- Daily Quiz
+                        Text('Daily Quiz', style: TextStyle(fontSize: 24)),
+
+                        // -- No Function
+                        IconButton(
+                          onPressed: () {},
+                          icon: Icon(IconlyLight.more_circle, size: 28),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // -- Progress Indicator
+                    LinearProgressIndicator(
+                      color: _getTimerColor(),
+                      value: _secondsRemaining / 15.0,
+                      borderRadius: BorderRadius.circular(100),
+                      minHeight: 10.0,
+                    ),
+                    const SizedBox(height: 12),
+
+                    // -- Correct answer and Point number
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Daily Quiz 🧠',
-                          style: Theme.of(context).textTheme.headlineLarge,
+                          'Correct: ${state.correctAnswers}',
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
-                        // Timer display for question
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _getTimerColor(),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Text(
-                            _formatQuestionTime(),
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
+                        Text(
+                          'Points: ${state.totalPoints}',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    // Total quiz time remaining
-                    DailyQuizTotalQuizTimeRemaining(
-                      totalTimeRemaining: _totalTimeRemaining,
-                    ),
-                    const SizedBox(height: 8),
-
-                    Text(
-                      'Questions: ${state.questionsAnswered}/${questions.length}',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    Text(
-                      'Correct: ${state.correctAnswers}',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    Text(
-                      'Points: ${state.totalPoints}',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
                     const SizedBox(height: 16),
+
                     if (state.questionsAnswered < questions.length)
                       _buildActiveQuiz(
                         context,
@@ -476,95 +475,95 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Difficulty badge
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: difficultyColor,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              question.difficulty.toUpperCase(),
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
+          // // --  Difficulty badge
+          // Container(
+          //   padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          //   decoration: BoxDecoration(
+          //     color: difficultyColor,
+          //     borderRadius: BorderRadius.circular(12),
+          //   ),
+          //   child: Text(
+          //     question.difficulty.toUpperCase(),
+          //     style: TextStyle(
+          //       color: Colors.white,
+          //       fontWeight: FontWeight.bold,
+          //     ),
+          //   ),
+          // ),
           const SizedBox(height: 16),
-          // Question text
+
+          // -- Question text
           Expanded(
-            child: Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Text(
                       question.text,
-                      style: Theme.of(context).textTheme.headlineSmall,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineMedium,
                     ),
-                    const SizedBox(height: 24),
-                    // Answer input field with typing indicator
-                    Column(
-                      children: [
-                        TextField(
-                          controller: _answerController,
-                          decoration: InputDecoration(
-                            hintText: 'Type your answer here...',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            filled: true,
-                            suffixIcon: IconButton(
-                              icon: Icon(Icons.send),
-                              onPressed:
-                                  () => _handleAnswerSubmission(
-                                    _answerController.text,
-                                  ),
-                            ),
-                          ),
-                          style: Theme.of(context).textTheme.titleMedium,
-                          onSubmitted: _handleAnswerSubmission,
-                          autofocus: true,
-                        ),
-                        const SizedBox(height: 8),
-                        // Add the typing progress indicator
-                        TypingProgressIndicator(
-                          controller: _answerController,
-                          maxWidth: MediaQuery.of(context).size.width - 64,
+                  ),
+                  const SizedBox(height: 12),
+
+                  Divider(),
+                  const SizedBox(height: 12),
+
+                  // -- Text Field
+                  Container(
+                    height: 150,
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(255, 14, 209, 142),
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color.fromARGB(
+                            255,
+                            14,
+                            209,
+                            142,
+                          ).withValues(alpha: 0.7),
+                          offset: Offset(0, 8),
+                          blurRadius: 0,
+                          spreadRadius: 0,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
-                    Center(
-                      child: Text(
-                        'Type your answer and press Enter or tap Send',
-                        style: Theme.of(context).textTheme.bodySmall,
+                    padding: const EdgeInsets.all(20),
+                    child: Center(
+                      child: TextField(
+                        controller: _answerController,
+                        textAlign: TextAlign.center,
+                        cursorColor: Colors.white,
+                        cursorWidth: 4,
+                        maxLines: 1,
+                        cursorRadius: Radius.circular(100),
+                        style: CustomInputDecoration.borderlessFieldTextStyle,
+                        decoration: CustomInputDecoration.borderlessField
+                            .copyWith(hintText: 'Type your answer here'),
+                        onSubmitted: _handleAnswerSubmission,
+                        autofocus: true,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Center(
-                      child: Text(
-                        'Answer quickly for more points!',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontStyle: FontStyle.italic,
-                        ),
+                  ),
+                  const SizedBox(height: 20),
+                  Center(
+                    child: Text(
+                      'Type your answer and press Enter or tap Send',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: Text(
+                      'Answer quickly for more points!',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontStyle: FontStyle.italic,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -601,15 +600,6 @@ class _DailyQuizScreenState extends State<DailyQuizScreen> {
     } else {
       return Colors.red;
     }
-  }
-
-  String _formatQuestionTime() {
-    // Convert seconds to seconds:milliseconds format
-    // For simplicity, we'll simulate milliseconds by dividing the second into 10 parts
-    final seconds = _secondsRemaining ~/ 1;
-    final milliseconds =
-        (_secondsRemaining * 100) % 100; // Using 2 decimal places
-    return '$seconds:${milliseconds.toInt().toString().padLeft(2, '0')}';
   }
 
   // New method to check and trigger achievements

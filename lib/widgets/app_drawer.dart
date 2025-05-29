@@ -31,7 +31,7 @@ class AppDrawer extends StatelessWidget {
       child: SafeArea(
         child: Column(
           children: [
-            // Drawer header
+            // -- Drawer header
             Container(
               padding: EdgeInsets.all(20),
               child: Row(
@@ -67,129 +67,90 @@ class AppDrawer extends StatelessWidget {
                 ],
               ),
             ),
-
             Divider(thickness: 1, color: textColor.withValues(alpha: 0.1)),
 
-            // Drawer items
-            _buildDrawerItem(
-              context,
-              icon: Icons.home,
-              title: 'Home',
-              onTap: () {
-                Navigator.pop(context);
-                // Navigator.pushNamedAndRemoveUntil(
-                //   context,
-                //   Routes.home,
-                //   (route) => false,
-                // );
-                context.goNamed(AppRouteName.home);
-              },
-              textColor: textColor,
-              accentColor: accentColor,
+            // Scrollable middle content
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    // -- Home
+                    _DrawerItem(
+                      icon: Icons.home,
+                      title: 'Home',
+                      onTap: () {
+                        context.pop();
+                        context.goNamed(AppRouteName.home);
+                      },
+                      textColor: textColor,
+                      accentColor: accentColor,
+                    ),
+
+                    // -- Profile
+                    _DrawerItem(
+                      icon: Icons.person,
+                      title: 'Profile',
+                      onTap: () {
+                        context.pop();
+                        context.goNamed(AppRouteName.profile);
+                      },
+                      textColor: textColor,
+                      accentColor: accentColor,
+                    ),
+
+                    // -- Daily Quiz
+                    _DrawerItem(
+                      icon: Icons.lightbulb,
+                      title: 'Daily Quiz',
+                      onTap: () {
+                        context.pop();
+                        context.goNamed(AppRouteName.quiz);
+                      },
+                      textColor: textColor,
+                      accentColor: accentColor,
+                    ),
+
+                    // -- Premium Sub
+                    _DrawerItem(
+                      icon: Icons.star,
+                      title: 'Premium Subscription',
+                      onTap: () {
+                        context.pop();
+                        //TODO: Navigate to premium sub screen
+                      },
+                      textColor: textColor,
+                      accentColor: Colors.amber,
+                    ),
+
+                    // -- Leaderboard
+                    _DrawerItem(
+                      icon: Icons.format_list_bulleted,
+                      title: 'Leaderboard',
+                      onTap: () {
+                        context.pop();
+                        //TODO: To be implemented
+                      },
+                      textColor: textColor,
+                      accentColor: accentColor,
+                    ),
+
+                    // -- Settings
+                    _DrawerItem(
+                      icon: Icons.settings,
+                      title: 'Settings',
+                      onTap: () => context.pushNamed(AppRouteName.settings),
+                      textColor: textColor,
+                      accentColor: accentColor,
+                    ),
+                  ],
+                ),
+              ),
             ),
-
-            _buildDrawerItem(
-              context,
-              icon: Icons.person,
-              title: 'Profile',
-              onTap: () {
-                Navigator.pop(context);
-                // Profile feature has been removed
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Profile feature is currently unavailable'),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
-              },
-              textColor: textColor,
-              accentColor: accentColor,
-            ),
-
-            _buildDrawerItem(
-              context,
-              icon: Icons.lightbulb,
-              title: 'Daily Quiz',
-              onTap: () {
-                Navigator.pop(context);
-                // Navigator.pushNamedAndRemoveUntil(
-                //   context,
-                //   Routes.home,
-                //   (route) => false,
-                // );
-                context.goNamed(AppRouteName.quiz);
-              },
-              textColor: textColor,
-              accentColor: accentColor,
-            ),
-
-            _buildDrawerItem(
-              context,
-              icon: Icons.star,
-              title: 'Premium Subscription',
-              onTap: () {
-                Navigator.pop(context);
-                // Navigator.pushNamed(context, Routes.manageSubscription);
-                // context.goNamed(AppRouteName.home);
-              },
-              textColor: textColor,
-              accentColor: Colors.amber,
-            ),
-
-            _buildDrawerItem(
-              context,
-              icon: Icons.format_list_bulleted,
-              title: 'Leaderboard',
-              onTap: () {
-                Navigator.pop(context);
-                // Navigator.pushNamedAndRemoveUntil(
-                //   context,
-                //   Routes.home,
-                //   (route) => false,
-                // );
-                // context.goNamed(AppRouteName.);
-              },
-              textColor: textColor,
-              accentColor: accentColor,
-            ),
-
-            SizedBox(height: 16),
-            Divider(thickness: 1, color: textColor.withValues(alpha: 0.1)),
-
-            // Theme toggle
-            _buildDrawerItem(
-              context,
-              icon: isDarkMode ? Icons.wb_sunny : Icons.nightlight_round,
-              title: isDarkMode ? 'Light Mode' : 'Dark Mode',
-              onTap: () {
-                // toggleTheme();
-                Navigator.pop(context);
-              },
-              textColor: textColor,
-              accentColor: accentColor,
-            ),
-
-            // Settings
-            _buildDrawerItem(
-              context,
-              icon: Icons.settings,
-              title: 'Settings',
-              onTap: () {
-                Navigator.pop(context);
-                // Navigator.pushNamed(context, Routes.settings);
-                context.pushNamed(AppRouteName.settings);
-              },
-              textColor: textColor,
-              accentColor: accentColor,
-            ),
-
-            const Spacer(),
 
             Divider(thickness: 1, color: textColor.withValues(alpha: 0.1)),
 
             // Logout button at the bottom
-            _buildDrawerItem(
-              context,
+            _DrawerItem(
               icon: Icons.logout,
               title: 'Logout',
               onTap: () {
@@ -198,30 +159,9 @@ class AppDrawer extends StatelessWidget {
               textColor: Colors.red.shade400,
               accentColor: Colors.red.shade400,
             ),
-
-            SizedBox(height: 20),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildDrawerItem(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-    required Color textColor,
-    required Color accentColor,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: accentColor, size: 24),
-      title: Text(
-        title,
-        style: FontUtility.montserratMedium(fontSize: 16, color: textColor),
-      ),
-      onTap: onTap,
-      contentPadding: EdgeInsets.symmetric(horizontal: 24),
     );
   }
 
@@ -249,6 +189,35 @@ class AppDrawer extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+class _DrawerItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final VoidCallback onTap;
+  final Color textColor;
+  final Color accentColor;
+
+  const _DrawerItem({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+    required this.textColor,
+    required this.accentColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(icon, color: accentColor, size: 24),
+      title: Text(
+        title,
+        style: FontUtility.montserratMedium(fontSize: 16, color: textColor),
+      ),
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
     );
   }
 }

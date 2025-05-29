@@ -243,7 +243,9 @@ class _SettingsHeader extends StatelessWidget {
               Spacer(),
 
               GestureDetector(
-                onTap: () {},
+                onTap: () {
+                  context.pushNamed(AppRouteName.premiumSubscription);
+                },
                 child: Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(24),
